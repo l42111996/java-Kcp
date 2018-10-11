@@ -44,6 +44,7 @@ public class RecieveTask implements ITask {
                 release();
                 return;
             }
+            long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
             boolean hasRevieveMessage = false;
             for(;;) {
@@ -53,7 +54,7 @@ public class RecieveTask implements ITask {
                         break;
                     }
                     hasRevieveMessage = true;
-                    kcp.input(byteBuf);
+                    kcp.input(byteBuf,current);
                 } catch (Throwable throwable) {
                     kcp.getKcpListener().handleException(throwable, kcp);
                     release();

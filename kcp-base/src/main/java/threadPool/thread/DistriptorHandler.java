@@ -15,6 +15,8 @@ public class DistriptorHandler
 	{
 		try {
 			this.task.execute();
+			//得主动释放内存
+			this.task = null;
 		} catch (Throwable throwable) {
 			logger.error("error",throwable);
 		}

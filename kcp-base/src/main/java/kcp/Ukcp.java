@@ -30,7 +30,7 @@ public class Ukcp implements Runnable, ITask {
 
     private Kcp kcp;
 
-    private boolean fastFlush = false;
+    private boolean fastFlush = true;
 
     private long tsUpdate = -1;
 
@@ -104,7 +104,7 @@ public class Ukcp implements Runnable, ITask {
         kcp.recv(bufList);
     }
 
-    public void input(ByteBuf data) throws IOException {
+    public void input(ByteBuf data,long current) throws IOException {
         lastRecieveTime = System.currentTimeMillis();
         Snmp.snmp.InPkts.incrementAndGet();
         Snmp.snmp.InBytes.addAndGet(data.readableBytes());
@@ -113,25 +113,25 @@ public class Ukcp implements Runnable, ITask {
             FecPacket fecPacket = FecPacket.newFecPacket(data);
             if (fecPacket.getFlag() == Fec.typeData) {
                 data.skipBytes(2);
-                input(data, true);
+                input(data, true,current);
                 //data.release();
             }
             if (fecPacket.getFlag() == Fec.typeData || fecPacket.getFlag() == Fec.typeFEC) {
                 List<ByteBuf> byteBufs = fecDecode.decode(fecPacket);
                 if (byteBufs != null) {
                     for (ByteBuf byteBuf : byteBufs) {
-                        input(byteBuf, false);
+                        input(byteBuf, false,current);
                         byteBuf.release();
                     }
                 }
             }
         } else {
-            input(data, true);
+            input(data, true,current);
         }
     }
 
-    private void input(ByteBuf data, boolean regular) throws IOException {
-        int ret = kcp.input(data, regular);
+    private void input(ByteBuf data, boolean regular,long current) throws IOException {
+        int ret = kcp.input(data, regular,current);
         switch (ret) {
             case -1:
                 throw new IOException("No enough bytes of head");
@@ -394,11 +394,6 @@ public class Ukcp implements Runnable, ITask {
         return this;
     }
 
-    public Ukcp wndSize(int sndWnd, int rcvWnd) {
-        kcp.wndsize(sndWnd, rcvWnd);
-        return this;
-    }
-
     public int waitSnd() {
         return kcp.waitSnd();
     }
@@ -573,6 +568,7 @@ public class Ukcp implements Runnable, ITask {
             long next;
             if (this.tsUpdate == -1) {
                 next = update(now);
+                System.out.println(next - now);
                 scheduledFuture = DisruptorExecutorPool.schedule(this, next - now);
                 return;
             }
@@ -582,6 +578,7 @@ public class Ukcp implements Runnable, ITask {
             } else {
                 setTsUpdate(next);
             }
+            System.out.println(next - now);
             scheduledFuture = DisruptorExecutorPool.schedule(this, next - now);
             //TODO 检测写缓冲区 如果能写则触发写事件
             //if(canSend(false)){

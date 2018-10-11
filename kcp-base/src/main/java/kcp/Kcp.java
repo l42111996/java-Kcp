@@ -49,11 +49,13 @@ public class Kcp {
 
     /**
      * cmd: window probe (ask)
+     * 询问对方当前剩余窗口大小 请求
      */
     public static final byte IKCP_CMD_WASK = 83;
 
     /**
      * cmd: window size (tell)
+     * 返回本地当前剩余窗口大小
      */
     public static final byte IKCP_CMD_WINS = 84;
 
@@ -125,20 +127,18 @@ public class Kcp {
     private int sndWnd = IKCP_WND_SND;
     /**接收窗口**/
     private int rcvWnd = IKCP_WND_RCV;
-    /**对端接收窗口**/
+    /**当前对端可接收窗口**/
     private int rmtWnd = IKCP_WND_RCV;
     /**拥塞控制窗口**/
     private int cwnd;
     /**探测标志位**/
     private int probe;
-    /**当前时间**/
-    private long current;
+    ///**当前时间**/
+    //private long current;
     /**间隔**/
     private int interval = IKCP_INTERVAL;
     /**发送**/
     private long tsFlush = IKCP_INTERVAL;
-    /**重传次数**/
-    private int xmit;
     /**是否无延迟 0不启用；1启用**/
     private boolean nodelay;
     /**状态是否已更新**/
@@ -169,7 +169,7 @@ public class Kcp {
 
     private ReusableListIterator<Segment> rcvBufItr = rcvBuf.listIterator();
 
-    private int[] acklist = new int[8];
+    private long[] acklist = new long[8];
 
     private int ackcount;
 
@@ -522,23 +522,23 @@ public class Kcp {
             rxSrtt = rtt;
             rxRttval = rtt / 2;
         } else {
-            //int delta = rtt - rxSrtt;
-            //rxSrtt += delta>>3;
-            //delta = Math.abs(delta);
-            //if (rtt < rxSrtt - rxRttval) {
-            //    rxRttval += ( delta - rxRttval)>>5;
-            //} else {
-            //    rxRttval += (delta - rxRttval) >>2;
-            //}
             int delta = rtt - rxSrtt;
-            if (delta < 0) {
-                delta = -delta;
+            rxSrtt += delta>>3;
+            delta = Math.abs(delta);
+            if (rtt < rxSrtt - rxRttval) {
+                rxRttval += ( delta - rxRttval)>>5;
+            } else {
+                rxRttval += (delta - rxRttval) >>2;
             }
-            rxRttval = (3 * rxRttval + delta) / 4;
-            rxSrtt = (7 * rxSrtt + rtt) / 8;
-            if (rxSrtt < 1) {
-                rxSrtt = 1;
-            }
+            //int delta = rtt - rxSrtt;
+            //if (delta < 0) {
+            //    delta = -delta;
+            //}
+            //rxRttval = (3 * rxRttval + delta) / 4;
+            //rxSrtt = (7 * rxSrtt + rtt) / 8;
+            //if (rxSrtt < 1) {
+            //    rxSrtt = 1;
+            //}
         }
         int rto = rxSrtt + Math.max(interval, 4 * rxRttval);
         rxRto = ibound(rxMinrto, rto, IKCP_RTO_MAX);
@@ -608,13 +608,13 @@ public class Kcp {
                 throw new OutOfMemoryError();
             }
 
-            int[] newArray = new int[newCapacity];
+            long[] newArray = new long[newCapacity];
             System.arraycopy(acklist, 0, newArray, 0, acklist.length);
             this.acklist = newArray;
         }
 
-        acklist[2 * ackcount] = (int) sn;
-        acklist[2 * ackcount + 1] = (int) ts;
+        acklist[2 * ackcount] =  sn;
+        acklist[2 * ackcount + 1] =  ts;
         ackcount++;
     }
 
@@ -674,7 +674,7 @@ public class Kcp {
     }
 
     @Deprecated
-    private int input1(ByteBuf data) {
+    private int input1(ByteBuf data,long current) {
         long oldSndUna = sndUna;
         long maxack = 0;
         boolean flag = false;
@@ -830,7 +830,7 @@ public class Kcp {
         return 0;
     }
 
-    public int input(ByteBuf data, boolean regular) {
+    public int input(ByteBuf data, boolean regular,long current) {
         long oldSndUna = sndUna;
         long maxack = 0;
         boolean flag = false;
@@ -1005,7 +1005,7 @@ public class Kcp {
 
 
         if (ackNoDelay && ackcount > 0) { // ack immediately
-            flush(true);
+            flush(true,current);
         }
 
         return 0;
@@ -1021,14 +1021,14 @@ public class Kcp {
     /**
      * ikcp_flush
      */
-    private void flush(boolean ackOnly) {
+    private void flush(boolean ackOnly,long current) {
 
         // 'ikcp_update' haven't been called.
         //if (!updated) {
         //    return;
         //}
 
-        long current = this.current;
+        //long current = this.current;
         long uintCurrent = long2Uint(current);
 
         Segment seg = Segment.createSegment(byteBufAllocator, 0);
@@ -1052,7 +1052,7 @@ public class Kcp {
                 buffer = createByteBuf();
                 hasAck = false;
             }
-            int sn =  acklist[i * 2];
+            long sn =  acklist[i * 2];
 
             if (sn >= rcvNxt || count-1 == i) {
                 hasAck = true;
@@ -1074,6 +1074,7 @@ public class Kcp {
         }
 
         // probe window size (if remote window size equals zero)
+        //拥堵控制 如果对方可接受窗口大小为0  需要询问对方窗口大小
         if (rmtWnd == 0) {
             if (probeWait == 0) {
                 probeWait = IKCP_PROBE_INIT;
@@ -1175,7 +1176,6 @@ public class Kcp {
                 }
             } else if (itimediff(current, segment.resendts) >= 0) {
                 needsend = true;
-                xmit++;
                 if (!nodelay) {
                     segment.rto = rxRto;
                 } else {
@@ -1297,38 +1297,38 @@ public class Kcp {
      * @param current
      */
     public void update(long current) {
-        this.current = current;
+        //this.current = current;
 
         if (!updated) {
             updated = true;
-            tsFlush = this.current;
+            tsFlush = current;
         }
 
-        int slap = itimediff(this.current, tsFlush);
+        int slap = itimediff(current, tsFlush);
 
         if (slap >= 10000 || slap < -10000) {
-            tsFlush = this.current;
+            tsFlush = current;
             slap = 0;
         }
 
-        /*if (slap >= 0) {
-            tsFlush += setInterval;
-            if (itimediff(this.current, tsFlush) >= 0) {
-                tsFlush = this.current + setInterval;
-            }
-            flush();
-        }*/
+        //if (slap >= 0) {
+        //    tsFlush += interval;
+        //    if (itimediff(current, tsFlush) >= 0) {
+        //        tsFlush = current + interval;
+        //    }
+        //    flush(false,current);
+        //}
 
         if (slap >= 0) {
             tsFlush += interval;
-            if (itimediff(this.current, tsFlush) >= 0) {
-                tsFlush = this.current + interval;
+            if (itimediff(current, tsFlush) >= 0) {
+                tsFlush = current + interval;
             }
         } else {
-            tsFlush = this.current + interval;
+            tsFlush = current + interval;
         }
 
-        flush(false);
+        flush(false,current);
     }
 
     /**
@@ -1447,17 +1447,6 @@ public class Kcp {
         }
 
         this.nocwnd = nc;
-
-        return 0;
-    }
-
-    public int wndsize(int sndWnd, int rcvWnd) {
-        if (sndWnd > 0) {
-            this.sndWnd = sndWnd;
-        }
-        if (rcvWnd > 0) {
-            this.rcvWnd = rcvWnd;
-        }
 
         return 0;
     }
