@@ -940,7 +940,7 @@ public class Kcp {
                         Snmp.snmp.RepeatSegs.incrementAndGet();
                     }
                     if (log.isDebugEnabled()) {
-                        log.debug("{} input push: sn={}, una={}, ts={}", this, sn, una, ts);
+                        log.debug("{} input push: sn={}, una={}, ts={},regular={}", this, sn, una, ts,regular);
                     }
                     break;
                 }
@@ -1021,7 +1021,7 @@ public class Kcp {
     /**
      * ikcp_flush
      */
-    private void flush(boolean ackOnly,long current) {
+    private long flush(boolean ackOnly,long current) {
 
         // 'ikcp_update' haven't been called.
         //if (!updated) {
@@ -1060,7 +1060,7 @@ public class Kcp {
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
                 if (log.isDebugEnabled()) {
-                    log.debug("{} flush ack: sn={}, ts={}", this, seg.sn, seg.ts);
+                    log.debug("{} flush ack: sn={}, ts={} ,count={}", this, seg.sn, seg.ts,count);
                 }
             }
         }
@@ -1070,7 +1070,7 @@ public class Kcp {
 
         if(ackOnly&&hasAck){
             output(buffer, this);
-            return;
+            return interval;
         }
 
         // probe window size (if remote window size equals zero)
@@ -1138,30 +1138,22 @@ public class Kcp {
             if (newSeg == null) {
                 break;
             }
-
-            sndBuf.add(newSeg);
-
             newSeg.conv = conv;
             newSeg.cmd = IKCP_CMD_PUSH;
-            newSeg.wnd = seg.wnd;
-            newSeg.ts = uintCurrent;
-            newSeg.sn = sndNxt++;
-            newSeg.una = rcvNxt;
-            newSeg.resendts = current;
-            newSeg.rto = rxRto;
-            newSeg.fastack = 0;
-            newSeg.xmit = 0;
+            newSeg.sn = sndNxt;
+            sndNxt++;
             newSegsCount++;
+            sndBuf.add(newSeg);
         }
 
         // calculate resent
         int resent = fastresend > 0 ? fastresend : Integer.MAX_VALUE;
-        int rtomin = nodelay ? 0 : (rxRto >> 3);
 
         // flush data segments
         int change = 0;
         boolean lost = false;
         long lostSegs = 0, fastRetransSegs=0, earlyRetransSegs=0;
+        long minrto = interval;
 
 
         for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext();) {
@@ -1181,6 +1173,12 @@ public class Kcp {
                 } else {
                     segment.rto = rxRto / 2;
                 }
+                //go 版本的
+                //if (!nodelay) {
+                //    segment.rto += rxRto;
+                //} else {
+                //    segment.rto += rxRto / 2;
+                //}
                 segment.resendts = current + segment.rto;
                 lost = true;
                 lostSegs++;
@@ -1235,6 +1233,12 @@ public class Kcp {
                 if (segment.xmit >= deadLink) {
                     state = -1;
                 }
+
+                // get the nearest rto
+                long rto = itimediff(segment.rto, current);
+                if(rto>0 &&rto<minrto){
+                    minrto = rto;
+                }
             }
         }
 
@@ -1287,6 +1291,7 @@ public class Kcp {
             cwnd = 1;
             incr = mss;
         }
+        return minrto;
     }
 
     /**
