@@ -4,27 +4,23 @@ import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscArrayQueue;
 import org.jctools.queues.SpscLinkedQueue;
-import threadPool.task.ITask;
-import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.IMessageExecutor;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Wrapper for kcp
  *
  * @author <a href="mailto:szhnet@gmail.com">szh</a>
  */
-public class Ukcp implements Runnable, ITask {
+public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
@@ -47,6 +43,8 @@ public class Ukcp implements Runnable, ITask {
 
     private KcpListener kcpListener;
 
+    private EventExecutor eventExecutors;
+
     /**
      * 上次收到消息时间
      **/
@@ -57,13 +55,6 @@ public class Ukcp implements Runnable, ITask {
      **/
     private long closeTime = 0;
 
-    /**
-     * 是否执行完了
-     **/
-    private AtomicBoolean isExecute = new AtomicBoolean(true);
-
-    private ScheduledFuture<?> scheduledFuture;
-
 
     /**
      * Creates a new instance.
@@ -71,7 +62,7 @@ public class Ukcp implements Runnable, ITask {
      * @param conv   conv of kcp
      * @param output output for kcp
      */
-    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor) {
+    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, EventExecutor eventExecutors) {
         Kcp kcp = new Kcp(conv, output);
         this.kcp = kcp;
         this.active = true;
@@ -80,7 +71,7 @@ public class Ukcp implements Runnable, ITask {
         //默认2<<16   可以修改
         sendList = new MpscArrayQueue<>(2 << 16);
         recieveList = new SpscLinkedQueue<>();
-        this.scheduledFuture = DisruptorExecutorPool.schedule(this, kcp.getInterval());
+        this.eventExecutors = eventExecutors;
     }
 
 
@@ -90,7 +81,7 @@ public class Ukcp implements Runnable, ITask {
             KcpOutput kcpOutput = kcp.getOutput();
             fecEncode = new FecEncode(0, reedSolomon);
             fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon);
-            kcpOutput = new FecOutPut1(kcpOutput, fecEncode);
+            kcpOutput = new FecOutPut(kcpOutput, fecEncode);
             kcp.setOutput(kcpOutput);
         }
     }
@@ -216,6 +207,10 @@ public class Ukcp implements Runnable, ITask {
         setTsUpdate(nextTsUp);
 
         return nextTsUp;
+    }
+
+    public long flush(long current){
+        return kcp.flush(false,current);
     }
 
     /**
@@ -439,19 +434,27 @@ public class Ukcp implements Runnable, ITask {
     public void read(ByteBuf byteBuf) {
         //System.out.println("recieve "+Thread.currentThread().getName());
         this.recieveList.add(byteBuf);
-        RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
-        this.disruptorSingleExecutor.execute(recieveTask);
+        notifyReadEvent();
     }
 
     public boolean write(ByteBuf byteBuf) {
         if (!sendList.offer(byteBuf)) {
             return false;
         }
-        triggerWriteEvent();
+        notifyWriteEvent();
         return true;
     }
 
-    private void triggerWriteEvent() {
+    public void notifyCloseEvent(){
+        this.disruptorSingleExecutor.execute(() -> setClosed(true));
+    }
+
+    private void notifyReadEvent() {
+        RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
+        this.disruptorSingleExecutor.execute(recieveTask);
+    }
+
+    protected void notifyWriteEvent() {
         SendTask sendTask = SendTask.newSendTask(this);
         this.disruptorSingleExecutor.execute(sendTask);
     }
@@ -486,6 +489,7 @@ public class Ukcp implements Runnable, ITask {
     public boolean isActive() {
         return active;
     }
+
 
     void setClosed(boolean closeKcp) {
         kcpListener.handleClose(this);
@@ -528,12 +532,12 @@ public class Ukcp implements Runnable, ITask {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Channel> T channel() {
-        return (T) kcp.getUser();
+    public User user() {
+        return (User) kcp.getUser();
     }
 
-    public Ukcp channel(Channel channel) {
-        kcp.setUser(channel);
+    public Ukcp user(User user) {
+        kcp.setUser(user);
         return this;
     }
 
@@ -544,50 +548,5 @@ public class Ukcp implements Runnable, ITask {
                 ", state=" + kcp.getState() +
                 ", active=" + active +
                 ')';
-    }
-
-    @Override
-    public void run() {
-        isExecute.set(false);
-        this.disruptorSingleExecutor.execute(this);
-    }
-
-    @Override
-    public void execute() {
-        try {
-            long now = System.currentTimeMillis();
-            //判断连接是否关闭
-            if (this.closeTime != 0 && now + this.closeTime > this.lastRecieveTime) {
-                setClosed(true);
-                //release();
-                return;
-            }
-            if (!this.isActive())
-                return;
-            //检查flush
-            long next;
-            if (this.tsUpdate == -1) {
-                next = update(now);
-                System.out.println(next - now);
-                scheduledFuture = DisruptorExecutorPool.schedule(this, next - now);
-                return;
-            }
-            next = check(now);
-            if (now >= next) {
-                next = update(now);
-            } else {
-                setTsUpdate(next);
-            }
-            System.out.println(next - now);
-            scheduledFuture = DisruptorExecutorPool.schedule(this, next - now);
-            //TODO 检测写缓冲区 如果能写则触发写事件
-            //if(canSend(false)){
-            //    triggerWriteEvent();
-            //}
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
     }
 }

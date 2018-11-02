@@ -41,7 +41,6 @@ public class SendTask implements ITask {
         try {
             //查看连接状态
             if(!kcp.isActive()){
-                release();
                 return;
             }
             //从发送缓冲区到kcp缓冲区
@@ -57,22 +56,21 @@ public class SendTask implements ITask {
                     this.kcp.send(byteBuf);
                 } catch (IOException e) {
                     kcp.getKcpListener().handleException(e,kcp);
-                    release();
                     return;
                 }
             }
             //如果有发送 则检测时间
-            if(hasSend){
-                long now =System.currentTimeMillis();
-                if(kcp.isFastFlush()){
-                    kcp.update(now);
-                }else{
-                    kcp.setTsUpdate(-1);
+            if(hasSend&&kcp.isFastFlush()){
+                if(kcp.canSend(false)){
+                    long now =System.currentTimeMillis();
+                    long next = kcp.flush(now);
+                    kcp.setTsUpdate(now+next);
                 }
             }
-            release();
         }catch (Exception e){
             e.printStackTrace();
+        }finally {
+            release();
         }
     }
 

@@ -4,6 +4,7 @@ import com.backblaze.erasure.fec.Fec;
 import com.backblaze.erasure.fec.FecEncode;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 
 /**
  * Created by JinMiao
@@ -17,23 +18,20 @@ public class FecOutPut implements  KcpOutput{
 
     private ByteBufAllocator byteBufAllocator = ByteBufAllocator.DEFAULT;
 
-    public FecOutPut(KcpOutput output, FecEncode fecEncode) {
+    protected FecOutPut(KcpOutput output, FecEncode fecEncode) {
         this.output = output;
         this.fecEncode = fecEncode;
     }
 
     @Override
     public void out(ByteBuf msg, Kcp kcp) {
-        //TODO 把fec头部分拷贝出来
-        ByteBuf byteBuf = byteBufAllocator.ioBuffer(Fec.fecHeaderSizePlus2+msg.writerIndex());
-        byteBuf.setBytes(Fec.fecHeaderSizePlus2,msg);
-        byteBuf.writerIndex(Fec.fecHeaderSizePlus2+msg.writerIndex());
-        msg.release();
-
-        //byte[] test = new byte[byteBuf.writerIndex()];
-        //byteBuf.getBytes(0,test);
-        ByteBuf[] byteBufs = fecEncode.encode(byteBuf);
-        output.out(byteBuf,kcp);
+        ByteBuf byteBuf = byteBufAllocator.ioBuffer(Fec.fecHeaderSizePlus2);
+        byteBuf.writerIndex(Fec.fecHeaderSizePlus2);
+        ByteBuf newByteBuf = Unpooled.wrappedBuffer(byteBuf,msg);
+        newByteBuf.writerIndex(Fec.fecHeaderSizePlus2+msg.writerIndex());
+        ByteBuf[] byteBufs = fecEncode.encode(newByteBuf);
+        //out之后会自动释放你内存
+        output.out(newByteBuf,kcp);
         if(byteBufs==null)
             return;
         for (int i = 0; i < byteBufs.length; i++) {

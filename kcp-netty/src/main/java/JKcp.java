@@ -7,17 +7,12 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import kcp.Kcp;
-import kcp.KcpListener;
-import kcp.KcpOutput;
-import kcp.Ukcp;
+import kcp.*;
+import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.DisruptorSingleExecutor;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by JinMiao
@@ -43,7 +38,9 @@ public class JKcp  implements KcpOutput, KcpListener {
     public void init(){
         DisruptorSingleExecutor disruptorSingleExecutor = new DisruptorSingleExecutor("Disruptor");
         disruptorSingleExecutor.start();
-        ukcp = new Ukcp(10,this,this,disruptorSingleExecutor);
+        nioEventLoopGroup = new NioEventLoopGroup(1);
+        EventLoop eventExecutors  = nioEventLoopGroup.next();
+        ukcp = new Ukcp(10,this,this,disruptorSingleExecutor,eventExecutors);
         ukcp.setMtu(300);
         ukcp.setNocwnd(true);
         ukcp.setRcvWnd(512);
@@ -57,7 +54,7 @@ public class JKcp  implements KcpOutput, KcpListener {
 
 
 
-        nioEventLoopGroup = new NioEventLoopGroup();
+
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
         bootstrap.group(nioEventLoopGroup);
@@ -76,7 +73,6 @@ public class JKcp  implements KcpOutput, KcpListener {
                         if(!connected){
                             connected = true;
                             ukcp.getKcpListener().onConnected(ukcp);
-
                         }
                         DatagramPacket dp = (DatagramPacket) msg;
                         ukcp.read(dp.content());
@@ -89,14 +85,22 @@ public class JKcp  implements KcpOutput, KcpListener {
                         cause.printStackTrace();
                     }
                 });
+                cp.addLast(new ChannelInboundHandlerAdapter(){
+                    @Override
+                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                        System.out.println("fire read "+Thread.currentThread().getName());
+
+                    }
+                });
             }
         });
         ChannelFuture sync = bootstrap.bind(30000).syncUninterruptibly();
         channel = (NioDatagramChannel) sync.channel();
         addr = channel.localAddress();
 
-        remote = new InetSocketAddress("127.0.0.1",10000);
+        //remote = new InetSocketAddress("10.60.100.191",10001);
 
+        remote = new InetSocketAddress("127.0.0.1",10001);
 
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ukcp.write(rttMsg(++count));
@@ -108,9 +112,8 @@ public class JKcp  implements KcpOutput, KcpListener {
             }
         }, 20, 20, TimeUnit.MILLISECONDS);
 
-
-
-
+        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,ukcp,new ConcurrentHashMap<>());
+        DisruptorExecutorPool.schedule(scheduleTask, ukcp.getInterval());
 
 
         Runtime.getRuntime().addShutdownHook(

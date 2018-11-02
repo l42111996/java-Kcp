@@ -20,178 +20,99 @@ public class FecTest {
 
 
     static PooledByteBufAllocator pooledByteBufAllocator = new PooledByteBufAllocator(true);
-    static   ReedSolomon reedSolomon = ReedSolomon.create(2,1);
     public static void main(String[] args) {
-
-
         new Thread(() -> runtask()).start();
-
-        new Thread(() -> runtask()).start();
-
-
-        new Thread(() -> runtask()).start();
-        //System.out.println();
-
-        //long start =System.currentTimeMillis();
-        //int j = 0;
-        //int count = 0;
-        //List<ByteBuf> byteBufs = buildBytebuf(2);
-        //try {
-        //    while (true){
-        //        count++;
-        //        //long now = System.currentTimeMillis();
-        //        //if(now-start>1000){
-        //        //    System.out.println(j/1024/1024);
-        //        //    System.out.println("count:  "+count);
-        //        //    j=0;
-        //        //    start = now;
-        //        //    count = 0;
-        //        //}
-        //
-        //
-        //
-        //
-        //
-        //        ByteBuf[] encodeBytes = null;
-        //        ByteBuf[] result = null;
-        //        for (ByteBuf byteBuf : byteBufs) {
-        //            j +=byteBuf.readableBytes();
-        //            result = fecEncode.encode(byteBuf);
-        //            //byteBuf.release();
-        //        }
-        //
-        //
-        //        List<byte[]> encodeList = new ArrayList<>();
-        //        for (ByteBuf byteBuf : result) {
-        //            byte[] bytes = new byte[byteBuf.writerIndex()];
-        //            byteBuf.getBytes(0,bytes);
-        //            encodeList.add(bytes);
-        //        }
-        //
-        //
-        //        List<ByteBuf> decodeList  = null;
-        //        for (int i = 0; i < result.length; i++) {
-        //            ByteBuf byteBuf = result[i];
-        //            if(i==1){
-        //                continue;
-        //            }
-        //           FecPacket fecPacket =  fecDecode.newFecPacket(byteBuf);
-        //            decodeList = fecDecode.decode(fecPacket);
-        //        }
-        //
-        //        //ByteBuf old = byteBufs.get(1);
-        //        //ByteBuf news = decodeList.get(0);
-        //        //old.skipBytes(Fec.fecHeaderSize);
-        //        //news.skipBytes(Fec.fecHeaderSize);
-        //        //
-        //        //int avable = old.readableBytes();
-        //
-        //        //for (int i = Fec.fecHeaderSize-1; i < avable; i++) {
-        //        //    byte a = old.readByte();
-        //        //    byte b = decodeList.get(0).readByte();
-        //        //    if(a!= b){
-        //        //        System.out.println("index "+i);
-        //        //    }
-        //        //}
-        //        for (ByteBuf byteBuf : result) {
-        //            byteBuf.release();
-        //
-        //        }
-        //
-        //        for (ByteBuf byteBuf : decodeList) {
-        //            byteBuf.release();
-        //        }
-        //        for (ByteBuf byteBuf : result) {
-        //            //System.out.println(byteBuf.refCnt());
-        //        }
-        //        //System.out.println("次数");
-        //        //Thread.sleep(1);
-        //    }
-        //}catch (Throwable e){
-        //    e.printStackTrace();
-        //}
     }
 
 
     private static void runtask(){
-        int lostIndex = 1;
+        int data = 3;
+        int part = 10;
+
+        ReedSolomon reedSolomon = ReedSolomon.create(data,part);
+
+        FecEncode fecEncode = new FecEncode(0,reedSolomon);
+        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon);
+
+        FecDecode fecDecode1 = new FecDecode((data+part)*3,reedSolomon);
+        int j = 0;
         while (true){
-            FecEncode fecEncode = new FecEncode(0,reedSolomon);
-            FecDecode fecDecode = new FecDecode(3*3,reedSolomon);
-            for (int k =0 ;k<10;k++) {
-
+            j++;
                 //System.out.println(j);
-                List<ByteBuf> byteBufs = buildBytebuf(2);
+                List<ByteBuf> byteBufs = buildBytebuf(data);
 
-                List<byte[]> arrayList = new ArrayList<>();
-                for (ByteBuf byteBuf : byteBufs) {
-                    byte[] bytes = new byte[byteBuf.writerIndex()];
-                    byteBuf.getBytes(0,bytes);
-                    for (byte aByte : bytes) {
-                        //System.out.print(aByte);
-                    }
-                    //System.out.println();
-                    arrayList.add(bytes);
-                }
-
-                ByteBuf[] result = new ByteBuf[byteBufs.size()+1];
+                List<ByteBuf> byteBufList = new ArrayList<>();
                 for (int i = 0; i < byteBufs.size(); i++) {
                     ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
                     if(encodeResult!=null){
-                        result[i+1] = encodeResult[0];
+                        for (int i1 = 0; i1 < encodeResult.length; i1++) {
+                            byteBufList.add(encodeResult[i1]);
+                        }
                     }
-                    result[i] = byteBufs.get(i);
+                    byteBufList.add(byteBufs.get(i));
+                }
+                //是否能恢复
+                boolean canDecode = new Random().nextBoolean();
+                int dropCount = 0;
+
+                if(canDecode){
+                    dropCount = new Random().nextInt(part);
+                }else{
+                    dropCount = part+1+(new Random().nextInt(data));
                 }
 
-
-                List<byte[]> encodeList = new ArrayList<>();
-                for (ByteBuf byteBuf : result) {
-                    byte[] bytes = new byte[byteBuf.writerIndex()];
-                    byteBuf.getBytes(0,bytes);
-                    for (byte aByte : bytes) {
-                        //System.out.print(aByte);
-                    }
-                    //System.out.println();
-                    encodeList.add(bytes);
+                for (int i = 0; i < dropCount; i++) {
+                    int dropIndex = new Random().nextInt(byteBufList.size());
+                    byteBufList.get(dropIndex).release();
+                    byteBufList.remove(dropIndex);
                 }
-                List<ByteBuf> dencodeResult = new ArrayList<>();
-                for (int i = 0; i < result.length; i++) {
-                    ByteBuf byteBuf = result[i];
-                    if(i==lostIndex)
-                        continue;
+
+                List<ByteBuf> dencodeResult = null;
+                int dataSize = 0;
+                for (ByteBuf byteBuf : byteBufList) {
                     FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
+                    if(fecPacket.getFlag()==Fec.typeData){
+                        dataSize++;
+                    }
                     dencodeResult = fecDecode.decode(fecPacket);
+                    if(dencodeResult!=null)
+                        break;
                 }
 
-                for (ByteBuf byteBuf : result) {
+            System.out.println(j +"  "+canDecode);
+                if(dataSize!=data){
+                    if(dencodeResult!=null&&!canDecode)
+                    {
+                        System.out.println("异常"+j);
+                    }
+
+                    if(dencodeResult==null&&canDecode)
+                    {
+                        for (ByteBuf byteBuf : byteBufList) {
+                            byteBuf.readerIndex(0);
+                            FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
+                            dencodeResult = fecDecode1.decode(fecPacket);
+                        }
+                        System.out.println("异常"+j);
+                    }
+                }
+                for (ByteBuf byteBuf : byteBufList) {
                     byteBuf.release();
                 }
 
-                List<byte[]> decodeList = new ArrayList<>();
-                for (ByteBuf byteBuf : dencodeResult) {
-                    byte[] bytes = new byte[byteBuf.writerIndex()];
-                    byteBuf.getBytes(0,bytes);
-                    decodeList.add(bytes);
-                }
+                if(dencodeResult!=null){
+                    for (ByteBuf byteBuf : dencodeResult) {
+                        byteBuf.release();
+                    }
 
-                for (ByteBuf byteBuf : dencodeResult) {
-                    byteBuf.release();
                 }
 
 
-                //for (int i = 0; i < decodeList.size(); i++) {
-                //    byte[] encodeBytes = encodeList.get(lostIndex);
-                //    for (int i1 = 7; i1 < encodeBytes.length; i1++) {
-                //        if(encodeBytes[i1]!=decodeList.get(i)[i1]){
-                //            System.out.println();
-                //        }
-                //    }
-                //}
+
             }
 
-            fecEncode.release();
-            fecDecode.release();
-        }
+            //fecEncode.release();
+            //fecDecode.release();
 
     }
 
@@ -229,7 +150,7 @@ public class FecTest {
             ByteBuf byteBuf = pooledByteBufAllocator.buffer(Fec.mtuLimit);
             byteBuf.writeBytes(new byte[Fec.fecHeaderSizePlus2]);
             //ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(Fec.mtuLimit);
-            int size = new Random().nextInt(10)+Fec.fecHeaderSizePlus2+1;
+            int size = new Random().nextInt(200)+Fec.fecHeaderSizePlus2+1;
             for (int i1 = 0; i1 < size; i1++) {
                 byteBuf.writeByte(new Random().nextInt(127));
             }

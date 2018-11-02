@@ -1,7 +1,6 @@
 package kcp;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -10,7 +9,6 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import threadPool.thread.DisruptorExecutorPool;
 
 import java.net.SocketAddress;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,7 +24,7 @@ public class AbstractKcpServer {
     private Bootstrap bootstrap;
     private EventLoopGroup group;
     private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
-    //TODO 如何从map中移除呢？？纠结
+
     private Map<SocketAddress,Ukcp> ukcpMap = new ConcurrentHashMap<>();
 
 
@@ -68,6 +66,12 @@ public class AbstractKcpServer {
         localAddresss.values().forEach(
                 channel -> channel.close()
         );
+        ukcpMap.values().forEach(ukcp ->
+        {
+            ukcp.notifyCloseEvent();
+        });
+
+
         if(group !=null)
             group.shutdownGracefully();
         if(disruptorExecutorPool!=null)
@@ -75,41 +79,45 @@ public class AbstractKcpServer {
     }
 
     public static void main(String[] args) {
-        System.out.println(System.getProperty("os.name"));
-        ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFecDataShardCount(10);
-        channelConfig.setFecParityShardCount(3);
-        channelConfig.setMtu(300);
+        int size = 5;
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i&size-1);
+        }
 
-        channelConfig.setNocwnd(true);
-        channelConfig.setRcvwnd(512);
-        channelConfig.setSndwnd(512);
-        channelConfig.setInterval(40);
-        channelConfig.setFastresend(0);
-
-
-        new AbstractKcpServer(2, new KcpListener() {
-            @Override
-            public void onConnected(Ukcp ukcp) {
-                System.out.println("有连接进来"+Thread.currentThread().getName());
-            }
-
-            @Override
-            public void handleReceive(ByteBuf bb, Ukcp kcp) {
-                System.out.println("收到消息"+Thread.currentThread().getName());
-                String content = bb.toString(Charset.forName("utf-8"));
-                kcp.write(bb);//echo
-            }
-
-            @Override
-            public void handleException(Throwable ex, Ukcp kcp) {
-                ex.printStackTrace();
-            }
-
-            @Override
-            public void handleClose(Ukcp kcp) {
-                System.out.println("连接断开"+Thread.currentThread().getName());
-            }
-        },channelConfig,10000);
+        //ChannelConfig channelConfig = new ChannelConfig();
+        //channelConfig.setFecDataShardCount(10);
+        //channelConfig.setFecParityShardCount(3);
+        //channelConfig.setMtu(300);
+        //
+        //channelConfig.setNocwnd(true);
+        //channelConfig.setRcvwnd(512);
+        //channelConfig.setSndwnd(512);
+        //channelConfig.setInterval(40);
+        //channelConfig.setFastresend(0);
+        //
+        //
+        //new AbstractKcpServer(2, new KcpListener() {
+        //    @Override
+        //    public void onConnected(Ukcp ukcp) {
+        //        System.out.println("有连接进来"+Thread.currentThread().getName());
+        //    }
+        //
+        //    @Override
+        //    public void handleReceive(ByteBuf bb, Ukcp kcp) {
+        //        System.out.println("收到消息"+Thread.currentThread().getName());
+        //        String content = bb.toString(Charset.forName("utf-8"));
+        //        kcp.write(bb);//echo
+        //    }
+        //
+        //    @Override
+        //    public void handleException(Throwable ex, Ukcp kcp) {
+        //        ex.printStackTrace();
+        //    }
+        //
+        //    @Override
+        //    public void handleClose(Ukcp kcp) {
+        //        System.out.println("连接断开"+Thread.currentThread().getName());
+        //    }
+        //},channelConfig,10000);
     }
 }

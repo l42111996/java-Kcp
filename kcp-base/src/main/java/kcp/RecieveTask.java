@@ -41,7 +41,6 @@ public class RecieveTask implements ITask {
         try {
             //查看连接状态
             if(!kcp.isActive()){
-                release();
                 return;
             }
             long current = System.currentTimeMillis();
@@ -57,12 +56,10 @@ public class RecieveTask implements ITask {
                     kcp.input(byteBuf,current);
                 } catch (Throwable throwable) {
                     kcp.getKcpListener().handleException(throwable, kcp);
-                    release();
                     return;
                 }
             }
             if(!hasRevieveMessage){
-                release();
                 return;
             }
             CodecOutputList<ByteBuf> bufList = CodecOutputList.newInstance();
@@ -74,12 +71,14 @@ public class RecieveTask implements ITask {
                 buf.release();
             }
             bufList.recycle();
-            //立刻刷新 并设置定时器的刷新时间
-            kcp.setTsUpdate(-1);
-            //kcp.update(System.currentTimeMillis());
-            release();
         }catch (Exception e){
             e.printStackTrace();
+        }finally {
+            //判断写事件
+            if(kcp.canSend(false)){
+                kcp.notifyWriteEvent();
+            }
+            release();
         }
     }
 

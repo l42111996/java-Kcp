@@ -71,6 +71,8 @@ public class FecDecode {
     public List<ByteBuf> decode(FecPacket pkt){
         if(pkt.getFlag()==Fec.typeFEC){
             Snmp.snmp.FECParityShards.incrementAndGet();
+        }else{
+            Snmp.snmp.FECDataShards.incrementAndGet();
         }
         int n = 0;
         if(rx!=null)

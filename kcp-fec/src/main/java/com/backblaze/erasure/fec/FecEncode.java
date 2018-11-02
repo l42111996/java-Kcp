@@ -132,6 +132,8 @@ public class FecEncode {
 
 
     public void release(){
+
+        System.out.println("releaseed");
         this.dataShards=0;
         this.parityShards=0;
         this.shardSize=0;

@@ -333,9 +333,8 @@ public class Kcp {
         }
     }
 
-    private ByteBuf createByteBuf() {
-        ByteBuf byteBuf = byteBufAllocator.ioBuffer((this.mtu + IKCP_OVERHEAD) * 3);
-        return byteBuf;
+    private ByteBuf createFlushByteBuf() {
+        return byteBufAllocator.ioBuffer(this.mtu);
     }
 
 
@@ -465,12 +464,13 @@ public class Kcp {
         if (stream) {
             if (!sndQueue.isEmpty()) {
                 Segment last = sndQueue.peekLast();
-                if (len < mss) {
-                    ByteBuf lastData = last.data;
-                    int capacity = mss - lastData.readableBytes();
+                ByteBuf lastData = last.data;
+                int lastLen = lastData.readableBytes();
+                if (lastLen < mss) {
+                    int capacity = mss - lastLen;
                     int extend = len < capacity ? len : capacity;
                     if (lastData.maxWritableBytes() < extend) { // extend
-                        ByteBuf newBuf = byteBufAllocator.ioBuffer(lastData.readableBytes() + extend);
+                        ByteBuf newBuf = byteBufAllocator.ioBuffer(lastLen + extend);
                         newBuf.writeBytes(lastData);
                         lastData.release();
                         lastData = last.data = newBuf;
@@ -1021,7 +1021,7 @@ public class Kcp {
     /**
      * ikcp_flush
      */
-    private long flush(boolean ackOnly,long current) {
+    public long flush(boolean ackOnly,long current) {
 
         // 'ikcp_update' haven't been called.
         //if (!updated) {
@@ -1040,7 +1040,7 @@ public class Kcp {
         seg.sn = 0;
         seg.ts = 0;
 
-        ByteBuf buffer = createByteBuf();
+        ByteBuf buffer = createFlushByteBuf();
 
 
         boolean hasAck =false;
@@ -1049,7 +1049,7 @@ public class Kcp {
         for (int i = 0; i < count; i++) {
             if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
                 output(buffer, this);
-                buffer = createByteBuf();
+                buffer = createFlushByteBuf();
                 hasAck = false;
             }
             long sn =  acklist[i * 2];
@@ -1102,7 +1102,7 @@ public class Kcp {
             seg.cmd = IKCP_CMD_WASK;
             if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
                 output(buffer, this);
-                buffer = createByteBuf();
+                buffer = createFlushByteBuf();
             }
             encodeSeg(buffer, seg);
             if (log.isDebugEnabled()) {
@@ -1115,7 +1115,7 @@ public class Kcp {
             seg.cmd = IKCP_CMD_WINS;
             if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
                 output(buffer, this);
-                buffer = createByteBuf();
+                buffer = createFlushByteBuf();
             }
             encodeSeg(buffer, seg);
             if (log.isDebugEnabled()) {
@@ -1169,16 +1169,10 @@ public class Kcp {
             } else if (itimediff(current, segment.resendts) >= 0) {
                 needsend = true;
                 if (!nodelay) {
-                    segment.rto = rxRto;
+                    segment.rto += rxRto;
                 } else {
-                    segment.rto = rxRto / 2;
+                    segment.rto += rxRto / 2;
                 }
-                //go 版本的
-                //if (!nodelay) {
-                //    segment.rto += rxRto;
-                //} else {
-                //    segment.rto += rxRto / 2;
-                //}
                 segment.resendts = current + segment.rto;
                 lost = true;
                 lostSegs++;
@@ -1220,7 +1214,7 @@ public class Kcp {
 
                 if (buffer.readableBytes() + need > mtu) {
                     output(buffer, this);
-                    buffer = createByteBuf();
+                    buffer = createFlushByteBuf();
                 }
 
                 encodeSeg(buffer, segment);
