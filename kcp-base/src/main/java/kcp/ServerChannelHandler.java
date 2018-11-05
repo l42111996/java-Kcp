@@ -20,7 +20,7 @@ import java.util.Map;
 public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     static final Logger logger = LoggerFactory.getLogger(ServerChannelHandler.class);
 
-    private Map<SocketAddress,Ukcp> ukcpMap;
+    private Map<SocketAddress,Ukcp> clientMap;
 
     private ChannelConfig channelConfig ;
 
@@ -28,8 +28,8 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
 
     private KcpListener kcpListener;
 
-    public ServerChannelHandler(Map<SocketAddress, Ukcp> ukcpMap, ChannelConfig channelConfig, DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener) {
-        this.ukcpMap = ukcpMap;
+    public ServerChannelHandler(Map<SocketAddress, Ukcp> clientMap, ChannelConfig channelConfig, DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener) {
+        this.clientMap = clientMap;
         this.channelConfig = channelConfig;
         this.disruptorExecutorPool = disruptorExecutorPool;
         this.kcpListener = kcpListener;
@@ -39,7 +39,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         SocketAddress socketAddress = ctx.channel().remoteAddress();
-        Ukcp ukcp = ukcpMap.get(socketAddress);
+        Ukcp ukcp = clientMap.get(socketAddress);
         if(ukcp==null){
             logger.error("exceptionCaught ukcp is not exist address"+ctx.channel().remoteAddress(),cause);
             return;
@@ -50,10 +50,10 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) {
         InetSocketAddress socketAddress = msg.sender();
-        Ukcp ukcp = ukcpMap.get(socketAddress);
+        Ukcp ukcp = clientMap.get(socketAddress);
         if(ukcp==null){
-            User user = new User(ctx,msg.sender(),msg.recipient());
-            System.out.println("新连接"+Thread.currentThread().getName());
+            User user = new User(ctx.channel(),msg.sender(),msg.recipient());
+            //System.out.println("新连接"+Thread.currentThread().getName());
             IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
             KcpOutput kcpOutput = new KcpOutPutImp();
             Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,ctx.executor());
@@ -68,22 +68,18 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
             newUkcp.setMinRto(channelConfig.getMinRto());
             newUkcp.setCloseTime(channelConfig.getTimeout());
             newUkcp.setStream(channelConfig.isStream());
-
             newUkcp.setAckNoDelay(channelConfig.isAckNoDelay());
             newUkcp.setFastFlush(channelConfig.isFastFlush());
-
             newUkcp.user(user);
-
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 ReedSolomon reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
                 newUkcp.initFec(reedSolomon);
             }
-
             disruptorSingleExecutor.execute(() -> newUkcp.getKcpListener().onConnected(newUkcp));
-            ukcpMap.put(socketAddress,newUkcp);
+            clientMap.put(socketAddress,newUkcp);
             newUkcp.read(msg.content());
 
-            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp,ukcpMap);
+            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, clientMap);
             DisruptorExecutorPool.schedule(scheduleTask, newUkcp.getInterval());
             return;
         }

@@ -18,6 +18,6 @@ public class KcpOutPutImp implements KcpOutput {
         //InetSocketAddress inetSocketAddress = channel.remoteAddress();
 
         DatagramPacket temp = new DatagramPacket(data,user.getRemoteAddress(), user.getLocalAddress());
-        user.getChannelHandlerContext().channel().writeAndFlush(temp);
+        user.getChannel().writeAndFlush(temp);
     }
 }

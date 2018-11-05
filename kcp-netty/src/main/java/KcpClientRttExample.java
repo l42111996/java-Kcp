@@ -15,10 +15,13 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.*;
 
 /**
+ * 客户端版本
+ * 仅仅为了测试  暂时没有进行封装
+ * 如果有需要可以联系我
  * Created by JinMiao
  * 2018/9/10.
  */
-public class JKcp  implements KcpOutput, KcpListener {
+public class KcpClientRttExample implements KcpOutput, KcpListener {
 
     private Ukcp ukcp;
 
@@ -32,7 +35,7 @@ public class JKcp  implements KcpOutput, KcpListener {
 
 
     public static void main(String[] args) {
-        new JKcp().init();
+        new KcpClientRttExample().init();
     }
 
     public void init(){
@@ -51,9 +54,6 @@ public class JKcp  implements KcpOutput, KcpListener {
 
         ReedSolomon reedSolomon = ReedSolomon.create(10,3);
         ukcp.initFec(reedSolomon);
-
-
-
 
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
@@ -145,7 +145,7 @@ public class JKcp  implements KcpOutput, KcpListener {
     private final long startTime ;
 
 
-    public JKcp() {
+    public KcpClientRttExample() {
         data = Unpooled.buffer(200);
         for (int i = 0; i < data.capacity(); i++) {
             data.writeByte((byte) i);

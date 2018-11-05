@@ -1,6 +1,6 @@
 package kcp;
 
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
 
@@ -10,23 +10,22 @@ import java.net.InetSocketAddress;
  */
 public class User {
 
-    public User(ChannelHandlerContext channelHandlerContext, InetSocketAddress remoteAddress, InetSocketAddress localAddress) {
-        this.channelHandlerContext = channelHandlerContext;
+    private Channel channel;
+    private InetSocketAddress remoteAddress;
+    private InetSocketAddress localAddress;
+
+    public User(Channel channel, InetSocketAddress remoteAddress, InetSocketAddress localAddress) {
+        this.channel = channel;
         this.remoteAddress = remoteAddress;
         this.localAddress = localAddress;
     }
 
-    private ChannelHandlerContext channelHandlerContext;
-
-    private InetSocketAddress remoteAddress;
-    private InetSocketAddress localAddress;
-
-    public ChannelHandlerContext getChannelHandlerContext() {
-        return channelHandlerContext;
+    public Channel getChannel() {
+        return channel;
     }
 
-    public void setChannelHandlerContext(ChannelHandlerContext channelHandlerContext) {
-        this.channelHandlerContext = channelHandlerContext;
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public InetSocketAddress getRemoteAddress() {

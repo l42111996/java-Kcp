@@ -1,20 +1,19 @@
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
-import kcp.AbstractKcpServer;
+import kcp.KcpServer;
 import kcp.ChannelConfig;
 import kcp.KcpListener;
 import kcp.Ukcp;
 
 /**
+ *
  * Created by JinMiao
  * 2018/11/2.
  */
-public class KcpServer implements KcpListener {
+public class KcpServerRttExample implements KcpListener {
 
     public static void main(String[] args) {
-        new KcpServer().init();
-
-
+        new KcpServerRttExample().init();
     }
 
 
@@ -29,7 +28,7 @@ public class KcpServer implements KcpListener {
         channelConfig.setAckNoDelay(false);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
-        AbstractKcpServer abstractKcpServer = new AbstractKcpServer(2,this,channelConfig,10001);
+        KcpServer abstractKcpServer = new KcpServer(2,this,channelConfig,10001);
     }
 
     @Override
@@ -41,8 +40,10 @@ public class KcpServer implements KcpListener {
     @Override
     public void handleReceive(ByteBuf buf, Ukcp kcp) {
         short curCount = buf.getShort(buf.readerIndex());
+        System.out.println(Thread.currentThread().getName()+"  收到消息 "+curCount);
+        ByteBuf sendBytebuf = buf.retainedDuplicate();
 
-        kcp.write(buf);
+        kcp.write(sendBytebuf);
         if (curCount == -1) {
             kcp.notifyCloseEvent();
         }
@@ -50,7 +51,7 @@ public class KcpServer implements KcpListener {
 
     @Override
     public void handleException(Throwable ex, Ukcp kcp) {
-
+        ex.printStackTrace();
     }
 
     @Override

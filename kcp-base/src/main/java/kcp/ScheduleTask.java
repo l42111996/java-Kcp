@@ -44,23 +44,23 @@ public class ScheduleTask implements ITask,Runnable {
             long now = System.currentTimeMillis();
             //判断连接是否关闭
             if (ukcp.getCloseTime() != 0 && now + ukcp.getCloseTime() > ukcp.getLastRecieveTime()) {
-                ukcp.setClosed(true);
+                ukcp.close();
+            }
+            if(!ukcp.isActive()){
                 User user = ukcp.user();
                 //抛回网络线程处理连接删除
-                user.getChannelHandlerContext().executor().execute(()-> ukcpMap.remove(user.getChannelHandlerContext().channel().remoteAddress()));
+                user.getChannel().eventLoop().execute(()-> ukcpMap.remove(user.getRemoteAddress()));
                 return;
             }
-            if (!ukcp.isActive())
-                return;
             long timeLeft = ukcp.getTsUpdate()-now;
             //判断执行时间是否到了
             if(timeLeft>0){
-                System.err.println(timeLeft);
+                //System.err.println(timeLeft);
                 DisruptorExecutorPool.schedule(this, timeLeft);
                 return;
             }
             long next = ukcp.flush(now);
-            System.err.println(next);
+            //System.err.println(next);
             DisruptorExecutorPool.schedule(this, next);
             //检测写缓冲区 如果能写则触发写事件
             if(ukcp.canSend(false)){

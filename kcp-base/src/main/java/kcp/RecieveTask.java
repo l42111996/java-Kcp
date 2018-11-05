@@ -39,6 +39,7 @@ public class RecieveTask implements ITask {
     @Override
     public void execute() {
         try {
+            //Thread.sleep(1000);
             //查看连接状态
             if(!kcp.isActive()){
                 return;
@@ -71,7 +72,7 @@ public class RecieveTask implements ITask {
                 buf.release();
             }
             bufList.recycle();
-        }catch (Exception e){
+        }catch (Throwable e){
             e.printStackTrace();
         }finally {
             //判断写事件

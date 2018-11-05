@@ -105,7 +105,7 @@ public class Ukcp{
             if (fecPacket.getFlag() == Fec.typeData) {
                 data.skipBytes(2);
                 input(data, true,current);
-                //data.release();
+                data.release();
             }
             if (fecPacket.getFlag() == Fec.typeData || fecPacket.getFlag() == Fec.typeFEC) {
                 List<ByteBuf> byteBufs = fecDecode.decode(fecPacket);
@@ -118,6 +118,7 @@ public class Ukcp{
             }
         } else {
             input(data, true,current);
+            data.release();
         }
     }
 
@@ -433,10 +434,15 @@ public class Ukcp{
 
     public void read(ByteBuf byteBuf) {
         //System.out.println("recieve "+Thread.currentThread().getName());
-        this.recieveList.add(byteBuf);
+        this.recieveList.add(byteBuf.retainedDuplicate());
         notifyReadEvent();
     }
 
+    /**
+     * 主动发消息使用
+     * @param byteBuf
+     * @return
+     */
     public boolean write(ByteBuf byteBuf) {
         if (!sendList.offer(byteBuf)) {
             return false;
@@ -445,8 +451,11 @@ public class Ukcp{
         return true;
     }
 
+    /**
+     * 主动关闭连接调用
+     */
     public void notifyCloseEvent(){
-        this.disruptorSingleExecutor.execute(() -> setClosed(true));
+        this.disruptorSingleExecutor.execute(() -> close());
     }
 
     private void notifyReadEvent() {
@@ -491,15 +500,12 @@ public class Ukcp{
     }
 
 
-    void setClosed(boolean closeKcp) {
+    void close() {
         kcpListener.handleClose(this);
         this.active = false;
-        if (closeKcp) {
-            setKcpClosed();
-        }
     }
 
-    void setKcpClosed() {
+    void release() {
         kcp.setState(-1);
         kcp.release();
         for (; ; ) {
