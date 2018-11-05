@@ -15,8 +15,6 @@ public class KcpOutPutImp implements KcpOutput {
         Snmp.snmp.OutPkts.incrementAndGet();
         Snmp.snmp.OutBytes.addAndGet(data.writerIndex());
         User user = (User) kcp.getUser();
-        //InetSocketAddress inetSocketAddress = channel.remoteAddress();
-
         DatagramPacket temp = new DatagramPacket(data,user.getRemoteAddress(), user.getLocalAddress());
         user.getChannel().writeAndFlush(temp);
     }

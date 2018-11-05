@@ -38,6 +38,7 @@ public class RecieveTask implements ITask {
 
     @Override
     public void execute() {
+        CodecOutputList<ByteBuf> bufList = null;
         try {
             //Thread.sleep(1000);
             //查看连接状态
@@ -48,30 +49,28 @@ public class RecieveTask implements ITask {
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
             boolean hasRevieveMessage = false;
             for(;;) {
-                try {
-                    ByteBuf byteBuf = recieveList.poll();
-                    if (byteBuf == null) {
-                        break;
-                    }
-                    hasRevieveMessage = true;
-                    kcp.input(byteBuf,current);
-                } catch (Throwable throwable) {
-                    kcp.getKcpListener().handleException(throwable, kcp);
-                    return;
+                ByteBuf byteBuf = recieveList.poll();
+                if (byteBuf == null) {
+                    break;
                 }
+                hasRevieveMessage = true;
+                kcp.input(byteBuf,current);
             }
             if(!hasRevieveMessage){
                 return;
             }
-            CodecOutputList<ByteBuf> bufList = CodecOutputList.newInstance();
+            bufList =  CodecOutputList.newInstance();
             while (kcp.canRecv()) {
                 kcp.receive(bufList);
             }
             for (ByteBuf buf : bufList) {
-                kcp.getKcpListener().handleReceive(buf, kcp);
+                try {
+                    kcp.getKcpListener().handleReceive(buf, kcp);
+                }catch (Throwable throwable){
+                    kcp.getKcpListener().handleException(throwable,kcp);
+                }
                 buf.release();
             }
-            bufList.recycle();
         }catch (Throwable e){
             e.printStackTrace();
         }finally {
@@ -80,6 +79,8 @@ public class RecieveTask implements ITask {
                 kcp.notifyWriteEvent();
             }
             release();
+            if(bufList!=null)
+                bufList.recycle();
         }
     }
 
