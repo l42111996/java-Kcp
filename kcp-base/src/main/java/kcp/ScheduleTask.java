@@ -44,12 +44,13 @@ public class ScheduleTask implements ITask,Runnable {
             long now = System.currentTimeMillis();
             //判断连接是否关闭
             if (ukcp.getCloseTime() != 0 && now + ukcp.getCloseTime() > ukcp.getLastRecieveTime()) {
-                ukcp.close();
+                    ukcp.close();
             }
             if(!ukcp.isActive()){
                 User user = ukcp.user();
                 //抛回网络线程处理连接删除
                 user.getChannel().eventLoop().execute(()-> ukcpMap.remove(user.getRemoteAddress()));
+                ukcp.release();
                 return;
             }
             long timeLeft = ukcp.getTsUpdate()-now;

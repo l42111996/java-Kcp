@@ -1229,7 +1229,7 @@ public class Kcp {
                 }
 
                 // get the nearest rto
-                long rto = itimediff(segment.rto, current);
+                long rto = itimediff(segment.resendts, current);
                 if(rto>0 &&rto<minrto){
                     minrto = rto;
                 }
