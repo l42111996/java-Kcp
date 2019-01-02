@@ -583,7 +583,7 @@ public class Kcp {
         }
     }
 
-    private void parseFastack(long sn) {
+    private void parseFastack(long sn,long ts) {
         if (itimediff(sn, sndUna) < 0 || itimediff(sn, sndNxt) >= 0) {
             return;
         }
@@ -592,7 +592,8 @@ public class Kcp {
             Segment seg = itr.next();
             if (itimediff(sn, seg.sn) < 0) {
                 break;
-            } else if (sn != seg.sn) {
+                //根据时间判断  在当前包时间之前的包才能被认定是需要快速重传的
+            } else if (sn != seg.sn&& itimediff(seg.ts, ts) <= 0) {
                 seg.fastack++;
             }
         }
@@ -618,12 +619,12 @@ public class Kcp {
         ackcount++;
     }
 
-    private void parseData(Segment newSeg) {
+    private boolean parseData(Segment newSeg) {
         long sn = newSeg.sn;
 
         if (itimediff(sn, rcvNxt + rcvWnd) >= 0 || itimediff(sn, rcvNxt) < 0) {
             newSeg.recycle(true);
-            return;
+            return true;
         }
 
         boolean repeat = false;
@@ -635,7 +636,7 @@ public class Kcp {
                 Segment seg = listItr.previous();
                 if (seg.sn == sn) {
                     repeat = true;
-                    Snmp.snmp.RepeatSegs.incrementAndGet();
+                    //Snmp.snmp.RepeatSegs.incrementAndGet();
                     break;
                 }
                 if (itimediff(sn, seg.sn) > 0) {
@@ -658,6 +659,7 @@ public class Kcp {
 
         // move available data from rcv_buf -> rcv_queue
         moveRcvData(); // Invoke the method only if the segment is not repeat?
+        return repeat;
     }
 
     private void moveRcvData() {
@@ -675,19 +677,19 @@ public class Kcp {
 
     public int input(ByteBuf data, boolean regular,long current) {
         long oldSndUna = sndUna;
-        long maxack = 0;
-        boolean flag = false;
-        long inSegs = 0;
-
+        if (data == null || data.readableBytes() < IKCP_OVERHEAD) {
+            return -1;
+        }
         if (log.isDebugEnabled()) {
             log.debug("{} [RI] {} bytes", this, data.readableBytes());
         }
 
-        if (data == null || data.readableBytes() < IKCP_OVERHEAD) {
-            return -1;
-        }
 
-        long lastackts=0;
+        long latest =0; // latest packet
+        boolean flag = false;
+        long inSegs = 0;
+
+
         long uintCurrent = long2Uint(current);
 
         while (true) {
@@ -738,26 +740,23 @@ public class Kcp {
             boolean readed = false;
             switch (cmd) {
                 case IKCP_CMD_ACK: {
-                    int rtt = itimediff(uintCurrent, ts);
-                    //if (rtt >= 0) {
-                    //    updateAck(rtt);
-                    //}
                     parseAck(sn);
                     shrinkBuf();
+                    parseFastack(sn,ts);
                     if (!flag) {
                         flag = true;
-                        maxack = sn;
-                        lastackts = ts;
-                    } else if (itimediff(sn, maxack) > 0) {
-                        maxack = sn;
-                        lastackts = ts;
+                        latest= ts;
+                    } else if (itimediff(sn, latest) > 0) {
+                        latest= ts;
                     }
+                    int rtt = itimediff(uintCurrent, ts);
                     if (log.isDebugEnabled()) {
                         log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={}", this, sn, rtt, rxRto,regular);
                     }
                     break;
                 }
                 case IKCP_CMD_PUSH: {
+                    boolean repeat = true;
                     if (itimediff(sn, rcvNxt + rcvWnd) < 0) {
                         ackPush(sn, ts);
                         if (itimediff(sn, rcvNxt) >= 0) {
@@ -774,12 +773,10 @@ public class Kcp {
                             seg.ts = ts;
                             seg.sn = sn;
                             seg.una = una;
-
-                            parseData(seg);
-                        }else{
-                            Snmp.snmp.RepeatSegs.incrementAndGet();
+                            repeat = parseData(seg);
                         }
-                    }else{
+                    }
+                    if (regular && repeat) {
                         Snmp.snmp.RepeatSegs.incrementAndGet();
                     }
                     if (log.isDebugEnabled()) {
@@ -816,8 +813,7 @@ public class Kcp {
         Snmp.snmp.InSegs.addAndGet(inSegs);
 
         if (flag && regular) {
-            parseFastack(maxack);
-            int rtt = itimediff(uintCurrent, lastackts);
+            int rtt = itimediff(uintCurrent, latest);
             if (rtt >= 0) {
                 updateAck(rtt);//收到ack包，根据ack包的时间计算srtt和rto
             }
