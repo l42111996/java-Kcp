@@ -98,9 +98,9 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         channel = (NioDatagramChannel) sync.channel();
         addr = channel.localAddress();
 
-        //remote = new InetSocketAddress("10.60.100.191",10001);
+        remote = new InetSocketAddress("10.60.100.191",10002);
 
-        remote = new InetSocketAddress("127.0.0.1",10001);
+        //remote = new InetSocketAddress("127.0.0.1",10002);
 
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ukcp.write(rttMsg(++count));
