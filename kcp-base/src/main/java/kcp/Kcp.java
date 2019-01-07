@@ -741,7 +741,6 @@ public class Kcp {
             switch (cmd) {
                 case IKCP_CMD_ACK: {
                     parseAck(sn);
-                    shrinkBuf();
                     parseFastack(sn,ts);
                     if (!flag) {
                         flag = true;
