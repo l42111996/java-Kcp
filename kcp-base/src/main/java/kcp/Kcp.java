@@ -742,12 +742,8 @@ public class Kcp {
                 case IKCP_CMD_ACK: {
                     parseAck(sn);
                     parseFastack(sn,ts);
-                    if (!flag) {
-                        flag = true;
-                        latest= ts;
-                    } else if (itimediff(sn, latest) > 0) {
-                        latest= ts;
-                    }
+                    flag = true;
+                    latest= ts;
                     int rtt = itimediff(uintCurrent, ts);
                     if (log.isDebugEnabled()) {
                         log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={}", this, sn, rtt, rxRto,regular);
@@ -819,24 +815,26 @@ public class Kcp {
 
         }
 
-        if (itimediff(sndUna, oldSndUna) > 0) {
-            if (cwnd < rmtWnd) {
-                int mss = this.mss;
-                if (cwnd < ssthresh) {
-                    cwnd++;
-                    incr += mss;
-                } else {
-                    if (incr < mss) {
-                        incr = mss;
-                    }
-                    incr += (mss * mss) / incr + (mss / 16);
-                    if ((cwnd + 1) * mss <= incr) {
+        if(!nocwnd){
+            if (itimediff(sndUna, oldSndUna) > 0) {
+                if (cwnd < rmtWnd) {
+                    int mss = this.mss;
+                    if (cwnd < ssthresh) {
                         cwnd++;
+                        incr += mss;
+                    } else {
+                        if (incr < mss) {
+                            incr = mss;
+                        }
+                        incr += (mss * mss) / incr + (mss / 16);
+                        if ((cwnd + 1) * mss <= incr) {
+                            cwnd++;
+                        }
                     }
-                }
-                if (cwnd > rmtWnd) {
-                    cwnd = rmtWnd;
-                    incr = rmtWnd * mss;
+                    if (cwnd > rmtWnd) {
+                        cwnd = rmtWnd;
+                        incr = rmtWnd * mss;
+                    }
                 }
             }
         }
@@ -867,16 +865,13 @@ public class Kcp {
         //}
 
         //long current = this.current;
-        long uintCurrent = long2Uint(current);
+        //long uintCurrent = long2Uint(current);
 
         Segment seg = Segment.createSegment(byteBufAllocator, 0);
         seg.conv = conv;
         seg.cmd = IKCP_CMD_ACK;
-        seg.frg = 0;
         seg.wnd = wndUnused();//可接收数量
         seg.una = rcvNxt;//已接收数量，下次要接收的包的sn，这sn之前的包都已经收到
-        seg.sn = 0;
-        seg.ts = 0;
 
         ByteBuf buffer = createFlushByteBuf();
 
@@ -914,6 +909,7 @@ public class Kcp {
         // probe window size (if remote window size equals zero)
         //拥堵控制 如果对方可接受窗口大小为0  需要询问对方窗口大小
         if (rmtWnd == 0) {
+            current = System.currentTimeMillis();
             if (probeWait == 0) {
                 probeWait = IKCP_PROBE_INIT;
                 tsProbe = current + probeWait;
@@ -979,15 +975,16 @@ public class Kcp {
             newSeg.conv = conv;
             newSeg.cmd = IKCP_CMD_PUSH;
             newSeg.sn = sndNxt;
+            sndBuf.add(newSeg);
             sndNxt++;
             newSegsCount++;
-            sndBuf.add(newSeg);
         }
 
         // calculate resent
         int resent = fastresend > 0 ? fastresend : Integer.MAX_VALUE;
 
         // flush data segments
+        current=System.currentTimeMillis();
         int change = 0;
         boolean lost = false;
         long lostSegs = 0, fastRetransSegs=0, earlyRetransSegs=0;
@@ -1030,19 +1027,19 @@ public class Kcp {
                             .resendts - current));
                 }
             }
-            //else if(segment.fastack>0 &&newSegsCount==0){  // early retransmit
-            //    needsend = true;
-            //    segment.fastack = 0;
-            //    segment.rto = rxRto;
-            //    segment.resendts = current + segment.rto;
-            //    change++;
-            //    earlyRetransSegs++;
-            //}
+            else if(segment.fastack>0 &&newSegsCount==0){  // early retransmit
+                needsend = true;
+                segment.fastack = 0;
+                segment.rto = rxRto;
+                segment.resendts = current + segment.rto;
+                change++;
+                earlyRetransSegs++;
+            }
 
 
             if (needsend) {
                 segment.xmit++;
-                segment.ts = uintCurrent;
+                segment.ts = long2Uint(current);
                 segment.wnd = seg.wnd;
                 segment.una = rcvNxt;
 
@@ -1100,28 +1097,30 @@ public class Kcp {
             Snmp.snmp.RetransSegs.addAndGet(sum);
         }
         // update ssthresh
-        if (change > 0) {
-            int inflight = (int) (sndNxt - sndUna);
-            ssthresh = inflight / 2;
-            if (ssthresh < IKCP_THRESH_MIN) {
-                ssthresh = IKCP_THRESH_MIN;
+        if (!nocwnd){
+            if (change > 0) {
+                int inflight = (int) (sndNxt - sndUna);
+                ssthresh = inflight / 2;
+                if (ssthresh < IKCP_THRESH_MIN) {
+                    ssthresh = IKCP_THRESH_MIN;
+                }
+                cwnd = ssthresh + resent;
+                incr = cwnd * mss;
             }
-            cwnd = ssthresh + resent;
-            incr = cwnd * mss;
-        }
 
-        if (lost) {
-            ssthresh = cwnd0 / 2;
-            if (ssthresh < IKCP_THRESH_MIN) {
-                ssthresh = IKCP_THRESH_MIN;
+            if (lost) {
+                ssthresh = cwnd0 / 2;
+                if (ssthresh < IKCP_THRESH_MIN) {
+                    ssthresh = IKCP_THRESH_MIN;
+                }
+                cwnd = 1;
+                incr = mss;
             }
-            cwnd = 1;
-            incr = mss;
-        }
 
-        if (cwnd < 1) {
-            cwnd = 1;
-            incr = mss;
+            if (cwnd < 1) {
+                cwnd = 1;
+                incr = mss;
+            }
         }
         return minrto;
     }
