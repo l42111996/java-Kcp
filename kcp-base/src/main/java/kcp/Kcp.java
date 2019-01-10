@@ -165,7 +165,7 @@ public class Kcp {
 
     private ReusableListIterator<Segment> rcvQueueItr = rcvQueue.listIterator();
 
-    private ReusableListIterator<Segment> sndBufItr = sndBuf.listIterator();
+    public ReusableListIterator<Segment> sndBufItr = sndBuf.listIterator();
 
     private ReusableListIterator<Segment> rcvBufItr = rcvBuf.listIterator();
 
@@ -236,7 +236,7 @@ public class Kcp {
         return buf.writerIndex() - offset;
     }
 
-    private static class Segment {
+    public static class Segment {
 
         private final Recycler.Handle<Segment> recyclerHandle;
         /**会话id**/
@@ -307,12 +307,28 @@ public class Kcp {
             return seg;
         }
 
-        static Segment createSegment(ByteBuf buf) {
+        public static Segment createSegment(ByteBuf buf) {
             Segment seg = RECYCLER.get();
             seg.data = buf;
             return seg;
         }
 
+
+        public long getResendts() {
+            return resendts;
+        }
+
+        public void setResendts(long resendts) {
+            this.resendts = resendts;
+        }
+
+        public int getXmit() {
+            return xmit;
+        }
+
+        public void setXmit(int xmit) {
+            this.xmit = xmit;
+        }
     }
 
     public Kcp(int conv, KcpOutput output) {
@@ -1147,24 +1163,24 @@ public class Kcp {
             slap = 0;
         }
 
-        //if (slap >= 0) {
-        //    tsFlush += interval;
-        //    if (itimediff(current, tsFlush) >= 0) {
-        //        tsFlush = current + interval;
-        //    }
-        //    flush(false,current);
-        //}
-
         if (slap >= 0) {
             tsFlush += interval;
             if (itimediff(current, tsFlush) >= 0) {
                 tsFlush = current + interval;
             }
-        } else {
-            tsFlush = current + interval;
+            flush(false,current);
         }
 
-        flush(false,current);
+        //if (slap >= 0) {
+        //    tsFlush += interval;
+        //    if (itimediff(current, tsFlush) >= 0) {
+        //        tsFlush = current + interval;
+        //    }
+        //} else {
+        //    tsFlush = current + interval;
+        //}
+        //
+        //flush(false,current);
     }
 
     /**
