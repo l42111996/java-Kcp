@@ -166,7 +166,7 @@ public class LatencySimulator {
 
     public void test(int mode) throws InterruptedException {
         LatencySimulator vnet = new LatencySimulator();
-        vnet.init(60, 60, 125);
+        vnet.init(10, 10, 125);
         KcpOutput output1 = (buf, kcp) ->{
             vnet.send(0, buf);
             buf.release();
@@ -233,25 +233,30 @@ public class LatencySimulator {
             //处理虚拟网络：检测是否有udp包从p1->p2
             for (;;) {
                 ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer(2000);
-                hr = vnet.recv(1, buffer);
-                if (hr < 0) {
-                    break;
+                try {
+                    hr = vnet.recv(1, buffer);
+                    if (hr < 0) {
+                        break;
+                    }
+                    kcp2.input(buffer,true,System.currentTimeMillis());
+                }finally {
+                    buffer.release();
                 }
-                kcp2.input(buffer,true,System.currentTimeMillis());
-                // 如果 p2收到udp，则作为下层协议输入到kcp2
-                buffer.release();
             }
 
             // 处理虚拟网络：检测是否有udp包从p2->p1
             for (;;){
                 ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer(2000);
-                hr = vnet.recv(0, buffer);
-                if (hr < 0) {
-                    break;
+                try {
+                    hr = vnet.recv(0, buffer);
+                    if (hr < 0) {
+                        break;
+                    }
+                    // 如果 p1收到udp，则作为下层协议输入到kcp1
+                    kcp1.input(buffer, true, System.currentTimeMillis());
+                }finally {
+                    buffer.release();
                 }
-                // 如果 p1收到udp，则作为下层协议输入到kcp1
-                kcp1.input(buffer, true, System.currentTimeMillis());
-                buffer.release();
             }
 
             // kcp2接收到任何包都返回回去
@@ -262,7 +267,7 @@ public class LatencySimulator {
                 //byteBuf.writerIndex(byteBuf.readerIndex());
                 //byteBuf.readerIndex(0);
                 kcp2.send(byteBuf);
-                //byteBuf.release();
+                byteBuf.release();
             }
             bufList.recycle();
 
@@ -290,6 +295,7 @@ public class LatencySimulator {
                 if (rtt > maxrtt) {
                     maxrtt = (int) rtt;
                 }
+                byteBuf.release();
 
             }
             bufList.recycle();
