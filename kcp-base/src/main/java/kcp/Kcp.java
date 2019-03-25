@@ -101,7 +101,7 @@ public class Kcp {
     private int conv;
     /**最大传输单元**/
     private int mtu = IKCP_MTU_DEF;
-
+    /**最大分节大小  mtu减去头等部分**/
     private int mss = this.mtu - IKCP_OVERHEAD;
     /**状态**/
     private int state;
@@ -180,6 +180,9 @@ public class Kcp {
     private boolean nocwnd;
     /**是否流传输**/
     private boolean stream;
+
+    /**头部预留长度  为fec checksum准备**/
+    private int reserved;
 
     private KcpOutput output;
 
@@ -414,6 +417,19 @@ public class Kcp {
         return len;
     }
 
+
+    // ReserveBytes keeps n bytes untouched from the beginning of the buffer
+    // the output_callback function should be aware of this
+    // return false if n >= mss
+    public boolean reserveBytes(int n){
+        if (n >= mtu-IKCP_OVERHEAD || n < 0) {
+            return false;
+        }
+        reserved=n;
+        mss = mtu-IKCP_OVERHEAD-n;
+        return true;
+    }
+
     /**
      * check the size of next message in the recv queue
      * 检查接收队列里面是否有完整的一个包，如果有返回该包的字节长度
@@ -501,7 +517,7 @@ public class Kcp {
             }
         }
 
-        int count = 0;
+        int count;
         if (len <= mss) {
             count = 1;
         } else {
@@ -870,6 +886,27 @@ public class Kcp {
         return 0;
     }
 
+
+    private ByteBuf makeSpace(ByteBuf buffer ,int space){
+        if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
+            output(buffer, this);
+            buffer = createFlushByteBuf();
+            buffer.writerIndex(reserved);
+        }
+        return buffer;
+    }
+
+    private void flushBuffer(ByteBuf buffer){
+        if (buffer.readableBytes() > reserved) {
+            output(buffer, this);
+            return;
+        }
+        buffer.release();
+
+    }
+
+
+
     /**
      * ikcp_flush
      */
@@ -890,21 +927,21 @@ public class Kcp {
         seg.una = rcvNxt;//已接收数量，下次要接收的包的sn，这sn之前的包都已经收到
 
         ByteBuf buffer = createFlushByteBuf();
+        buffer.writerIndex(reserved);
 
-
-        boolean hasAck =false;
         // flush acknowledges有收到的包需要确认，则发确认包
         int count = ackcount;
         for (int i = 0; i < count; i++) {
-            if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
-                output(buffer, this);
-                buffer = createFlushByteBuf();
-                hasAck = false;
-            }
+
+            buffer =  makeSpace(buffer,IKCP_OVERHEAD);
+            //if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
+            //    output(buffer, this);
+            //    buffer = createFlushByteBuf();
+            //    hasAck = false;
+            //}
             long sn =  acklist[i * 2];
 
             if (sn >= rcvNxt || count-1 == i) {
-                hasAck = true;
                 seg.sn = acklist[i * 2];
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
@@ -917,8 +954,8 @@ public class Kcp {
         ackcount = 0;
 
 
-        if(ackOnly&&hasAck){
-            output(buffer, this);
+        if(ackOnly){
+            flushBuffer(buffer);
             return interval;
         }
 
@@ -950,10 +987,7 @@ public class Kcp {
         // flush window probing commands
         if ((probe & IKCP_ASK_SEND) != 0) {
             seg.cmd = IKCP_CMD_WASK;
-            if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
-                output(buffer, this);
-                buffer = createFlushByteBuf();
-            }
+            buffer = makeSpace(buffer,IKCP_OVERHEAD);
             encodeSeg(buffer, seg);
             if (log.isDebugEnabled()) {
                 log.debug("{} flush ask", this);
@@ -963,10 +997,7 @@ public class Kcp {
         // flush window probing commands
         if ((probe & IKCP_ASK_TELL) != 0) {
             seg.cmd = IKCP_CMD_WINS;
-            if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
-                output(buffer, this);
-                buffer = createFlushByteBuf();
-            }
+            buffer = makeSpace(buffer,IKCP_OVERHEAD);
             encodeSeg(buffer, seg);
             if (log.isDebugEnabled()) {
                 log.debug("{} flush tell: wnd={}", this, seg.wnd);
@@ -1062,11 +1093,12 @@ public class Kcp {
                 ByteBuf segData = segment.data;
                 int segLen = segData.readableBytes();
                 int need = IKCP_OVERHEAD + segLen;
+                buffer = makeSpace(buffer,need);
 
-                if (buffer.readableBytes() + need > mtu) {
-                    output(buffer, this);
-                    buffer = createFlushByteBuf();
-                }
+                //if (buffer.readableBytes() + need > mtu) {
+                //    output(buffer, this);
+                //    buffer = createFlushByteBuf();
+                //}
 
                 encodeSeg(buffer, segment);
 
@@ -1088,14 +1120,8 @@ public class Kcp {
         }
 
         // flash remain segments
-        if (buffer.readableBytes() > 0) {
-            output(buffer, this);
-        } else {
-            buffer.release();
-        }
-
+        flushBuffer(buffer);
         seg.recycle(true);
-
 
         long sum = lostSegs;
         if (lostSegs > 0) {
@@ -1256,9 +1282,12 @@ public class Kcp {
         if (mtu < IKCP_OVERHEAD || mtu < 50) {
             return -1;
         }
+        if (reserved >= mtu-IKCP_OVERHEAD || reserved < 0) {
+            return -1;
+        }
 
         this.mtu = mtu;
-        this.mss = mtu - IKCP_OVERHEAD;
+        this.mss = mtu - IKCP_OVERHEAD-reserved;
         return 0;
     }
 
@@ -1374,6 +1403,10 @@ public class Kcp {
 
     public void setRcvWnd(int rcvWnd) {
         this.rcvWnd = rcvWnd;
+    }
+
+    public void setReserved(int reserved) {
+        this.reserved = reserved;
     }
 
     public int getSndWnd() {

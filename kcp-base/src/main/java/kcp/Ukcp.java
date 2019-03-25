@@ -83,6 +83,7 @@ public class Ukcp{
             fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon);
             kcpOutput = new FecOutPut(kcpOutput, fecEncode);
             kcp.setOutput(kcpOutput);
+            kcp.setReserved(Fec.fecHeaderSizePlus2);
         }
     }
 
@@ -400,6 +401,11 @@ public class Ukcp{
 
     public Ukcp setRcvWnd(int rcvWnd) {
         kcp.setRcvWnd(rcvWnd);
+        return this;
+    }
+
+    public Ukcp setReserved(int reserved){
+        kcp.setRcvWnd(reserved);
         return this;
     }
 

@@ -54,6 +54,7 @@ public class SendTask implements ITask {
                 try {
                     hasSend = true;
                     this.kcp.send(byteBuf);
+                    byteBuf.release();
                 } catch (IOException e) {
                     kcp.getKcpListener().handleException(e,kcp);
                     return;
@@ -64,6 +65,8 @@ public class SendTask implements ITask {
                 if(kcp.canSend(false)){
                     long now =System.currentTimeMillis();
                     long next = kcp.flush(now);
+                    //System.out.println(next);
+                    //System.out.println("耗时"+(System.currentTimeMillis()-now));
                     kcp.setTsUpdate(now+next);
                 }
             }

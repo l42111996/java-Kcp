@@ -1,10 +1,8 @@
 package kcp;
 
-import com.backblaze.erasure.fec.Fec;
 import com.backblaze.erasure.fec.FecEncode;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 
 /**
  * Created by JinMiao
@@ -25,13 +23,14 @@ public class FecOutPut implements  KcpOutput{
 
     @Override
     public void out(ByteBuf msg, Kcp kcp) {
-        ByteBuf byteBuf = byteBufAllocator.ioBuffer(Fec.fecHeaderSizePlus2);
-        byteBuf.writerIndex(Fec.fecHeaderSizePlus2);
-        ByteBuf newByteBuf = Unpooled.wrappedBuffer(byteBuf,msg);
-        newByteBuf.writerIndex(Fec.fecHeaderSizePlus2+msg.writerIndex());
-        ByteBuf[] byteBufs = fecEncode.encode(newByteBuf);
+        //ByteBuf byteBuf = byteBufAllocator.ioBuffer(Fec.fecHeaderSizePlus2);
+        //byteBuf.writerIndex(Fec.fecHeaderSizePlus2);
+        //ByteBuf newByteBuf = Unpooled.wrappedBuffer(byteBuf,msg);
+        //newByteBuf.writerIndex(Fec.fecHeaderSizePlus2+msg.writerIndex());
+
+        ByteBuf[] byteBufs = fecEncode.encode(msg);
         //out之后会自动释放你内存
-        output.out(newByteBuf,kcp);
+        output.out(msg,kcp);
         if(byteBufs==null)
             return;
         for (int i = 0; i < byteBufs.length; i++) {
