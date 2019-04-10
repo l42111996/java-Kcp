@@ -1,7 +1,5 @@
 # java-Kcp
 
-Java implementation of KCP based on Netty(include  fec implement)
-
 [![Powered][2]][1]
 
 基于netty版本实现的kcp(包含fec功能的实现)
