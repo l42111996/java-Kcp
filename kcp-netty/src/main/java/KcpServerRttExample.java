@@ -19,16 +19,16 @@ public class KcpServerRttExample implements KcpListener {
 
     public void init(){
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(0);
+        channelConfig.setFastresend(2);
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
-        channelConfig.setMtu(300);
+        channelConfig.setMtu(1400);
         channelConfig.setFecDataShardCount(10);
         channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
-        KcpServer abstractKcpServer = new KcpServer(2,this,channelConfig,10001);
+        KcpServer abstractKcpServer = new KcpServer(2,this,channelConfig,10002);
     }
 
     @Override

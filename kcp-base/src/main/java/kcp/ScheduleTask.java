@@ -60,8 +60,10 @@ public class ScheduleTask implements ITask,Runnable {
                 DisruptorExecutorPool.schedule(this, timeLeft);
                 return;
             }
+            //long start = System.currentTimeMillis();
             long next = ukcp.flush(now);
             //System.err.println(next);
+            //System.out.println("耗时  "+(System.currentTimeMillis()-start));
             DisruptorExecutorPool.schedule(this, next);
             //检测写缓冲区 如果能写则触发写事件
             if(ukcp.canSend(false)){
