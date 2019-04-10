@@ -39,7 +39,8 @@
 2. https://github.com/xtaci/kcp-go go版本kcp,有大量优化
 3. https://github.com/Backblaze/JavaReedSolomon java版本fec
 4. https://github.com/LMAX-Exchange/disruptor 高性能的线程间消息传递库
-5. https://github.com/szhnet/kcp-netty java版本的一个kcp
+5. https://github.com/JCTools/JCTools 高性能并发库
+6. https://github.com/szhnet/kcp-netty java版本的一个kcp
    
    
 #交流
