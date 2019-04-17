@@ -2,7 +2,6 @@ package kcp;
 
 import com.backblaze.erasure.fec.FecEncode;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 
 /**
  * Created by JinMiao
@@ -14,7 +13,6 @@ public class FecOutPut implements  KcpOutput{
 
     private FecEncode fecEncode;
 
-    private ByteBufAllocator byteBufAllocator = ByteBufAllocator.DEFAULT;
 
     protected FecOutPut(KcpOutput output, FecEncode fecEncode) {
         this.output = output;
@@ -23,11 +21,6 @@ public class FecOutPut implements  KcpOutput{
 
     @Override
     public void out(ByteBuf msg, Kcp kcp) {
-        //ByteBuf byteBuf = byteBufAllocator.ioBuffer(Fec.fecHeaderSizePlus2);
-        //byteBuf.writerIndex(Fec.fecHeaderSizePlus2);
-        //ByteBuf newByteBuf = Unpooled.wrappedBuffer(byteBuf,msg);
-        //newByteBuf.writerIndex(Fec.fecHeaderSizePlus2+msg.writerIndex());
-
         ByteBuf[] byteBufs = fecEncode.encode(msg);
         //out之后会自动释放你内存
         output.out(msg,kcp);
