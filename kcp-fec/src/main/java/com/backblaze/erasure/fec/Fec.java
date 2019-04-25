@@ -10,6 +10,6 @@ public class Fec {
             fecHeaderSize      = 6,
             fecHeaderSizePlus2 = fecHeaderSize + 2, // plus 2B data size
             typeData           = 0xf1,
-            typeFEC            = 0xf2;
+            typeParity = 0xf2;
 
 }

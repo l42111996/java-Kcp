@@ -70,7 +70,7 @@ public class FecDecode {
      * @return
      */
     public List<ByteBuf> decode(FecPacket pkt){
-        if(pkt.getFlag()==Fec.typeFEC){
+        if(pkt.getFlag()==Fec.typeParity){
             Snmp.snmp.FECParityShards.incrementAndGet();
         }else{
             Snmp.snmp.FECDataShards.incrementAndGet();

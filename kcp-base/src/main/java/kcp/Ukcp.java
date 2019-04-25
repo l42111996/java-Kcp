@@ -108,7 +108,7 @@ public class Ukcp{
                 input(data, true,current);
                 data.release();
             }
-            if (fecPacket.getFlag() == Fec.typeData || fecPacket.getFlag() == Fec.typeFEC) {
+            if (fecPacket.getFlag() == Fec.typeData || fecPacket.getFlag() == Fec.typeParity) {
                 List<ByteBuf> byteBufs = fecDecode.decode(fecPacket);
                 if (byteBufs != null) {
                     for (ByteBuf byteBuf : byteBufs) {

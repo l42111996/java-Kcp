@@ -98,7 +98,7 @@ public class FecEncode {
             ByteBuf parityByte = ByteBufAllocator.DEFAULT.buffer(this.maxSize);
             shardCache[i+dataShards]  = parityByte;
             encodeCache[i] = parityByte;
-            markFEC(parityByte,headerOffset);
+            markParity(parityByte,headerOffset);
             parityByte.writerIndex(Fec.fecHeaderSize);
         }
 
@@ -230,9 +230,9 @@ public class FecEncode {
         this.next++;
     }
 
-    public void markFEC(ByteBuf byteBuf,int offset){
+    public void markParity(ByteBuf byteBuf, int offset){
         byteBuf.setInt(offset, this.next);
-        byteBuf.setShort(offset+4,Fec.typeFEC);
+        byteBuf.setShort(offset+4,Fec.typeParity);
         this.next = (this.next + 1) % this.paws;
     }
 }
