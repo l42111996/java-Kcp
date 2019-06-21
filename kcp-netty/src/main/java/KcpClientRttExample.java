@@ -43,7 +43,12 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         disruptorSingleExecutor.start();
         nioEventLoopGroup = new NioEventLoopGroup(1);
         EventLoop eventExecutors  = nioEventLoopGroup.next();
-        ukcp = new Ukcp(10,this,this,disruptorSingleExecutor,eventExecutors);
+
+
+        ReedSolomon reedSolomon = ReedSolomon.create(10,3);
+
+
+        ukcp = new Ukcp(10,this,this,disruptorSingleExecutor,eventExecutors,true,reedSolomon);
         ukcp.setMtu(1400);
         ukcp.setNocwnd(true);
         ukcp.setNodelay(true);
@@ -51,10 +56,8 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         ukcp.setSndWnd(512);
         ukcp.setInterval(40);
         ukcp.setFastResend(2);
+        //ukcp.setCloseTime(5000);
         //ukcp.setAckNoDelay(true);
-
-        ReedSolomon reedSolomon = ReedSolomon.create(10,3);
-        ukcp.initFec(reedSolomon);
 
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
@@ -101,7 +104,7 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
 
         //remote = new InetSocketAddress("10.60.100.191",10002);
 
-        remote = new InetSocketAddress("127.0.0.1",10002);
+        remote = new InetSocketAddress("127.0.0.1",10003);
 
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ukcp.write(rttMsg(++count));

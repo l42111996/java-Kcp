@@ -56,7 +56,13 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
             //System.out.println("新连接"+Thread.currentThread().getName());
             IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
             KcpOutput kcpOutput = new KcpOutPutImp();
-            Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,ctx.executor());
+
+            ReedSolomon reedSolomon = null;
+            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+                reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
+            }
+
+            Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,ctx.executor(),channelConfig.isCrc32Check(),reedSolomon);
 
             newUkcp.setNodelay(channelConfig.isNodelay());
             newUkcp.setInterval(channelConfig.getInterval());
@@ -71,10 +77,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
             newUkcp.setAckNoDelay(channelConfig.isAckNoDelay());
             newUkcp.setFastFlush(channelConfig.isFastFlush());
             newUkcp.user(user);
-            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
-                ReedSolomon reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
-                newUkcp.initFec(reedSolomon);
-            }
+
             disruptorSingleExecutor.execute(() -> newUkcp.getKcpListener().onConnected(newUkcp));
             clientMap.put(socketAddress,newUkcp);
             newUkcp.read(msg.content());

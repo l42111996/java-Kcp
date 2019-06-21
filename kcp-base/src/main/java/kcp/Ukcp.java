@@ -12,8 +12,10 @@ import org.jctools.queues.SpscLinkedQueue;
 import threadPool.thread.IMessageExecutor;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Queue;
+import java.util.zip.CRC32;
 
 /**
  * Wrapper for kcp
@@ -23,6 +25,8 @@ import java.util.Queue;
 public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
+
+    public static final int HEADER_CRC=4,HEADER_NONCESIZE= 16;
 
     private Kcp kcp;
 
@@ -45,6 +49,8 @@ public class Ukcp{
 
     private EventExecutor eventExecutors;
 
+    private boolean crc32Check = false;
+
     /**
      * 上次收到消息时间
      **/
@@ -55,6 +61,8 @@ public class Ukcp{
      **/
     private long closeTime = 0;
 
+    private CRC32 crc32 = new CRC32();
+
 
     /**
      * Creates a new instance.
@@ -62,7 +70,7 @@ public class Ukcp{
      * @param conv   conv of kcp
      * @param output output for kcp
      */
-    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, EventExecutor eventExecutors) {
+    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, EventExecutor eventExecutors,boolean crc32Check,ReedSolomon reedSolomon) {
         Kcp kcp = new Kcp(conv, output);
         this.kcp = kcp;
         this.active = true;
@@ -72,20 +80,33 @@ public class Ukcp{
         sendList = new MpscArrayQueue<>(2 << 16);
         recieveList = new SpscLinkedQueue<>();
         this.eventExecutors = eventExecutors;
-    }
+
+        int headerSize = 0;
+        //init encryption
 
 
-    public void initFec(ReedSolomon reedSolomon) {
+        //init crc32
+        if(crc32Check){
+            this.crc32Check = true;
+            KcpOutput kcpOutput = kcp.getOutput();
+            kcpOutput = new Crc32OutPut(kcpOutput,headerSize);
+            kcp.setOutput(kcpOutput);
+            headerSize+=HEADER_CRC;
+        }
+
         //init fec
         if (reedSolomon != null) {
             KcpOutput kcpOutput = kcp.getOutput();
-            fecEncode = new FecEncode(0, reedSolomon);
+            fecEncode = new FecEncode(headerSize, reedSolomon);
             fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon);
             kcpOutput = new FecOutPut(kcpOutput, fecEncode);
             kcp.setOutput(kcpOutput);
-            kcp.setReserved(Fec.fecHeaderSizePlus2);
+            headerSize+= Fec.fecHeaderSizePlus2;
         }
+
+        kcp.setReserved(headerSize);
     }
+
 
     /**
      * Receives ByteBufs.
@@ -101,6 +122,16 @@ public class Ukcp{
         Snmp.snmp.InPkts.incrementAndGet();
         Snmp.snmp.InBytes.addAndGet(data.readableBytes());
 
+        if(crc32Check){
+            long checksum =  data.readUnsignedInt();
+            ByteBuffer byteBuffer = data.nioBuffer(data.readerIndex(),data.readableBytes());
+            crc32.reset();
+            crc32.update(byteBuffer);
+            if(checksum!=crc32.getValue()){
+                Snmp.snmp.getInCsumErrors().incrementAndGet();
+                return;
+            }
+        }
         if (fecDecode != null) {
             FecPacket fecPacket = FecPacket.newFecPacket(data);
             if (fecPacket.getFlag() == Fec.typeData) {
@@ -534,6 +565,7 @@ public class Ukcp{
             this.fecDecode.release();
         }
     }
+
 
     public long getCloseTime() {
         return closeTime;

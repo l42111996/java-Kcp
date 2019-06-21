@@ -13,6 +13,7 @@ public class ChannelConfig {
     private int rcvwnd = Kcp.IKCP_WND_RCV;
     private int mtu = Kcp.IKCP_MTU_DEF;
     private int minRto = Kcp.IKCP_RTO_MIN;
+    //TODO 有bug待修复
     private long timeout;
     //TODO 有bug还未测试
     private boolean stream;
@@ -22,13 +23,15 @@ public class ChannelConfig {
     private int fecParityShardCount;
 
     private boolean ackNoDelay = false;
+
     private boolean fastFlush = true;
+    //crc32校验
+    private boolean crc32Check = false;
 
 
     public boolean isNodelay() {
         return nodelay;
     }
-
 
 
     public void setNodelay(boolean nodelay) {
@@ -138,5 +141,13 @@ public class ChannelConfig {
 
     public void setFastFlush(boolean fastFlush) {
         this.fastFlush = fastFlush;
+    }
+
+    public boolean isCrc32Check() {
+        return crc32Check;
+    }
+
+    public void setCrc32Check(boolean crc32Check) {
+        this.crc32Check = crc32Check;
     }
 }

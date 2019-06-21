@@ -1409,6 +1409,10 @@ public class Kcp {
         this.reserved = reserved;
     }
 
+    public int getReserved() {
+        return reserved;
+    }
+
     public int getSndWnd() {
         return sndWnd;
     }
