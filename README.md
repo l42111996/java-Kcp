@@ -11,7 +11,7 @@
 
 # 兼容性:
 1. 兼容c版本kcp
-2. fec基于https://github.com/Backblaze/JavaReedSolomon实现
+2. fec基于 https://github.com/Backblaze/JavaReedSolomon 实现
 
 
 # 性能优化:
