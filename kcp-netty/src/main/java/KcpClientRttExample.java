@@ -56,7 +56,7 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         ukcp.setSndWnd(512);
         ukcp.setInterval(40);
         ukcp.setFastResend(2);
-        //ukcp.setCloseTime(5000);
+        ukcp.setTimeoutMillis(5000);
         //ukcp.setAckNoDelay(true);
 
         Bootstrap bootstrap = new Bootstrap();
@@ -182,7 +182,7 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
                     }
                     System.out.println("average: "+ (sum / rtts.length));
                     System.out.println(Snmp.snmp.toString());
-                    ukcp.setCloseTime(System.currentTimeMillis());
+                    ukcp.setTimeoutMillis(System.currentTimeMillis());
                     System.exit(0);
                 }
             }, 3, TimeUnit.SECONDS);

@@ -13,8 +13,8 @@ public class ChannelConfig {
     private int rcvwnd = Kcp.IKCP_WND_RCV;
     private int mtu = Kcp.IKCP_MTU_DEF;
     private int minRto = Kcp.IKCP_RTO_MIN;
-    //TODO 有bug待修复
-    private long timeout;
+    //超时时间 超过一段时间没收到消息断开连接
+    private long timeoutMillis;
     //TODO 有bug还未测试
     private boolean stream;
 
@@ -95,12 +95,12 @@ public class ChannelConfig {
         this.minRto = minRto;
     }
 
-    public long getTimeout() {
-        return timeout;
+    public long getTimeoutMillis() {
+        return timeoutMillis;
     }
 
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
+    public void setTimeoutMillis(long timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
     }
 
     public boolean isStream() {

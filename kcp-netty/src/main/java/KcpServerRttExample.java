@@ -29,7 +29,7 @@ public class KcpServerRttExample implements KcpListener {
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
-        //channelConfig.setTimeout(10000);
+        channelConfig.setTimeoutMillis(10000);
         KcpServer abstractKcpServer = new KcpServer(2,this,channelConfig,10003);
     }
 

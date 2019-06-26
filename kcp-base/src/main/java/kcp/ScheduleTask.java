@@ -43,7 +43,7 @@ public class ScheduleTask implements ITask,Runnable {
         try {
             long now = System.currentTimeMillis();
             //判断连接是否关闭
-            if (ukcp.getCloseTime() != 0 && now + ukcp.getCloseTime() > ukcp.getLastRecieveTime()) {
+            if (ukcp.getTimeoutMillis() != 0 && now - ukcp.getTimeoutMillis() > ukcp.getLastRecieveTime()) {
                     ukcp.close();
             }
             if(!ukcp.isActive()){

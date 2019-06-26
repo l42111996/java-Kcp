@@ -37,7 +37,6 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         Ukcp ukcp = clientMap.get(socketAddress);
         if(ukcp==null){
@@ -72,7 +71,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
             newUkcp.setRcvWnd(channelConfig.getRcvwnd());
             newUkcp.setMtu(channelConfig.getMtu());
             newUkcp.setMinRto(channelConfig.getMinRto());
-            newUkcp.setCloseTime(channelConfig.getTimeout());
+            newUkcp.setTimeoutMillis(channelConfig.getTimeoutMillis());
             newUkcp.setStream(channelConfig.isStream());
             newUkcp.setAckNoDelay(channelConfig.isAckNoDelay());
             newUkcp.setFastFlush(channelConfig.isFastFlush());

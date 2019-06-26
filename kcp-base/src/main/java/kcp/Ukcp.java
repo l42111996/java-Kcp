@@ -59,7 +59,7 @@ public class Ukcp{
     /**
      * 超时关闭时间
      **/
-    private long closeTime = 0;
+    private long timeoutMillis = 0;
 
     private CRC32 crc32 = new CRC32();
 
@@ -567,12 +567,12 @@ public class Ukcp{
     }
 
 
-    public long getCloseTime() {
-        return closeTime;
+    public long getTimeoutMillis() {
+        return timeoutMillis;
     }
 
-    public void setCloseTime(long closeTime) {
-        this.closeTime = closeTime;
+    public void setTimeoutMillis(long timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
     }
 
     @SuppressWarnings("unchecked")
