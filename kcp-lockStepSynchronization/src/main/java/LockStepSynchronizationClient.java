@@ -1,5 +1,3 @@
-package lockStepSynchronizationTest;
-
 /**
  * Created by JinMiao
  * 2019-06-25.

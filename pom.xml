@@ -12,6 +12,7 @@
         <module>kcp-base</module>
         <module>kcp-netty</module>
         <module>kcp-fec</module>
+        <module>kcp-lockStepSynchronization</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

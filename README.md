@@ -14,18 +14,20 @@
 2. fec基于 https://github.com/Backblaze/JavaReedSolomon 实现
 
 
-# 性能优化:
+# 优化:
 1. 基于disruptor事件驱动,充分利用多核
 2. 优化fastack逻辑，降低10%流量
 3. 优化check函数。
 4. 优化集合迭代器。
 5. 包含fec,降低延迟
+6. 附带crc32校验
     
     
 # 使用方法以及参数
 1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpServerRttExample.java)
-2. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
-3. [大量资料](https://github.com/skywind3000/kcp)
+2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpClientRttExample.java)
+3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
+4. [大量资料](https://github.com/skywind3000/kcp)
 
 
 # 关于 fec(向前纠错技术)
