@@ -18,24 +18,24 @@ public interface KcpListener {
     /**
      * kcp message
      *
-     * @param bb the data
-     * @param kcp
+     * @param byteBuf the data
+     * @param ukcp
      */
-    void handleReceive(ByteBuf bb, Ukcp kcp);
+    void handleReceive(ByteBuf byteBuf, Ukcp ukcp);
 
     /**
      *
      * kcp异常，之后此kcp就会被关闭
      *
      * @param ex 异常
-     * @param kcp 发生异常的kcp，null表示非kcp错误
+     * @param ukcp 发生异常的kcp，null表示非kcp错误
      */
-    void handleException(Throwable ex, Ukcp kcp);
+    void handleException(Throwable ex, Ukcp ukcp);
 
     /**
      * 关闭
      *
-     * @param kcp
+     * @param ukcp
      */
-    void handleClose(Ukcp kcp);
+    void handleClose(Ukcp ukcp);
 }

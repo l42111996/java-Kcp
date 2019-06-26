@@ -4,7 +4,6 @@ import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscArrayQueue;
@@ -47,8 +46,6 @@ public class Ukcp{
 
     private KcpListener kcpListener;
 
-    private EventExecutor eventExecutors;
-
     private boolean crc32Check = false;
 
     /**
@@ -70,7 +67,7 @@ public class Ukcp{
      * @param conv   conv of kcp
      * @param output output for kcp
      */
-    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, EventExecutor eventExecutors,boolean crc32Check,ReedSolomon reedSolomon) {
+    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, boolean crc32Check,ReedSolomon reedSolomon) {
         Kcp kcp = new Kcp(conv, output);
         this.kcp = kcp;
         this.active = true;
@@ -79,7 +76,6 @@ public class Ukcp{
         //默认2<<16   可以修改
         sendList = new MpscArrayQueue<>(2 << 16);
         recieveList = new SpscLinkedQueue<>();
-        this.eventExecutors = eventExecutors;
 
         int headerSize = 0;
         //init encryption

@@ -1,140 +1,22 @@
-import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.Snmp;
-import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramPacket;
-import io.netty.channel.socket.nio.NioDatagramChannel;
-import kcp.*;
-import threadPool.thread.DisruptorExecutorPool;
-import threadPool.thread.DisruptorSingleExecutor;
+import kcp.ChannelConfig;
+import kcp.KcpClient;
+import kcp.KcpListener;
+import kcp.Ukcp;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 客户端版本
- * 仅仅为了测试  暂时没有进行封装
- * 如果有需要可以联系我
  * Created by JinMiao
- * 2018/9/10.
+ * 2019-06-26.
  */
-public class KcpClientRttExample implements KcpOutput, KcpListener {
-
-    private Ukcp ukcp;
-
-    private NioEventLoopGroup nioEventLoopGroup;
-
-    private NioDatagramChannel channel;
-
-    private InetSocketAddress addr;
-
-    private InetSocketAddress remote;
-
-
-    public static void main(String[] args) {
-        new KcpClientRttExample().init();
-    }
-
-    public void init(){
-        DisruptorSingleExecutor disruptorSingleExecutor = new DisruptorSingleExecutor("Disruptor");
-        disruptorSingleExecutor.start();
-        nioEventLoopGroup = new NioEventLoopGroup(1);
-        EventLoop eventExecutors  = nioEventLoopGroup.next();
-
-
-        ReedSolomon reedSolomon = ReedSolomon.create(10,3);
-
-
-        ukcp = new Ukcp(10,this,this,disruptorSingleExecutor,eventExecutors,true,reedSolomon);
-        ukcp.setMtu(1400);
-        ukcp.setNocwnd(true);
-        ukcp.setNodelay(true);
-        ukcp.setRcvWnd(512);
-        ukcp.setSndWnd(512);
-        ukcp.setInterval(40);
-        ukcp.setFastResend(2);
-        ukcp.setTimeoutMillis(5000);
-        //ukcp.setAckNoDelay(true);
-
-        Bootstrap bootstrap = new Bootstrap();
-        bootstrap.channel(NioDatagramChannel.class);
-        bootstrap.group(nioEventLoopGroup);
-        bootstrap.handler(new ChannelInitializer<NioDatagramChannel>()
-        {
-            @Override
-            protected void initChannel(NioDatagramChannel ch) throws Exception
-            {
-                ChannelPipeline cp = ch.pipeline();
-                cp.addLast(new ChannelInboundHandlerAdapter()
-                {
-                    boolean connected = false;
-                    @Override
-                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception
-                    {
-                        if(!connected){
-                            connected = true;
-                            ukcp.getKcpListener().onConnected(ukcp);
-                        }
-                        DatagramPacket dp = (DatagramPacket) msg;
-                        ukcp.read(dp.content());
-                    }
-
-                    @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception
-                    {
-                        ukcp.getKcpListener().handleException(cause,ukcp);
-                        cause.printStackTrace();
-                    }
-                });
-                cp.addLast(new ChannelInboundHandlerAdapter(){
-                    @Override
-                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                        System.out.println("fire read "+Thread.currentThread().getName());
-
-                    }
-                });
-            }
-        });
-        ChannelFuture sync = bootstrap.bind(30000).syncUninterruptibly();
-        channel = (NioDatagramChannel) sync.channel();
-        addr = channel.localAddress();
-
-        //remote = new InetSocketAddress("10.60.100.191",10002);
-
-        remote = new InetSocketAddress("127.0.0.1",10003);
-
-        future = scheduleSrv.scheduleWithFixedDelay(() -> {
-            ukcp.write(rttMsg(++count));
-            if (count >= rtts.length) {
-                // finish
-                future.cancel(true);
-                ukcp.write(rttMsg(-1));
-
-            }
-        }, 20, 20, TimeUnit.MILLISECONDS);
-
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,ukcp,new ConcurrentHashMap<>());
-        DisruptorExecutorPool.schedule(scheduleTask, ukcp.getInterval());
-
-
-        Runtime.getRuntime().addShutdownHook(
-                new Thread(() ->
-                        nioEventLoopGroup.shutdownGracefully()));
-
-    }
-
-
-    @Override
-    public void out(ByteBuf data, Kcp kcp) {
-        Snmp.snmp.OutPkts.incrementAndGet();
-        Snmp.snmp.OutBytes.addAndGet(data.writerIndex());
-        DatagramPacket temp = new DatagramPacket(data, remote, this.addr);
-        this.channel.writeAndFlush(temp);
-    }
-
+public class KcpClientRttExample implements KcpListener {
 
     private final ByteBuf data;
 
@@ -147,7 +29,6 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
     private ScheduledFuture<?> future = null;
 
     private final long startTime ;
-
 
     public KcpClientRttExample() {
         data = Unpooled.buffer(200);
@@ -163,14 +44,43 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         scheduleSrv = Executors.newSingleThreadScheduledExecutor();
     }
 
-    @Override
-    public void onConnected(Ukcp ukcp) {
+    public static void main(String[] args) {
+        KcpClient kcpClient = new KcpClient();
+        kcpClient.init(38888);
 
+        ChannelConfig channelConfig = new ChannelConfig();
+        channelConfig.setFastresend(2);
+        channelConfig.setSndwnd(512);
+        channelConfig.setRcvwnd(512);
+        channelConfig.setMtu(1400);
+        channelConfig.setFecDataShardCount(10);
+        channelConfig.setFecParityShardCount(3);
+        channelConfig.setAckNoDelay(false);
+        channelConfig.setInterval(40);
+        channelConfig.setNocwnd(true);
+        channelConfig.setCrc32Check(true);
+        channelConfig.setTimeoutMillis(10000);
+
+        KcpClientRttExample kcpClientRttExample = new KcpClientRttExample();
+        kcpClient.connect(new InetSocketAddress("127.0.0.1",10003),channelConfig,kcpClientRttExample);
     }
 
     @Override
-    public void handleReceive(ByteBuf buf, Ukcp kcp) {
-        int curCount = buf.readShort();
+    public void onConnected(Ukcp ukcp) {
+        future = scheduleSrv.scheduleWithFixedDelay(() -> {
+            ukcp.write(rttMsg(++count));
+            if (count >= rtts.length) {
+                // finish
+                future.cancel(true);
+                ukcp.write(rttMsg(-1));
+
+            }
+        }, 20, 20, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
+        int curCount = byteBuf.readShort();
 
         if (curCount == -1) {
             scheduleSrv.schedule(new Runnable() {
@@ -188,7 +98,7 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
             }, 3, TimeUnit.SECONDS);
         } else {
             int idx = curCount - 1;
-            long time = buf.readInt();
+            long time = byteBuf.readInt();
             if (rtts[idx] != -1) {
                 System.out.println("???");
             }
@@ -196,11 +106,11 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
             rtts[idx] = (int) (System.currentTimeMillis() - startTime - time);
             System.out.println("rtt : "+ curCount+"  "+ rtts[idx]);
         }
-        //buf.release();
     }
 
     @Override
-    public void handleException(Throwable ex, Ukcp kcp) {
+    public void handleException(Throwable ex, Ukcp kcp)
+    {
         ex.printStackTrace();
     }
 
@@ -220,7 +130,6 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
         System.out.println("average: "+ (sum / rtts.length));
         System.out.println(Snmp.snmp.toString());
     }
-
 
 
     /**
@@ -243,4 +152,5 @@ public class KcpClientRttExample implements KcpOutput, KcpListener {
 
         return buf;
     }
+
 }

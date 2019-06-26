@@ -61,7 +61,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<DatagramPa
                 reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
             }
 
-            Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,ctx.executor(),channelConfig.isCrc32Check(),reedSolomon);
+            Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,channelConfig.isCrc32Check(),reedSolomon);
 
             newUkcp.setNodelay(channelConfig.isNodelay());
             newUkcp.setInterval(channelConfig.getInterval());

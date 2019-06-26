@@ -24,16 +24,23 @@ public class KcpServer {
     private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
     private Map<SocketAddress,Ukcp> clientMap = new ConcurrentHashMap<>();
 
-    public KcpServer(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int...ports) {
+
+    public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
+        DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
+        for (int i = 0; i < workSize; i++) {
+            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool");
+        }
+        init(disruptorExecutorPool,kcpListener,channelConfig,ports);
+    }
+
+
+    public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
         boolean epoll = true;
         String os = System.getProperty("os.name").toUpperCase();
         if(os.indexOf("WINDOWS")!=-1||os.indexOf("MAC")!=-1){
             epoll = false;
         }
-        disruptorExecutorPool = new DisruptorExecutorPool();
-        for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool");
-        }
+        this.disruptorExecutorPool = disruptorExecutorPool;
         bootstrap = new Bootstrap();
         group = epoll? new EpollEventLoopGroup(2): new NioEventLoopGroup(2);
         Class<? extends Channel> channelClass = epoll? EpollDatagramChannel.class:NioDatagramChannel.class;
@@ -57,6 +64,14 @@ public class KcpServer {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
+
+    public Map<Integer, Channel> getLocalAddresss() {
+        return localAddresss;
+    }
+
+    public void setLocalAddresss(Map<Integer, Channel> localAddresss) {
+        this.localAddresss = localAddresss;
+    }
 
     public void stop(){
         localAddresss.values().forEach(

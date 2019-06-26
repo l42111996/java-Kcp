@@ -21,9 +21,9 @@ public class ChannelConfig {
     //下面为新增参数
     private int fecDataShardCount;
     private int fecParityShardCount;
-
+    //收到包立刻回传ack包
     private boolean ackNoDelay = false;
-
+    //收到包立即调用flush
     private boolean fastFlush = true;
     //crc32校验
     private boolean crc32Check = false;

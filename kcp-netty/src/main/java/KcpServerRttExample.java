@@ -1,8 +1,8 @@
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
-import kcp.KcpServer;
 import kcp.ChannelConfig;
 import kcp.KcpListener;
+import kcp.KcpServer;
 import kcp.Ukcp;
 
 /**
@@ -13,11 +13,9 @@ import kcp.Ukcp;
 public class KcpServerRttExample implements KcpListener {
 
     public static void main(String[] args) {
-        new KcpServerRttExample().init();
-    }
 
+        KcpServerRttExample kcpServerRttExample = new KcpServerRttExample();
 
-    public void init(){
         ChannelConfig channelConfig = new ChannelConfig();
         channelConfig.setFastresend(2);
         channelConfig.setSndwnd(512);
@@ -30,8 +28,10 @@ public class KcpServerRttExample implements KcpListener {
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
-        KcpServer abstractKcpServer = new KcpServer(2,this,channelConfig,10003);
+        KcpServer kcpServer = new KcpServer();
+        kcpServer.init(Runtime.getRuntime().availableProcessors(),kcpServerRttExample,channelConfig,10003);
     }
+
 
     @Override
     public void onConnected(Ukcp ukcp) {
