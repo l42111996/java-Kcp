@@ -55,6 +55,7 @@ public class RecieveTask implements ITask {
                 }
                 hasRevieveMessage = true;
                 kcp.input(byteBuf,current);
+                byteBuf.release();
             }
             if(!hasRevieveMessage){
                 return;

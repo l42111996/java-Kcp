@@ -888,7 +888,7 @@ public class Kcp {
 
 
     private ByteBuf makeSpace(ByteBuf buffer ,int space){
-        if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
+        if (buffer.readableBytes() + space > mtu) {
             output(buffer, this);
             buffer = createFlushByteBuf();
             buffer.writerIndex(reserved);

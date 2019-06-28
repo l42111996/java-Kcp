@@ -79,14 +79,13 @@ public class FecDecode {
         if(rx!=null)
             n = rx.size()-1;
         int insertIdx = 0;
-        List<ByteBuf> result = null;
         for (int i = n; i >= 0; i--) {
             //去重
             if(pkt.getSeqid() == rx.get(i).getSeqid())
             {
                 Snmp.snmp.FECRepeatDataShards.incrementAndGet();
-                pkt.getData().release();
-                return result;
+                pkt.release();
+                return null;
             }
             if (pkt.getSeqid()> rx.get(i).getSeqid()) { // insertion
                 insertIdx = i + 1;
@@ -117,6 +116,7 @@ public class FecDecode {
             searchEnd = rx.size() - 1;
         }
 
+        List<ByteBuf> result = null;
         if(searchEnd-searchBegin+1>=dataShards){
             //当前包组的已收到的包数量
             int numshard=0;

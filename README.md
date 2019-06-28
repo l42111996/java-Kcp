@@ -24,8 +24,8 @@
     
     
 # 使用方法以及参数
-1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpServerRttExample.java)
-2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpClientRttExample.java)
+1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleServer.java)
+2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleClient.java)
 3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [大量资料](https://github.com/skywind3000/kcp)
 

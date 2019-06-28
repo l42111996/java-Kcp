@@ -3,6 +3,8 @@ package kcp;
 import com.backblaze.erasure.ReedSolomon;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -47,7 +49,13 @@ public class KcpClient {
         bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
         bootstrap.group(nioEventLoopGroup);
-        bootstrap.handler(new ClientChannelHandler(ukcpMap));
+        bootstrap.handler(new ChannelInitializer<NioDatagramChannel>() {
+            @Override
+            protected void initChannel(NioDatagramChannel ch) {
+                ChannelPipeline cp = ch.pipeline();
+                cp.addLast(new ClientChannelHandler(ukcpMap));
+            }
+        });
         ChannelFuture channelFuture;
         if (bindPort == 0) {
             channelFuture = bootstrap.bind();

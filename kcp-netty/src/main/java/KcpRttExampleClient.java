@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * Created by JinMiao
  * 2019-06-26.
  */
-public class KcpClientRttExample implements KcpListener {
+public class KcpRttExampleClient implements KcpListener {
 
     private final ByteBuf data;
 
@@ -30,7 +30,7 @@ public class KcpClientRttExample implements KcpListener {
 
     private final long startTime ;
 
-    public KcpClientRttExample() {
+    public KcpRttExampleClient() {
         data = Unpooled.buffer(200);
         for (int i = 0; i < data.capacity(); i++) {
             data.writeByte((byte) i);
@@ -61,7 +61,7 @@ public class KcpClientRttExample implements KcpListener {
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
 
-        KcpClientRttExample kcpClientRttExample = new KcpClientRttExample();
+        KcpRttExampleClient kcpClientRttExample = new KcpRttExampleClient();
         kcpClient.connect(new InetSocketAddress("127.0.0.1",10003),channelConfig,kcpClientRttExample);
     }
 

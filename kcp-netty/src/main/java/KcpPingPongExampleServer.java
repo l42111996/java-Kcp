@@ -6,20 +6,18 @@ import kcp.KcpServer;
 import kcp.Ukcp;
 
 /**
- *
  * Created by JinMiao
- * 2018/11/2.
+ * 2019-06-27.
  */
-public class KcpServerRttExample implements KcpListener {
+public class KcpPingPongExampleServer implements KcpListener {
 
     public static void main(String[] args) {
 
-        KcpServerRttExample kcpServerRttExample = new KcpServerRttExample();
-
+        KcpPingPongExampleServer kcpRttExampleServer = new KcpPingPongExampleServer();
         ChannelConfig channelConfig = new ChannelConfig();
         channelConfig.setFastresend(2);
-        channelConfig.setSndwnd(512);
-        channelConfig.setRcvwnd(512);
+        channelConfig.setSndwnd(1024);
+        channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
         channelConfig.setFecDataShardCount(10);
         channelConfig.setFecParityShardCount(3);
@@ -29,26 +27,31 @@ public class KcpServerRttExample implements KcpListener {
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(),kcpServerRttExample,channelConfig,10003);
+        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer, channelConfig, 10001);
     }
 
 
     @Override
     public void onConnected(Ukcp ukcp) {
         ukcp.setConv(10);
-        System.out.println("有连接进来"+Thread.currentThread().getName()+ukcp.user().getRemoteAddress());
+        System.out.println("有连接进来" + Thread.currentThread().getName() + ukcp.user().getRemoteAddress());
     }
+
+    int i = 0;
+
+    long start = System.currentTimeMillis();
 
     @Override
     public void handleReceive(ByteBuf buf, Ukcp kcp) {
-        short curCount = buf.getShort(buf.readerIndex());
-        System.out.println(Thread.currentThread().getName()+"  收到消息 "+curCount);
-        ByteBuf sendBytebuf = buf.retainedDuplicate();
-
-        kcp.write(sendBytebuf);
-        if (curCount == -1) {
-            kcp.notifyCloseEvent();
+        i++;
+        long now = System.currentTimeMillis();
+        if(now-start>1000){
+            System.out.println("收到消息 time: "+(now-start) +"  message :" +i);
+            start = now;
+            i=0;
         }
+        ByteBuf sendBytebuf = buf.retainedDuplicate();
+        kcp.write(sendBytebuf);
     }
 
     @Override
@@ -59,6 +62,7 @@ public class KcpServerRttExample implements KcpListener {
     @Override
     public void handleClose(Ukcp kcp) {
         System.out.println(Snmp.snmp.toString());
-        Snmp.snmp  = new Snmp();
+        Snmp.snmp= new Snmp();
+        System.out.println("连接断开了");
     }
 }

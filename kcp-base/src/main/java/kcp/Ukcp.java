@@ -133,7 +133,6 @@ public class Ukcp{
             if (fecPacket.getFlag() == Fec.typeData) {
                 data.skipBytes(2);
                 input(data, true,current);
-                data.release();
             }
             if (fecPacket.getFlag() == Fec.typeData || fecPacket.getFlag() == Fec.typeParity) {
                 List<ByteBuf> byteBufs = fecDecode.decode(fecPacket);
@@ -146,7 +145,6 @@ public class Ukcp{
             }
         } else {
             input(data, true,current);
-            data.release();
         }
     }
 
@@ -467,7 +465,7 @@ public class Ukcp{
 
     public void read(ByteBuf byteBuf) {
         //System.out.println("recieve "+Thread.currentThread().getName());
-        this.recieveList.add(byteBuf.retainedDuplicate());
+        this.recieveList.add(byteBuf);
         notifyReadEvent();
     }
 
