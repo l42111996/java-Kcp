@@ -45,9 +45,9 @@ public class RecieveTask implements ITask {
             if(!kcp.isActive()){
                 return;
             }
+            boolean hasRevieveMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
-            boolean hasRevieveMessage = false;
             for(;;) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
@@ -72,13 +72,13 @@ public class RecieveTask implements ITask {
                 }
                 buf.release();
             }
-        }catch (Throwable e){
-            e.printStackTrace();
-        }finally {
             //判断写事件
             if(kcp.canSend(false)){
                 kcp.notifyWriteEvent();
             }
+        }catch (Throwable e){
+            e.printStackTrace();
+        }finally {
             release();
             if(bufList!=null)
                 bufList.recycle();

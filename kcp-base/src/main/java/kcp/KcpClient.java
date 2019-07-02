@@ -37,7 +37,7 @@ public class KcpClient {
         if (disruptorExecutorPool == null) {
             this.disruptorExecutorPool = new DisruptorExecutorPool();
             for (int i = 0; i < cpuNum; i++) {
-                disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool");
+                disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
             }
         }
         boolean epoll = true;
@@ -78,7 +78,7 @@ public class KcpClient {
     public void init(int workSize, int bindPort) {
         this.disruptorExecutorPool = new DisruptorExecutorPool();
         for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool");
+            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
         }
         init(bindPort);
     }
@@ -109,9 +109,15 @@ public class KcpClient {
         ukcp.setFastFlush(channelConfig.isFastFlush());
         ukcp.user(user);
 
-        disruptorSingleExecutor.execute(() -> ukcp.getKcpListener().onConnected(ukcp));
+        disruptorSingleExecutor.execute(() -> {
+            try {
+                ukcp.getKcpListener().onConnected(ukcp);
+            }catch (Throwable throwable){
+                ukcp.getKcpListener().handleException(throwable,ukcp);
+            }
+        });
 
-        ukcpMap.put(remoteAddress,ukcp);
+        ukcpMap.put(remoteAddress, ukcp);
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, ukcpMap);
         DisruptorExecutorPool.schedule(scheduleTask, ukcp.getInterval());
@@ -124,12 +130,22 @@ public class KcpClient {
     }
 
     public void stop() {
-        ukcpMap.values().forEach(ukcp ->
-                ukcp.notifyCloseEvent());
+        //System.out.println("关闭连接");
+        ukcpMap.values().forEach(ukcp -> {
+            try {
+                ukcp.notifyCloseEvent();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
+        //System.out.println("关闭连接1");
         if (disruptorExecutorPool != null) {
             disruptorExecutorPool.stop();
         }
-        if (nioEventLoopGroup != null)
+        //System.out.println("关闭连接2");
+        if (nioEventLoopGroup != null) {
             nioEventLoopGroup.shutdownGracefully();
+        }
+        //System.out.println("关闭连接3");
     }
 }

@@ -482,10 +482,14 @@ public class Ukcp{
         return true;
     }
 
+    public IMessageExecutor getDisruptorSingleExecutor() {
+        return disruptorSingleExecutor;
+    }
+
     /**
      * 主动关闭连接调用
      */
-    public void notifyCloseEvent(){
+    public void notifyCloseEvent() {
         this.disruptorSingleExecutor.execute(() -> close());
     }
 

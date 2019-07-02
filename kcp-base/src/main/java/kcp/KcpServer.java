@@ -28,7 +28,7 @@ public class KcpServer {
     public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
         DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
         for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool");
+            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool"+i);
         }
         init(disruptorExecutorPool,kcpListener,channelConfig,ports);
     }

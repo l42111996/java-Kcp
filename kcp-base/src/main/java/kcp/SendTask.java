@@ -70,7 +70,7 @@ public class SendTask implements ITask {
                     kcp.setTsUpdate(now+next);
                 }
             }
-        }catch (Exception e){
+        }catch (Throwable e){
             e.printStackTrace();
         }finally {
             release();

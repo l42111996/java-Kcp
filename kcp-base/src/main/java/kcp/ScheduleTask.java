@@ -69,7 +69,7 @@ public class ScheduleTask implements ITask,Runnable {
             if(ukcp.canSend(false)){
                 ukcp.notifyWriteEvent();
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
 

@@ -79,7 +79,13 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                 newUkcp.setFastFlush(channelConfig.isFastFlush());
                 newUkcp.user(user);
 
-                disruptorSingleExecutor.execute(() -> newUkcp.getKcpListener().onConnected(newUkcp));
+                disruptorSingleExecutor.execute(() ->{
+                    try {
+                        newUkcp.getKcpListener().onConnected(newUkcp);
+                    }catch (Throwable throwable){
+                        newUkcp.getKcpListener().handleException(throwable,newUkcp);
+                    }
+                });
                 clientMap.put(socketAddress,newUkcp);
                 newUkcp.read(msg.content());
 

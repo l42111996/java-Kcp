@@ -25,5 +25,11 @@ public interface IMessageExecutor{
 	boolean isFull();
 
 
+	/**
+	 * 执行任务
+	 * 注意: 如果线程等于当前线程 则直接执行  如果非当前线程放进队列
+	 *
+	 * @param iTask
+	 */
 	void execute(ITask iTask);
 }

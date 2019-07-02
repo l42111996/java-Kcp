@@ -6,12 +6,11 @@ import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import threadPool.task.ITask;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 基于 {@link #Disruptor} 的单线程队列实现
+ * 基于 {@link #disruptor} 的单线程队列实现
  * @author King
  *
  */
@@ -36,6 +35,7 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	/**线程名字**/
 	private String threadName;
 
+	private DisruptorThread currentThread;
 
 
 	public DisruptorSingleExecutor(String threadName)
@@ -46,8 +46,9 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 
 	@SuppressWarnings("unchecked")
 	public void start() {
+		LoopThreadfactory loopThreadfactory = new LoopThreadfactory(this);
 //		disruptor = new Disruptor<DistriptorHandler>(eventFactory, ringBufferSize, executor, ProducerType.MULTI, strategy);
-		disruptor = new Disruptor<>(eventFactory, ringBufferSize, (r)->{return new DisruptorThread(r, threadName,this);});
+		disruptor = new Disruptor<>(eventFactory, ringBufferSize, loopThreadfactory);
 		buffer = disruptor.getRingBuffer();
 		disruptor.handleEventsWith(DisruptorSingleExecutor.handler);
 		disruptor.start();
@@ -57,11 +58,16 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	
 	/**主线程工厂**/
 	private class LoopThreadfactory implements ThreadFactory {
+		IMessageExecutor iMessageExecutor;
+
+		public LoopThreadfactory(IMessageExecutor iMessageExecutor) {
+			this.iMessageExecutor = iMessageExecutor;
+		}
 
 		public Thread newThread(Runnable r) {
-			Thread thread = new Thread(r);
-			thread.setName(threadName);
-			return thread;
+			currentThread = new DisruptorThread(r,iMessageExecutor);
+			currentThread.setName(threadName);
+			return currentThread;
 		}
 	}
 	
@@ -78,7 +84,24 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 
 		istop.set(true);
 	}
-	
+
+
+	public static void main(String[] args) {
+		DisruptorSingleExecutor disruptorSingleExecutor = new DisruptorSingleExecutor("aa");
+		disruptorSingleExecutor.start();
+		disruptorSingleExecutor.execute(() -> {
+			System.out.println("hahaha");
+		});
+
+
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+
+	}
 
 	public AtomicBoolean getIstop() {
 		return istop;
@@ -90,7 +113,12 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	}
 
 	@Override
-	public void execute(ITask iTask) {
+	public void execute(ITask iTask){
+		Thread currentThread = Thread.currentThread();
+		if(currentThread==this.currentThread){
+			iTask.execute();
+			return;
+		}
 		//		if(buffer.hasAvailableCapacity(1))
 //		{
 //			System.out.println("没有容量了");
