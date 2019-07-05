@@ -22,17 +22,7 @@
 5. 包含fec,降低延迟
 6. 附带crc32校验
 
-# TODO 
-1. fec结合directbuffer检测对应cpu最佳性能方案
-2. 大量连接性能测试标准
 
-# 已完成
-1. 单连接死循环收发包内存检测，性能测试  
-配置:mbp 2.3 GHz Intel Core i9 16GRam
-单连接 带fec 5W/s qps
-单连接 不带fec  8W/s qps
-
-    
 # 使用方法以及参数
 1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleServer.java)
 2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleClient.java)
@@ -40,10 +30,17 @@
 4. [大量资料](https://github.com/skywind3000/kcp)
 
 
-# 关于 fec(向前纠错技术)
-   
-   浪费一定的流量丢包带来的延迟,在帧同步等发送频率快包小的场景中使用非常合适。
-   
+# 已完成测试
+1. 单连接死循环收发包内存检测，性能测试  
+配置:mbp 2.3 GHz Intel Core i9 16GRam
+单连接 带fec 5W/s qps
+单连接 不带fec  8W/s qps
+
+
+# TODO 
+1. fec结合directbuffer检测对应cpu最佳性能方案
+2. 大量连接性能测试标准
+
    
 # 相关资料
 
