@@ -34,7 +34,7 @@ public class FecDecode {
     private ReedSolomon codec;
 
 
-    public FecDecode(int rxlimit, ReedSolomon codec) {
+    public FecDecode(int rxlimit, ReedSolomon codec,int mtu) {
         this.rxlimit = rxlimit;
         this.dataShards = codec.getDataShardCount();
         this.parityShards = codec.getParityShardCount();
@@ -51,9 +51,8 @@ public class FecDecode {
         this.flagCache = new boolean[this.shardSize];
         this.rx = new ArrayList<>(rxlimit);
 
-        zeros = ByteBufAllocator.DEFAULT.buffer(Fec.mtuLimit);
-        zeros.writeBytes(new byte[Fec.mtuLimit]);
-        zeros.duplicate();
+        zeros = ByteBufAllocator.DEFAULT.buffer(mtu);
+        zeros.writeBytes(new byte[mtu]);
     }
 
 
@@ -75,9 +74,7 @@ public class FecDecode {
         }else{
             Snmp.snmp.FECDataShards.incrementAndGet();
         }
-        int n = 0;
-        if(rx!=null)
-            n = rx.size()-1;
+        int n = rx.size()-1;
         int insertIdx = 0;
         for (int i = n; i >= 0; i--) {
             //去重
@@ -101,12 +98,12 @@ public class FecDecode {
 
         //所有消息列表中的第一个包
         // shard range for current packet
-        int shardBegin = pkt.getSeqid()-pkt.getSeqid()%shardSize;
-        int shardEnd =shardBegin + shardSize - 1;
+        long shardBegin = pkt.getSeqid()-pkt.getSeqid()%shardSize;
+        long shardEnd =shardBegin + shardSize - 1;
 
         //rx数组中的第一个包
         // max search range in ordered queue for current shard
-        int searchBegin = insertIdx - pkt.getSeqid()%shardSize;
+        int searchBegin = (int) (insertIdx - pkt.getSeqid()%shardSize);
         if (searchBegin < 0) {
             searchBegin = 0;
         }
@@ -137,13 +134,13 @@ public class FecDecode {
             // shard assembly
             for (int i = searchBegin; i <= searchEnd; i++) {
                 FecPacket fecPacket = rx.get(i);
-                int seqid = fecPacket.getSeqid();
+                long seqid = fecPacket.getSeqid();
                 if(seqid>shardEnd)
                     break;
                 if(seqid<shardBegin)
                     continue;
-                shards[seqid%shardSize] = fecPacket.getData();
-                shardsflag[seqid%shardSize] = true;
+                shards[(int)(seqid%shardSize)] = fecPacket.getData();
+                shardsflag[(int)(seqid%shardSize)] = true;
                 numshard++;
                 if (fecPacket.getFlag() == typeData) {
                     numDataShard++;
@@ -156,27 +153,9 @@ public class FecDecode {
                 }
             }
             if(numDataShard==dataShards){
-                // case 1:  no lost data shards
                 freeRange(first, numshard, rx);
             }
             else if(numshard>=dataShards){
-                // case 2: data shard lost, but  recoverable from parity shard
-                //for k := range shards {
-                //    if shards[k] != nil {
-                //        dlen := len(shards[k])
-                //        shards[k] = shards[k][:maxlen]
-                //        copy(shards[k][dlen:], dec.zeros)
-                //    }
-                //}
-                //if err := dec.codec.ReconstructData(shards); err == nil {
-                //    for k := range shards[:dec.dataShards] {
-                //        if !shardsflag[k] {
-                //            recovered = append(recovered, shards[k])
-                //        }
-                //    }
-                //}
-                //dec.rx = dec.freeRange(first, numshard, dec.rx)
-                // case 2: data shard lost, but  recoverable from parity shard
                 for (int i = 0; i < shards.length; i++) {
                     ByteBuf shard  = shards[i];
                     //如果数据不存在 用0填充起来
@@ -193,25 +172,31 @@ public class FecDecode {
                 }
                 codec.decodeMissing(shards,shardsflag,Fec.fecHeaderSize,maxlen);
                 result = new ArrayList<>(this.dataShards);
-                for (int i = 0; i < dataShards; i++) {
-                    if(!shardsflag[i]){
-                        ByteBuf byteBufs = shards[i];
-                        int packageSize =byteBufs.getUnsignedShort(Fec.fecHeaderSize);
-                        //判断长度
-                        if(byteBufs.writerIndex()-Fec.fecHeaderSizePlus2>=packageSize&&packageSize>0)
-                        {
-                            byteBufs = byteBufs.slice(Fec.fecHeaderSizePlus2,packageSize);
-                            result.add(byteBufs);
-                            Snmp.snmp.FECRecovered.incrementAndGet();
-                        }else{
-                            System.out.println("bytebuf长度: "+byteBufs.writerIndex()+" 读出长度"+packageSize);
-                            byte[] bytes = new byte[byteBufs.writerIndex()];
-                            byteBufs.getBytes(0,bytes);
-                            for (byte aByte : bytes) {
-                                System.out.print("["+aByte+"] ");
-                            }
-                            Snmp.snmp.FECErrs.incrementAndGet();
+                for (int i = 0; i < shardSize; i++) {
+                    if(shardsflag[i]){
+                        continue;
+                    }
+                    ByteBuf byteBufs = shards[i];
+                    //释放构建的parityShards内存
+                    if(i>=dataShards){
+                        byteBufs.release();
+                        continue;
+                    }
+                    int packageSize =byteBufs.getUnsignedShort(Fec.fecHeaderSize);
+                    //判断长度
+                    if(byteBufs.writerIndex()-Fec.fecHeaderSizePlus2>=packageSize&&packageSize>0)
+                    {
+                        byteBufs = byteBufs.slice(Fec.fecHeaderSizePlus2,packageSize);
+                        result.add(byteBufs);
+                        Snmp.snmp.FECRecovered.incrementAndGet();
+                    }else{
+                        System.out.println("bytebuf长度: "+byteBufs.writerIndex()+" 读出长度"+packageSize);
+                        byte[] bytes = new byte[byteBufs.writerIndex()];
+                        byteBufs.getBytes(0,bytes);
+                        for (byte aByte : bytes) {
+                            System.out.print("["+aByte+"] ");
                         }
+                        Snmp.snmp.FECErrs.incrementAndGet();
                     }
                 }
                 freeRange(first, numshard, rx);
@@ -277,14 +262,14 @@ public class FecDecode {
         int first = 0;
         int n=2;
         ArrayList<Integer> q = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             q.add(i);
         }
-        for (int i = first; i < first+n; i++) {
+        for (int i = first; i < q.size(); i++) {
             int index = i+n;
             if(index==q.size())
                 break;
-            q.set(i,q.get(i+n));
+            q.set(i,q.get(index));
         }
         int removeIndex = q.size()-n;
         for (int i = 0; i < n; i++) {

@@ -53,12 +53,12 @@ public class KcpPingPongExampleClient implements KcpListener {
         ByteBuf sendBytebuf = byteBuf.retainedDuplicate();
         ukcp.write(sendBytebuf);
         int id = sendBytebuf.getInt(0);
-        if(j-id%10!=0){
-            System.out.println("id"+id +"  j" +j);
-        }
+        //if(j-id%10!=0){
+        //    System.out.println("id"+id +"  j" +j);
+        //}
 
         j++;
-        if(j%10000==0){
+        if(j%100000==0){
             System.out.println(Snmp.snmp.toString());
             System.out.println("收到了 返回回去"+j);
         }

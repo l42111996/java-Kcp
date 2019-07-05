@@ -94,19 +94,7 @@ public class KcpClient {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
 
-        Ukcp ukcp = new Ukcp(10, kcpOutput, kcpListener, disruptorSingleExecutor, channelConfig.isCrc32Check(), reedSolomon);
-        ukcp.setNodelay(channelConfig.isNodelay());
-        ukcp.setInterval(channelConfig.getInterval());
-        ukcp.setFastResend(channelConfig.getFastresend());
-        ukcp.setNocwnd(channelConfig.isNocwnd());
-        ukcp.setSndWnd(channelConfig.getSndwnd());
-        ukcp.setRcvWnd(channelConfig.getRcvwnd());
-        ukcp.setMtu(channelConfig.getMtu());
-        ukcp.setMinRto(channelConfig.getMinRto());
-        ukcp.setTimeoutMillis(channelConfig.getTimeoutMillis());
-        ukcp.setStream(channelConfig.isStream());
-        ukcp.setAckNoDelay(channelConfig.isAckNoDelay());
-        ukcp.setFastFlush(channelConfig.isFastFlush());
+        Ukcp ukcp = new Ukcp(10, kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
         ukcp.user(user);
 
         disruptorSingleExecutor.execute(() -> {

@@ -8,7 +8,7 @@ import io.netty.util.Recycler;
  * 2018/6/26.
  */
 public class FecPacket {
-    private int seqid;
+    private long seqid;
     private int flag;
     private ByteBuf data;
     private Recycler.Handle<FecPacket> recyclerHandle;
@@ -23,7 +23,7 @@ public class FecPacket {
 
     public static FecPacket newFecPacket(ByteBuf byteBuf){
         FecPacket pkt = fecPacketRecycler.get();
-        pkt.seqid =byteBuf.readInt();
+        pkt.seqid =byteBuf.readUnsignedInt();
         pkt.flag = byteBuf.readShort();
         pkt.data = byteBuf.retainedDuplicate();
         return pkt;
@@ -41,12 +41,8 @@ public class FecPacket {
         recyclerHandle.recycle(this);
     }
 
-    public int getSeqid() {
+    public long getSeqid() {
         return seqid;
-    }
-
-    public void setSeqid(int seqid) {
-        this.seqid = seqid;
     }
 
     public int getFlag() {

@@ -67,9 +67,8 @@ public class Ukcp{
      * @param conv   conv of kcp
      * @param output output for kcp
      */
-    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor, boolean crc32Check,ReedSolomon reedSolomon) {
-        Kcp kcp = new Kcp(conv, output);
-        this.kcp = kcp;
+    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
+        this.kcp = new Kcp(conv, output);
         this.active = true;
         this.kcpListener = kcpListener;
         this.disruptorSingleExecutor = disruptorSingleExecutor;
@@ -82,7 +81,7 @@ public class Ukcp{
 
 
         //init crc32
-        if(crc32Check){
+        if(channelConfig.isCrc32Check()){
             this.crc32Check = true;
             KcpOutput kcpOutput = kcp.getOutput();
             kcpOutput = new Crc32OutPut(kcpOutput,headerSize);
@@ -93,14 +92,32 @@ public class Ukcp{
         //init fec
         if (reedSolomon != null) {
             KcpOutput kcpOutput = kcp.getOutput();
-            fecEncode = new FecEncode(headerSize, reedSolomon);
-            fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon);
+            fecEncode = new FecEncode(headerSize, reedSolomon,channelConfig.getMtu());
+            fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon,channelConfig.getMtu());
             kcpOutput = new FecOutPut(kcpOutput, fecEncode);
             kcp.setOutput(kcpOutput);
             headerSize+= Fec.fecHeaderSizePlus2;
         }
 
         kcp.setReserved(headerSize);
+        intKcpConfig(channelConfig);
+    }
+
+
+    private void intKcpConfig(ChannelConfig channelConfig){
+        kcp.setNodelay(channelConfig.isNodelay());
+        kcp.setInterval(channelConfig.getInterval());
+        kcp.setFastresend(channelConfig.getFastresend());
+        kcp.setNocwnd(channelConfig.isNocwnd());
+
+        kcp.setSndWnd(channelConfig.getSndwnd());
+        kcp.setRcvWnd(channelConfig.getRcvwnd());
+        kcp.setMtu(channelConfig.getMtu());
+        kcp.setRxMinrto(channelConfig.getMinRto());
+        kcp.setStream(channelConfig.isStream());
+        kcp.setAckNoDelay(channelConfig.isAckNoDelay());
+        setFastFlush(channelConfig.isFastFlush());
+        setTimeoutMillis(channelConfig.getTimeoutMillis());
     }
 
 

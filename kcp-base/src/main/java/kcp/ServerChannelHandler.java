@@ -63,20 +63,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                     reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
                 }
 
-                Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,channelConfig.isCrc32Check(),reedSolomon);
-
-                newUkcp.setNodelay(channelConfig.isNodelay());
-                newUkcp.setInterval(channelConfig.getInterval());
-                newUkcp.setFastResend(channelConfig.getFastresend());
-                newUkcp.setNocwnd(channelConfig.isNocwnd());
-                newUkcp.setSndWnd(channelConfig.getSndwnd());
-                newUkcp.setRcvWnd(channelConfig.getRcvwnd());
-                newUkcp.setMtu(channelConfig.getMtu());
-                newUkcp.setMinRto(channelConfig.getMinRto());
-                newUkcp.setTimeoutMillis(channelConfig.getTimeoutMillis());
-                newUkcp.setStream(channelConfig.isStream());
-                newUkcp.setAckNoDelay(channelConfig.isAckNoDelay());
-                newUkcp.setFastFlush(channelConfig.isFastFlush());
+                Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
                 newUkcp.user(user);
 
                 disruptorSingleExecutor.execute(() ->{

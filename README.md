@@ -21,7 +21,17 @@
 4. 优化集合迭代器。
 5. 包含fec,降低延迟
 6. 附带crc32校验
-    
+
+# TODO 
+1. fec结合directbuffer检测对应cpu最佳性能方案
+2. 大量连接性能测试标准
+
+# 已完成
+1. 单连接死循环收发包内存检测，性能测试  
+配置:mbp 2.3 GHz Intel Core i9 16GRam
+单连接 带fec 5W/s qps
+单连接 不带fec  8W/s qps
+
     
 # 使用方法以及参数
 1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleServer.java)
