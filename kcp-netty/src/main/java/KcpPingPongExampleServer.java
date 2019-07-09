@@ -52,8 +52,7 @@ public class KcpPingPongExampleServer implements KcpListener {
             start = now;
             i=0;
         }
-        ByteBuf sendBytebuf = buf.retainedDuplicate();
-        kcp.write(sendBytebuf);
+        kcp.write(buf);
     }
 
     @Override

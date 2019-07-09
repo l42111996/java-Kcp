@@ -1,3 +1,5 @@
+package test;
+
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -49,38 +51,38 @@ public class TestEncryption {
     }
 
 
-    public static void main(String[] args) throws BadPaddingException, ShortBufferException, IllegalBlockSizeException {
-        TestEncryption testEncryption = new TestEncryption();
-        testEncryption.init();
-        ByteBuffer in = ByteBuffer.allocate(1024);
-        ByteBuffer out = ByteBuffer.allocate(1024);
-
-        for (int i = 0; i < 100; i++) {
-            in.putInt(i);
-        }
-
-        testEncryption.encruyptCipher.doFinal(in,out);
-
-
-
-        byte[] outBytes = testEncryption.encruyptCipher.doFinal(in.array());
-        byte[] inBytes = testEncryption.decryptCipher.doFinal(outBytes);
-
-
-
-        while (in.hasRemaining()){
-            System.out.println(in.getInt());
-        }
-
-
-
-
-
-        System.out.println();
-
-
-
-
-
-    }
+    //public static void main(String[] args) throws BadPaddingException, ShortBufferException, IllegalBlockSizeException {
+    //    test.TestEncryption testEncryption = new test.TestEncryption();
+    //    testEncryption.init();
+    //    ByteBuffer in = ByteBuffer.allocate(1024);
+    //    ByteBuffer out = ByteBuffer.allocate(1024);
+    //
+    //    for (int i = 0; i < 100; i++) {
+    //        in.putInt(i);
+    //    }
+    //
+    //    testEncryption.encruyptCipher.doFinal(in,out);
+    //
+    //
+    //
+    //    byte[] outBytes = testEncryption.encruyptCipher.doFinal(in.array());
+    //    byte[] inBytes = testEncryption.decryptCipher.doFinal(outBytes);
+    //
+    //
+    //
+    //    while (in.hasRemaining()){
+    //        System.out.println(in.getInt());
+    //    }
+    //
+    //
+    //
+    //
+    //
+    //    System.out.println();
+    //
+    //
+    //
+    //
+    //
+    //}
 }

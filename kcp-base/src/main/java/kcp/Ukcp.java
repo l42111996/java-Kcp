@@ -116,6 +116,7 @@ public class Ukcp{
         kcp.setRxMinrto(channelConfig.getMinRto());
         kcp.setStream(channelConfig.isStream());
         kcp.setAckNoDelay(channelConfig.isAckNoDelay());
+        kcp.setAutoSetConv(channelConfig.isAutoSetConv());
         setFastFlush(channelConfig.isFastFlush());
         setTimeoutMillis(channelConfig.getTimeoutMillis());
     }
@@ -488,11 +489,14 @@ public class Ukcp{
 
     /**
      * 主动发消息使用
-     * @param byteBuf
+     * 线程安全的
+     * @param byteBuf 发送后需要手动释放
      * @return
      */
     public boolean write(ByteBuf byteBuf) {
+        byteBuf = byteBuf.retainedDuplicate();
         if (!sendList.offer(byteBuf)) {
+            byteBuf.release();
             return false;
         }
         notifyWriteEvent();

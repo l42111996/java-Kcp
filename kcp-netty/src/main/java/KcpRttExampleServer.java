@@ -43,9 +43,7 @@ public class KcpRttExampleServer implements KcpListener {
     public void handleReceive(ByteBuf buf, Ukcp kcp) {
         short curCount = buf.getShort(buf.readerIndex());
         System.out.println(Thread.currentThread().getName()+"  收到消息 "+curCount);
-        ByteBuf sendBytebuf = buf.retainedDuplicate();
-
-        kcp.write(sendBytebuf);
+        kcp.write(buf);
         if (curCount == -1) {
             kcp.notifyCloseEvent();
         }

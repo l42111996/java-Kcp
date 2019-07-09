@@ -68,11 +68,15 @@ public class KcpRttExampleClient implements KcpListener {
     @Override
     public void onConnected(Ukcp ukcp) {
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
-            ukcp.write(rttMsg(++count));
+            ByteBuf byteBuf = rttMsg(++count);
+            ukcp.write(byteBuf);
+            byteBuf.release();
             if (count >= rtts.length) {
                 // finish
                 future.cancel(true);
-                ukcp.write(rttMsg(-1));
+                byteBuf = rttMsg(-1);
+                ukcp.write(byteBuf);
+                byteBuf.release();
 
             }
         }, 20, 20, TimeUnit.MILLISECONDS);

@@ -14,6 +14,16 @@ public class User {
     private InetSocketAddress remoteAddress;
     private InetSocketAddress localAddress;
 
+    private Object cache;
+
+    public void setCache(Object cache) {
+        this.cache = cache;
+    }
+
+    public <T>  T getCache() {
+        return (T) cache;
+    }
+
     public User(Channel channel, InetSocketAddress remoteAddress, InetSocketAddress localAddress) {
         this.channel = channel;
         this.remoteAddress = remoteAddress;
@@ -42,5 +52,14 @@ public class User {
 
     public void setLocalAddress(InetSocketAddress localAddress) {
         this.localAddress = localAddress;
+    }
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "remoteAddress=" + remoteAddress +
+                ", localAddress=" + localAddress +
+                '}';
     }
 }

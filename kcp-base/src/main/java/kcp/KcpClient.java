@@ -27,6 +27,7 @@ public class KcpClient {
     private DisruptorExecutorPool disruptorExecutorPool;
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
+    /**客户端的连接集合  key为本地的监听端口**/
     private Map<SocketAddress, Ukcp> ukcpMap = new ConcurrentHashMap<>();
 
 
@@ -87,7 +88,7 @@ public class KcpClient {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
 
-        Ukcp ukcp = new Ukcp(10, kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
+        Ukcp ukcp = new Ukcp(0, kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
         ukcp.user(user);
 
         disruptorSingleExecutor.execute(() -> {
@@ -98,7 +99,7 @@ public class KcpClient {
             }
         });
 
-        ukcpMap.put(remoteAddress, ukcp);
+        ukcpMap.put(localAddress, ukcp);
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, ukcpMap);
         DisruptorExecutorPool.schedule(scheduleTask, ukcp.getInterval());

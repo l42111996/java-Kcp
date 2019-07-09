@@ -49,40 +49,37 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        {
-            InetSocketAddress socketAddress = msg.sender();
-            Ukcp ukcp = clientMap.get(socketAddress);
-            if(ukcp==null){
-                User user = new User(ctx.channel(),msg.sender(),msg.recipient());
-                //System.out.println("新连接"+Thread.currentThread().getName());
-                IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
-                KcpOutput kcpOutput = new KcpOutPutImp();
+        InetSocketAddress socketAddress = msg.sender();
+        Ukcp ukcp = clientMap.get(socketAddress);
+        if(ukcp==null){
+            User user = new User(ctx.channel(),msg.sender(),msg.recipient());
+            //System.out.println("新连接"+Thread.currentThread().getName());
+            IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
+            KcpOutput kcpOutput = new KcpOutPutImp();
 
-                ReedSolomon reedSolomon = null;
-                if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
-                    reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
-                }
-
-                Ukcp newUkcp = new Ukcp(10,kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
-                newUkcp.user(user);
-
-                disruptorSingleExecutor.execute(() ->{
-                    try {
-                        newUkcp.getKcpListener().onConnected(newUkcp);
-                    }catch (Throwable throwable){
-                        newUkcp.getKcpListener().handleException(throwable,newUkcp);
-                    }
-                });
-                clientMap.put(socketAddress,newUkcp);
-                newUkcp.read(msg.content());
-
-                ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, clientMap);
-                DisruptorExecutorPool.schedule(scheduleTask, newUkcp.getInterval());
-                return;
+            ReedSolomon reedSolomon = null;
+            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+                reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
             }
-            ukcp.read(msg.content());
-        }
 
+            Ukcp newUkcp = new Ukcp(0,kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
+            newUkcp.user(user);
+
+            disruptorSingleExecutor.execute(() ->{
+                try {
+                    newUkcp.getKcpListener().onConnected(newUkcp);
+                }catch (Throwable throwable){
+                    newUkcp.getKcpListener().handleException(throwable,newUkcp);
+                }
+            });
+            clientMap.put(socketAddress,newUkcp);
+            newUkcp.read(msg.content());
+
+            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, clientMap);
+            DisruptorExecutorPool.schedule(scheduleTask, newUkcp.getInterval());
+            return;
+        }
+        ukcp.read(msg.content());
     }
 
 }

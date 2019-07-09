@@ -55,6 +55,8 @@ public class KcpServer {
                 cp.addLast(serverChannelHandler);
             }
         });
+        bootstrap.option(ChannelOption.SO_RCVBUF, 10*1024*1024);
+        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
         for (int port : ports) {
             ChannelFuture channelFuture = bootstrap.bind(port);
             Channel channel = channelFuture.channel();

@@ -1,5 +1,6 @@
 package threadPool.thread;
 
+import io.netty.channel.DefaultEventLoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,8 @@ public class DisruptorExecutorPool
     private static final ScheduledThreadPoolExecutor scheduled  = new ScheduledThreadPoolExecutor(1,new TimerThreadFacotry());
 
 
-    public static ScheduledThreadPoolExecutor getScheduled() {
-        return scheduled;
-    }
 
+    private static final DefaultEventLoop EVENT_EXECUTORS = new DefaultEventLoop();
 
     /**定时器线程工厂**/
     private static class TimerThreadFacotry implements ThreadFactory
@@ -44,13 +43,13 @@ public class DisruptorExecutorPool
         }
     }
 	public static ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,long milliseconds){
-		return scheduled.scheduleWithFixedDelay(command,milliseconds,milliseconds, TimeUnit.MILLISECONDS);
+		return EVENT_EXECUTORS.scheduleWithFixedDelay(command,milliseconds,milliseconds, TimeUnit.MILLISECONDS);
 	}
 
 
 
     public static ScheduledFuture<?> schedule(Runnable command,long milliseconds){
-        return scheduled.schedule(command,milliseconds, TimeUnit.MILLISECONDS);
+        return EVENT_EXECUTORS.schedule(command,milliseconds, TimeUnit.MILLISECONDS);
     }
 
 	/**

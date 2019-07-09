@@ -28,6 +28,8 @@ public class ChannelConfig {
     //crc32校验
     private boolean crc32Check = false;
 
+    private boolean autoSetConv = false;
+
 
     public boolean isNodelay() {
         return nodelay;
@@ -73,6 +75,14 @@ public class ChannelConfig {
 
     public int getRcvwnd() {
         return rcvwnd;
+    }
+
+    public boolean isAutoSetConv() {
+        return autoSetConv;
+    }
+
+    public void setAutoSetConv(boolean autoSetConv) {
+        this.autoSetConv = autoSetConv;
     }
 
     public void setRcvwnd(int rcvwnd) {

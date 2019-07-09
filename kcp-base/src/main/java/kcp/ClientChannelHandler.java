@@ -26,7 +26,7 @@ public class ClientChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        SocketAddress socketAddress = ctx.channel().remoteAddress();
+        SocketAddress socketAddress = ctx.channel().localAddress();
         Ukcp ukcp = ukcpMap.get(socketAddress);
         ukcp.getKcpListener().handleException(cause,ukcp);
     }
@@ -35,7 +35,7 @@ public class ClientChannelHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        InetSocketAddress socketAddress = msg.sender();
+        InetSocketAddress socketAddress = msg.recipient();
         Ukcp ukcp = ukcpMap.get(socketAddress);
         ukcp.read(msg.content());
     }

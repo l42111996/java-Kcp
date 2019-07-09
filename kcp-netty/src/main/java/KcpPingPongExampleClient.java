@@ -44,15 +44,15 @@ public class KcpPingPongExampleClient implements KcpListener {
             byte[] bytes = new byte[1020];
             byteBuf.writeBytes(bytes);
             ukcp.write(byteBuf);
+            byteBuf.release();
         }
     }
     int j =0;
 
     @Override
     public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-        ByteBuf sendBytebuf = byteBuf.retainedDuplicate();
-        ukcp.write(sendBytebuf);
-        int id = sendBytebuf.getInt(0);
+        ukcp.write(byteBuf);
+        int id = byteBuf.getInt(0);
         //if(j-id%10!=0){
         //    System.out.println("id"+id +"  j" +j);
         //}
