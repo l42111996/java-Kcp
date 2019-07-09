@@ -27,12 +27,10 @@ public class KcpClient {
     private DisruptorExecutorPool disruptorExecutorPool;
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
-    private NioDatagramChannel channel;
-    private InetSocketAddress localAddress;
     private Map<SocketAddress, Ukcp> ukcpMap = new ConcurrentHashMap<>();
 
 
-    public void init(int bindPort) {
+    public void init() {
         int cpuNum = Runtime.getRuntime().availableProcessors();
         if (disruptorExecutorPool == null) {
             this.disruptorExecutorPool = new DisruptorExecutorPool();
@@ -56,36 +54,31 @@ public class KcpClient {
                 cp.addLast(new ClientChannelHandler(ukcpMap));
             }
         });
-        ChannelFuture channelFuture;
-        if (bindPort == 0) {
-            channelFuture = bootstrap.bind();
-        } else {
-            channelFuture = bootstrap.bind(bindPort);
-        }
-        ChannelFuture sync = channelFuture.syncUninterruptibly();
-        channel = (NioDatagramChannel) sync.channel();
-        localAddress = channel.localAddress();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
-    public void init(DisruptorExecutorPool disruptorExecutorPool, int bindPort) {
+    public void init(DisruptorExecutorPool disruptorExecutorPool) {
         this.disruptorExecutorPool = disruptorExecutorPool;
-        init(bindPort);
+        init();
 
     }
 
-    public void init(int workSize, int bindPort) {
+    public void init(int workSize) {
         this.disruptorExecutorPool = new DisruptorExecutorPool();
         for (int i = 0; i < workSize; i++) {
             disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
         }
-        init(bindPort);
+        init();
     }
 
     public Ukcp connect(InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {
+        ChannelFuture channelFuture = bootstrap.bind(new InetSocketAddress(0));
+        ChannelFuture sync = channelFuture.syncUninterruptibly();
+        NioDatagramChannel channel = (NioDatagramChannel) sync.channel();
+        InetSocketAddress localAddress = channel.localAddress();
 
-        User user = new User(this.channel, remoteAddress, this.localAddress);
+        User user = new User(channel, remoteAddress, localAddress);
         IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
         KcpOutput kcpOutput = new KcpOutPutImp();
 

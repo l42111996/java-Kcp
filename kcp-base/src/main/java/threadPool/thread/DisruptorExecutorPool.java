@@ -43,6 +43,10 @@ public class DisruptorExecutorPool
             return thread;
         }
     }
+	public static ScheduledFuture<?> scheduleWithFixedDelay(Runnable command,long milliseconds){
+		return scheduled.scheduleWithFixedDelay(command,milliseconds,milliseconds, TimeUnit.MILLISECONDS);
+	}
+
 
 
     public static ScheduledFuture<?> schedule(Runnable command,long milliseconds){

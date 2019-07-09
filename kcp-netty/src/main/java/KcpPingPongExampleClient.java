@@ -16,7 +16,7 @@ public class KcpPingPongExampleClient implements KcpListener {
 
     public static void main(String[] args) {
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(38888);
+        kcpClient.init(Runtime.getRuntime().availableProcessors());
 
         ChannelConfig channelConfig = new ChannelConfig();
         channelConfig.setFastresend(2);
