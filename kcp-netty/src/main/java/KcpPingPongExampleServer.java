@@ -35,7 +35,6 @@ public class KcpPingPongExampleServer implements KcpListener {
 
     @Override
     public void onConnected(Ukcp ukcp) {
-        ukcp.setConv(10);
         System.out.println("有连接进来" + Thread.currentThread().getName() + ukcp.user().getRemoteAddress());
     }
 

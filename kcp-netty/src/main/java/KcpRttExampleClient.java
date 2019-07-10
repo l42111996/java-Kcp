@@ -53,13 +53,14 @@ public class KcpRttExampleClient implements KcpListener {
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
         channelConfig.setMtu(1400);
-        channelConfig.setFecDataShardCount(10);
-        channelConfig.setFecParityShardCount(3);
+        //channelConfig.setFecDataShardCount(10);
+        //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
+        channelConfig.setAutoSetConv(true);
 
         KcpRttExampleClient kcpClientRttExample = new KcpRttExampleClient();
         kcpClient.connect(new InetSocketAddress("127.0.0.1",10003),channelConfig,kcpClientRttExample);

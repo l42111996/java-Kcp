@@ -21,13 +21,14 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
         channelConfig.setMtu(1400);
-        channelConfig.setFecDataShardCount(10);
-        channelConfig.setFecParityShardCount(3);
+        //channelConfig.setFecDataShardCount(10);
+        //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
+        channelConfig.setAutoSetConv(true);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,10003);
     }
@@ -35,7 +36,6 @@ public class KcpRttExampleServer implements KcpListener {
 
     @Override
     public void onConnected(Ukcp ukcp) {
-        ukcp.setConv(10);
         System.out.println("有连接进来"+Thread.currentThread().getName()+ukcp.user().getRemoteAddress());
     }
 

@@ -1,5 +1,6 @@
 package test;
 
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import kcp.ChannelConfig;
@@ -37,11 +38,19 @@ public class LockStepSynchronizationServer implements KcpListener
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(1, lockStepSynchronizationServer, channelConfig, 10005);
+        kcpServer.init(1, lockStepSynchronizationServer, channelConfig, 10009);
 
         for (int i = 0; i < 1; i++) {
             lockStepSynchronizationServer.disruptorExecutorPool.createDisruptorProcessor("logic-"+i);
         }
+        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println();
+            Snmp.snmp = new Snmp();
+        },1000);
+
+
     }
 
 

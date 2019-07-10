@@ -1,5 +1,6 @@
 package test;
 
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import kcp.ChannelConfig;
@@ -18,6 +19,15 @@ public class LockStepSynchronizationClient implements KcpListener
 {
 
     public static void main(String[] args) {
+        String ip = "127.0.0.1";
+        if(args.length>0){
+            ip = args[0];
+        }
+        int number= 1000;
+        if(args.length>1){
+            number = Integer.parseInt(args[1]);
+        }
+
         KcpClient kcpClient = new KcpClient();
         kcpClient.init(Runtime.getRuntime().availableProcessors());
 
@@ -36,9 +46,17 @@ public class LockStepSynchronizationClient implements KcpListener
 
         LockStepSynchronizationClient lockStepSynchronizationClient = new LockStepSynchronizationClient();
 
-        for (int i = 0; i < 2000; i++) {
-            kcpClient.connect(new InetSocketAddress("127.0.0.1", 10005), channelConfig, lockStepSynchronizationClient);
+        for (int i = 0; i < number; i++) {
+            kcpClient.connect(new InetSocketAddress(ip, 10009), channelConfig, lockStepSynchronizationClient);
         }
+
+        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println();
+
+            Snmp.snmp = new Snmp();
+        },1000);
 
     }
 
