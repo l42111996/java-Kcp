@@ -1,6 +1,7 @@
 package kcp;
 
 import com.backblaze.erasure.ReedSolomon;
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -128,6 +129,7 @@ public class KcpClient {
         if (nioEventLoopGroup != null) {
             nioEventLoopGroup.shutdownGracefully();
         }
+        System.out.println(Snmp.snmp);
         //System.out.println("关闭连接3");
     }
 }

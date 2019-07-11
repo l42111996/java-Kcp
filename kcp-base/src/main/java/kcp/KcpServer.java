@@ -1,5 +1,6 @@
 package kcp;
 
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollDatagramChannel;
@@ -55,8 +56,8 @@ public class KcpServer {
                 cp.addLast(serverChannelHandler);
             }
         });
-        bootstrap.option(ChannelOption.SO_RCVBUF, 10*1024*1024);
-        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+        //bootstrap.option(ChannelOption.SO_RCVBUF, 10*1024*1024);
+        //bootstrap.option(ChannelOption.SO_REUSEADDR, true);
         for (int port : ports) {
             ChannelFuture channelFuture = bootstrap.bind(port);
             Channel channel = channelFuture.channel();
@@ -86,6 +87,7 @@ public class KcpServer {
         }
         if(group !=null)
             group.shutdownGracefully();
+        System.out.println(Snmp.snmp);
     }
 
 }
