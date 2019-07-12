@@ -406,9 +406,9 @@ public class ReedSolomon {
         }
 
         // All of the shard buffers should be the same length.
-        int shardLength = shards[0].writerIndex();
+        int shardLength = shards[0].readableBytes();
         for (int i = 1; i < shards.length; i++) {
-            if (shards[i].writerIndex() != shardLength) {
+            if (shards[i].readableBytes() != shardLength) {
                 throw new IllegalArgumentException("Shards are different sizes");
             }
         }

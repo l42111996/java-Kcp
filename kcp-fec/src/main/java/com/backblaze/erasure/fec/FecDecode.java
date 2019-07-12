@@ -10,6 +10,7 @@ import java.util.List;
 import static com.backblaze.erasure.fec.Fec.typeData;
 
 /**
+ *4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth)+body
  *
  * 融进kcp要考虑fec导致的rtt计算不准的问题
  * 参考 https://github.com/xtaci/kcp-go/issues/63
@@ -160,8 +161,8 @@ public class FecDecode {
                     ByteBuf shard  = shards[i];
                     //如果数据不存在 用0填充起来
                     if(shard==null){
-                        shards[i] = zeros.copy(0,maxlen+Fec.fecHeaderSize);
-                        shards[i].writerIndex(maxlen+ Fec.fecHeaderSize);
+                        shards[i] = zeros.copy(0,maxlen);
+                        shards[i].writerIndex(maxlen);
                         continue;
                     }
                     int left = maxlen-shard.readableBytes();
@@ -170,7 +171,7 @@ public class FecDecode {
                         zeros.resetReaderIndex();
                     }
                 }
-                codec.decodeMissing(shards,shardsflag,Fec.fecHeaderSize,maxlen);
+                codec.decodeMissing(shards,shardsflag,0,maxlen);
                 result = new ArrayList<>(this.dataShards);
                 for (int i = 0; i < shardSize; i++) {
                     if(shardsflag[i]){
@@ -182,14 +183,9 @@ public class FecDecode {
                         byteBufs.release();
                         continue;
                     }
-                    int packageSize =byteBufs.getUnsignedShort(Fec.fecHeaderSize);
-                    //判断长度
-                    if(byteBufs.writerIndex()-Fec.fecHeaderSizePlus2>=packageSize&&packageSize>0)
-                    {
-                        byteBufs = byteBufs.slice(Fec.fecHeaderSizePlus2,packageSize);
-                        result.add(byteBufs);
-                        Snmp.snmp.FECRecovered.incrementAndGet();
-                    }else{
+                    int packageSize =byteBufs.getUnsignedShort(0);
+
+                    if(byteBufs.readableBytes()<packageSize){
                         System.out.println("bytebuf长度: "+byteBufs.writerIndex()+" 读出长度"+packageSize);
                         byte[] bytes = new byte[byteBufs.writerIndex()];
                         byteBufs.getBytes(0,bytes);
@@ -197,7 +193,30 @@ public class FecDecode {
                             System.out.print("["+aByte+"] ");
                         }
                         Snmp.snmp.FECErrs.incrementAndGet();
+                    }else{
+                        Snmp.snmp.FECRecovered.incrementAndGet();
                     }
+
+                    //int packageSize =byteBufs.readUnsignedShort();
+                    //byteBufs = byteBufs.slice(0,packageSize);
+                    result.add(byteBufs);
+                    Snmp.snmp.FECRecovered.incrementAndGet();
+                    //int packageSize =byteBufs.getUnsignedShort(0);
+                    ////判断长度
+                    //if(byteBufs.writerIndex()-Fec.fecHeaderSizePlus2>=packageSize&&packageSize>0)
+                    //{
+                    //    byteBufs = byteBufs.slice(Fec.fecHeaderSizePlus2,packageSize);
+                    //    result.add(byteBufs);
+                    //    Snmp.snmp.FECRecovered.incrementAndGet();
+                    //}else{
+                    //    System.out.println("bytebuf长度: "+byteBufs.writerIndex()+" 读出长度"+packageSize);
+                    //    byte[] bytes = new byte[byteBufs.writerIndex()];
+                    //    byteBufs.getBytes(0,bytes);
+                    //    for (byte aByte : bytes) {
+                    //        System.out.print("["+aByte+"] ");
+                    //    }
+                    //    Snmp.snmp.FECErrs.incrementAndGet();
+                    //}
                 }
                 freeRange(first, numshard, rx);
             }

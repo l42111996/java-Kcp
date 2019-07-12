@@ -5,6 +5,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 /**
+ * 4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth)+body
+ *
+ *
  * Created by JinMiao
  * 2018/6/6.
  */
