@@ -64,6 +64,9 @@ public class KcpServer {
             localAddresss.put(port,channel);
         }
 
+        //TODO ADD SO_REUSEPORT ？ https://www.jianshu.com/p/61df929aa98b
+
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
