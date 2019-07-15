@@ -3,6 +3,8 @@ package kcp;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -10,7 +12,9 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import threadPool.thread.DisruptorExecutorPool;
 
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,7 +26,8 @@ public class KcpServer {
 
     private Bootstrap bootstrap;
     private EventLoopGroup group;
-    private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
+    //private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
+    private List<Channel> localAddresss = new Vector<>();
     private Map<SocketAddress,Ukcp> clientMap = new ConcurrentHashMap<>();
 
 
@@ -36,14 +41,18 @@ public class KcpServer {
 
 
     public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
-        boolean epoll = true;
-        String os = System.getProperty("os.name").toUpperCase();
-        if(os.indexOf("WINDOWS")!=-1||os.indexOf("MAC")!=-1){
-            epoll = false;
-        }
+        boolean epoll = Epoll.isAvailable();
         this.disruptorExecutorPool = disruptorExecutorPool;
         bootstrap = new Bootstrap();
-        group = epoll? new EpollEventLoopGroup(2): new NioEventLoopGroup(2);
+        int cpuNum = Runtime.getRuntime().availableProcessors();
+        int bindTimes = 1;
+        if(epoll){
+            //ADD SO_REUSEPORT ？ https://www.jianshu.com/p/61df929aa98b
+            bootstrap.option(EpollChannelOption.SO_REUSEPORT, true);
+            bindTimes = cpuNum;
+        }
+
+        group = epoll? new EpollEventLoopGroup(cpuNum): new NioEventLoopGroup(ports.length);
         Class<? extends Channel> channelClass = epoll? EpollDatagramChannel.class:NioDatagramChannel.class;
         bootstrap.channel(channelClass);
         bootstrap.group(group);
@@ -57,30 +66,22 @@ public class KcpServer {
             }
         });
         //bootstrap.option(ChannelOption.SO_RCVBUF, 10*1024*1024);
-        //bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+
+
         for (int port : ports) {
-            ChannelFuture channelFuture = bootstrap.bind(port);
-            Channel channel = channelFuture.channel();
-            localAddresss.put(port,channel);
+            for (int i = 0; i < bindTimes; i++) {
+                ChannelFuture channelFuture = bootstrap.bind(port);
+                Channel channel = channelFuture.channel();
+                localAddresss.add(channel);
+            }
         }
-
-        //TODO ADD SO_REUSEPORT ？ https://www.jianshu.com/p/61df929aa98b
-
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
-
-    public Map<Integer, Channel> getLocalAddresss() {
-        return localAddresss;
-    }
-
-    public void setLocalAddresss(Map<Integer, Channel> localAddresss) {
-        this.localAddresss = localAddresss;
-    }
-
     public void stop(){
-        localAddresss.values().forEach(
+        localAddresss.forEach(
                 channel -> channel.close()
         );
         clientMap.values().forEach(ukcp ->

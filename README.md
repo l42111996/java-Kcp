@@ -40,7 +40,6 @@
 # TODO 
 1. fec结合directbuffer检测对应cpu最佳性能方案
 2. 大量连接性能测试标准
-3. SO_REUSEPORT优化
 
    
 # 相关资料
