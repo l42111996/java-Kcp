@@ -98,7 +98,7 @@ public class KcpClient {
         ukcpMap.put(localAddress, ukcp);
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, ukcpMap);
-        DisruptorExecutorPool.schedule(scheduleTask, ukcp.getInterval());
+        DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
 
         return ukcp;
     }

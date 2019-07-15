@@ -1,5 +1,7 @@
 package kcp;
 
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import threadPool.task.ITask;
 import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.IMessageExecutor;
@@ -12,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by JinMiao
  * 2018/10/24.
  */
-public class ScheduleTask implements ITask,Runnable {
+public class ScheduleTask implements ITask,Runnable, TimerTask {
 
     private IMessageExecutor disruptorSingleExecutor;
 
@@ -57,14 +59,14 @@ public class ScheduleTask implements ITask,Runnable {
             //判断执行时间是否到了
             if(timeLeft>0){
                 //System.err.println(timeLeft);
-                DisruptorExecutorPool.schedule(this, timeLeft);
+                DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
                 return;
             }
             //long start = System.currentTimeMillis();
             long next = ukcp.flush(now);
             //System.err.println(next);
             //System.out.println("耗时  "+(System.currentTimeMillis()-start));
-            DisruptorExecutorPool.schedule(this, next);
+            DisruptorExecutorPool.scheduleHashedWheel(this, next);
             //检测写缓冲区 如果能写则触发写事件
             if(ukcp.canSend(false)){
                 ukcp.notifyWriteEvent();
@@ -79,5 +81,10 @@ public class ScheduleTask implements ITask,Runnable {
     public void run() {
         isExecute.set(false);
         this.disruptorSingleExecutor.execute(this);
+    }
+
+    @Override
+    public void run(Timeout timeout) {
+        run();
     }
 }

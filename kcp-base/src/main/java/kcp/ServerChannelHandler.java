@@ -76,7 +76,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
             newUkcp.read(msg.content());
 
             ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, clientMap);
-            DisruptorExecutorPool.schedule(scheduleTask, newUkcp.getInterval());
+            DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
             return;
         }
         ukcp.read(msg.content());

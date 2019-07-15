@@ -1,6 +1,8 @@
 package threadPool.thread;
 
 import io.netty.channel.DefaultEventLoop;
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +31,10 @@ public class DisruptorExecutorPool
     private static final ScheduledThreadPoolExecutor scheduled  = new ScheduledThreadPoolExecutor(1,new TimerThreadFacotry());
 
 
-
     private static final DefaultEventLoop EVENT_EXECUTORS = new DefaultEventLoop();
+
+
+    private static final HashedWheelTimer hashedWheelTimer = new HashedWheelTimer(new TimerThreadFacotry(),1,TimeUnit.MILLISECONDS);
 
     /**定时器线程工厂**/
     private static class TimerThreadFacotry implements ThreadFactory
@@ -48,8 +52,13 @@ public class DisruptorExecutorPool
 
 
 
+	public static void scheduleHashedWheel(TimerTask timerTask, long milliseconds){
+		hashedWheelTimer.newTimeout(timerTask,milliseconds,TimeUnit.MILLISECONDS);
+	}
+
     public static ScheduledFuture<?> schedule(Runnable command,long milliseconds){
-        return EVENT_EXECUTORS.schedule(command,milliseconds, TimeUnit.MILLISECONDS);
+        return scheduled.schedule(command,milliseconds, TimeUnit.MILLISECONDS);
+
     }
 
 	/**
