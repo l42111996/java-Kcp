@@ -154,12 +154,13 @@ public class Kcp {
     /**收到包立即回ack**/
     private boolean ackNoDelay;
 
-
+    /**待发送窗口窗口**/
     private LinkedList<Segment> sndQueue = new LinkedList<>();
+    /**发送后待确认的队列**/
+    private ReItrLinkedList<Segment> sndBuf = new ReItrLinkedList<>();
+
     /**收到后有序的队列**/
     private ReItrLinkedList<Segment> rcvQueue = new ReItrLinkedList<>();
-
-    private ReItrLinkedList<Segment> sndBuf = new ReItrLinkedList<>();
     /**收到的消息 无序的**/
     private ReItrLinkedList<Segment> rcvBuf = new ReItrLinkedList<>();
 
@@ -552,7 +553,7 @@ public class Kcp {
     private void updateAck(int rtt) {
         if (rxSrtt == 0) {
             rxSrtt = rtt;
-            rxRttval = rtt / 2;
+            rxRttval = rtt >> 2;
         } else {
             int delta = rtt - rxSrtt;
             rxSrtt += delta>>3;
@@ -572,7 +573,7 @@ public class Kcp {
             //    rxSrtt = 1;
             //}
         }
-        int rto = rxSrtt + Math.max(interval, 4 * rxRttval);
+        int rto = rxSrtt + Math.max(interval, rxRttval<<2);
         rxRto = ibound(rxMinrto, rto, IKCP_RTO_MAX);
     }
 
@@ -904,6 +905,7 @@ public class Kcp {
         buffer.release();
 
     }
+
 
 
 

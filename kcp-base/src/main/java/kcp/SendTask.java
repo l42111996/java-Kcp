@@ -45,14 +45,12 @@ public class SendTask implements ITask {
             }
             //从发送缓冲区到kcp缓冲区
             MpscArrayQueue<ByteBuf> queue = kcp.getSendList();
-            boolean hasSend  = false;
             while(kcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
                     break;
                 }
                 try {
-                    hasSend = true;
                     this.kcp.send(byteBuf);
                     byteBuf.release();
                 } catch (IOException e) {
@@ -60,15 +58,14 @@ public class SendTask implements ITask {
                     return;
                 }
             }
+
             //如果有发送 则检测时间
-            if(hasSend&&kcp.isFastFlush()){
-                if(kcp.canSend(false)){
-                    long now =System.currentTimeMillis();
-                    long next = kcp.flush(now);
-                    //System.out.println(next);
-                    //System.out.println("耗时"+(System.currentTimeMillis()-now));
-                    kcp.setTsUpdate(now+next);
-                }
+            if(!kcp.canSend(false)||(kcp.checkFlush()&&kcp.isFastFlush())){
+                long now =System.currentTimeMillis();
+                long next = kcp.flush(now);
+                //System.out.println(next);
+                //System.out.println("耗时"+(System.currentTimeMillis()-now));
+                kcp.setTsUpdate(now+next);
             }
         }catch (Throwable e){
             e.printStackTrace();

@@ -23,7 +23,7 @@ public class ChannelConfig {
     private int fecParityShardCount;
     //收到包立刻回传ack包
     private boolean ackNoDelay = false;
-    //收到包立即调用flush
+    //发送包立即调用flush 延迟低一些  cpu增加  如果interval值很小 建议关闭该参数
     private boolean fastFlush = true;
     //crc32校验
     private boolean crc32Check = false;
