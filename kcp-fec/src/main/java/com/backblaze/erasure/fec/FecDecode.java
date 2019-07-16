@@ -10,7 +10,7 @@ import java.util.List;
 import static com.backblaze.erasure.fec.Fec.typeData;
 
 /**
- *4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth)+body
+ *4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth不包含自己)+body
  *
  * 融进kcp要考虑fec导致的rtt计算不准的问题
  * 参考 https://github.com/xtaci/kcp-go/issues/63
@@ -183,8 +183,8 @@ public class FecDecode {
                         byteBufs.release();
                         continue;
                     }
-                    int packageSize =byteBufs.getUnsignedShort(0);
 
+                    int packageSize = byteBufs.readShort();
                     if(byteBufs.readableBytes()<packageSize){
                         System.out.println("bytebuf长度: "+byteBufs.writerIndex()+" 读出长度"+packageSize);
                         byte[] bytes = new byte[byteBufs.writerIndex()];
@@ -196,7 +196,8 @@ public class FecDecode {
                     }else{
                         Snmp.snmp.FECRecovered.incrementAndGet();
                     }
-
+                    //去除fec头标记的消息体长度2字段
+                    byteBufs = byteBufs.slice(Fec.fecDataSize,packageSize);
                     //int packageSize =byteBufs.readUnsignedShort();
                     //byteBufs = byteBufs.slice(0,packageSize);
                     result.add(byteBufs);

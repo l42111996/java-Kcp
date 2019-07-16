@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 /**
- * 4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth)+body
+ * 4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth不包含自己)+body
  *
  *
  * Created by JinMiao
@@ -88,7 +88,7 @@ public class FecEncode {
     public ByteBuf[] encode(ByteBuf byteBuf){
         markData(byteBuf,headerOffset);
         int sz = byteBuf.writerIndex();
-        byteBuf.setShort(payloadOffset,sz- Fec.fecHeaderSizePlus2);
+        byteBuf.setShort(payloadOffset,sz-headerOffset- Fec.fecHeaderSizePlus2);
         this.shardCache[shardCount] = byteBuf.retainedDuplicate();
         this.shardCount ++;
         if (sz > this.maxSize) {

@@ -7,7 +7,8 @@ package com.backblaze.erasure.fec;
 public class Fec {
     public static int
             fecHeaderSize      = 6,
-            fecHeaderSizePlus2 = fecHeaderSize + 2, // plus 2B data size
+            fecDataSize = 2,
+            fecHeaderSizePlus2 = fecHeaderSize + fecDataSize, // plus 2B data size
             typeData           = 0xf1,
             typeParity = 0xf2;
 
