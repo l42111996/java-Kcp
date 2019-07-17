@@ -236,7 +236,7 @@ public class Kcp {
         buf.writeIntLE((int) seg.una);
         buf.writeIntLE(seg.data.readableBytes());
 
-        Snmp.snmp.OutSegs.incrementAndGet();
+        Snmp.snmp.OutSegs.increment();
         return buf.writerIndex() - offset;
     }
 
@@ -805,7 +805,7 @@ public class Kcp {
                         }
                     }
                     if (regular && repeat) {
-                        Snmp.snmp.RepeatSegs.incrementAndGet();
+                        Snmp.snmp.RepeatSegs.increment();
                     }
                     if (log.isDebugEnabled()) {
                         log.debug("{} input push: sn={}, una={}, ts={},regular={}", this, sn, una, ts,regular);
@@ -838,7 +838,7 @@ public class Kcp {
             inSegs++;
         }
 
-        Snmp.snmp.InSegs.addAndGet(inSegs);
+        Snmp.snmp.InSegs.add(inSegs);
 
         if (flag && regular) {
             int rtt = itimediff(uintCurrent, latest);
@@ -1127,18 +1127,18 @@ public class Kcp {
 
         long sum = lostSegs;
         if (lostSegs > 0) {
-            Snmp.snmp.LostSegs.addAndGet(lostSegs);
+            Snmp.snmp.LostSegs.add(lostSegs);
         }
         if (fastRetransSegs > 0) {
-            Snmp.snmp.FastRetransSegs.addAndGet(fastRetransSegs);
+            Snmp.snmp.FastRetransSegs.add(fastRetransSegs);
             sum += fastRetransSegs;
         }
         if (earlyRetransSegs > 0) {
-            Snmp.snmp.EarlyRetransSegs.addAndGet(earlyRetransSegs);
+            Snmp.snmp.EarlyRetransSegs.add(earlyRetransSegs);
             sum += earlyRetransSegs;
         }
         if (sum > 0) {
-            Snmp.snmp.RetransSegs.addAndGet(sum);
+            Snmp.snmp.RetransSegs.add(sum);
         }
         // update ssthresh
         if (!nocwnd){

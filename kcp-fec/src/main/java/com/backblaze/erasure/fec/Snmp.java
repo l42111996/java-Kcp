@@ -1,6 +1,6 @@
 package com.backblaze.erasure.fec;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 
 /**
@@ -9,263 +9,263 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Snmp {
     // bytes sent from upper level
-    public AtomicLong BytesSent = new AtomicLong();
+    public LongAdder BytesSent = new LongAdder();
     // bytes received to upper level
-    public AtomicLong BytesReceived = new AtomicLong();
+    public LongAdder BytesReceived = new LongAdder();
     // max number of connections ever reached
-    public AtomicLong MaxConn = new AtomicLong();
+    public LongAdder MaxConn = new LongAdder();
     // accumulated active open connections
-    public AtomicLong ActiveOpens = new AtomicLong();
+    public LongAdder ActiveOpens = new LongAdder();
     // accumulated passive open connections
-    public AtomicLong PassiveOpens = new AtomicLong();
+    public LongAdder PassiveOpens = new LongAdder();
     // current number of established connections
-    public AtomicLong CurrEstab = new AtomicLong();
+    public LongAdder CurrEstab = new LongAdder();
     // UDP read errors reported from net.PacketConn
-    public AtomicLong InErrs = new AtomicLong();
+    public LongAdder InErrs = new LongAdder();
     // checksum errors from CRC32
-    public AtomicLong InCsumErrors = new AtomicLong();
+    public LongAdder InCsumErrors = new LongAdder();
     // packet iput errors reported from KCP
-    public AtomicLong KCPInErrors = new AtomicLong();
+    public LongAdder KCPInErrors = new LongAdder();
     // incoming packets count
-    public AtomicLong InPkts = new AtomicLong();
+    public LongAdder InPkts = new LongAdder();
     // outgoing packets count
-    public AtomicLong OutPkts = new AtomicLong();
+    public LongAdder OutPkts = new LongAdder();
     // incoming KCP segments
-    public AtomicLong InSegs = new AtomicLong();
+    public LongAdder InSegs = new LongAdder();
     // outgoing KCP segments
-    public AtomicLong OutSegs = new AtomicLong();
+    public LongAdder OutSegs = new LongAdder();
     // UDP bytes received
-    public AtomicLong InBytes = new AtomicLong();
+    public LongAdder InBytes = new LongAdder();
     // UDP bytes sent
-    public AtomicLong OutBytes = new AtomicLong();
+    public LongAdder OutBytes = new LongAdder();
     // accmulated retransmited segments
-    public AtomicLong RetransSegs = new AtomicLong();
+    public LongAdder RetransSegs = new LongAdder();
     // accmulated fast retransmitted segments
-    public AtomicLong FastRetransSegs = new AtomicLong();
+    public LongAdder FastRetransSegs = new LongAdder();
     // accmulated early retransmitted segments
-    public AtomicLong EarlyRetransSegs = new AtomicLong();
+    public LongAdder EarlyRetransSegs = new LongAdder();
     // number of segs infered as lost
-    public AtomicLong LostSegs = new AtomicLong();
+    public LongAdder LostSegs = new LongAdder();
     // number of segs duplicated
-    public AtomicLong RepeatSegs = new AtomicLong();
+    public LongAdder RepeatSegs = new LongAdder();
     // correct packets recovered from FEC
-    public AtomicLong FECRecovered = new AtomicLong();
+    public LongAdder FECRecovered = new LongAdder();
     // incorrect packets recovered from FEC
-    public AtomicLong FECErrs = new AtomicLong();
+    public LongAdder FECErrs = new LongAdder();
     // 收到的 Data数量
-    public AtomicLong FECDataShards = new AtomicLong();
+    public LongAdder FECDataShards = new LongAdder();
     // 收到的 Parity数量
-    public AtomicLong FECParityShards = new AtomicLong();
+    public LongAdder FECParityShards = new LongAdder();
     // number of data shards that's not enough for recovery
-    public AtomicLong FECShortShards = new AtomicLong();
+    public LongAdder FECShortShards = new LongAdder();
     // number of data shards that's not enough for recovery
-    public AtomicLong FECRepeatDataShards = new AtomicLong();
+    public LongAdder FECRepeatDataShards = new LongAdder();
 
-    public AtomicLong getBytesSent() {
+    public LongAdder getBytesSent() {
         return BytesSent;
     }
 
-    public void setBytesSent(AtomicLong bytesSent) {
+    public void setBytesSent(LongAdder bytesSent) {
         BytesSent = bytesSent;
     }
 
-    public AtomicLong getBytesReceived() {
+    public LongAdder getBytesReceived() {
         return BytesReceived;
     }
 
-    public void setBytesReceived(AtomicLong bytesReceived) {
+    public void setBytesReceived(LongAdder bytesReceived) {
         BytesReceived = bytesReceived;
     }
 
-    public AtomicLong getMaxConn() {
+    public LongAdder getMaxConn() {
         return MaxConn;
     }
 
-    public void setMaxConn(AtomicLong maxConn) {
+    public void setMaxConn(LongAdder maxConn) {
         MaxConn = maxConn;
     }
 
-    public AtomicLong getActiveOpens() {
+    public LongAdder getActiveOpens() {
         return ActiveOpens;
     }
 
-    public void setActiveOpens(AtomicLong activeOpens) {
+    public void setActiveOpens(LongAdder activeOpens) {
         ActiveOpens = activeOpens;
     }
 
-    public AtomicLong getPassiveOpens() {
+    public LongAdder getPassiveOpens() {
         return PassiveOpens;
     }
 
-    public void setPassiveOpens(AtomicLong passiveOpens) {
+    public void setPassiveOpens(LongAdder passiveOpens) {
         PassiveOpens = passiveOpens;
     }
 
-    public AtomicLong getCurrEstab() {
+    public LongAdder getCurrEstab() {
         return CurrEstab;
     }
 
-    public void setCurrEstab(AtomicLong currEstab) {
+    public void setCurrEstab(LongAdder currEstab) {
         CurrEstab = currEstab;
     }
 
-    public AtomicLong getInErrs() {
+    public LongAdder getInErrs() {
         return InErrs;
     }
 
-    public void setInErrs(AtomicLong inErrs) {
+    public void setInErrs(LongAdder inErrs) {
         InErrs = inErrs;
     }
 
-    public AtomicLong getInCsumErrors() {
+    public LongAdder getInCsumErrors() {
         return InCsumErrors;
     }
 
-    public void setInCsumErrors(AtomicLong inCsumErrors) {
+    public void setInCsumErrors(LongAdder inCsumErrors) {
         InCsumErrors = inCsumErrors;
     }
 
-    public AtomicLong getKCPInErrors() {
+    public LongAdder getKCPInErrors() {
         return KCPInErrors;
     }
 
-    public void setKCPInErrors(AtomicLong KCPInErrors) {
+    public void setKCPInErrors(LongAdder KCPInErrors) {
         this.KCPInErrors = KCPInErrors;
     }
 
-    public AtomicLong getInPkts() {
+    public LongAdder getInPkts() {
         return InPkts;
     }
 
-    public void setInPkts(AtomicLong inPkts) {
+    public void setInPkts(LongAdder inPkts) {
         InPkts = inPkts;
     }
 
-    public AtomicLong getOutPkts() {
+    public LongAdder getOutPkts() {
         return OutPkts;
     }
 
-    public void setOutPkts(AtomicLong outPkts) {
+    public void setOutPkts(LongAdder outPkts) {
         OutPkts = outPkts;
     }
 
-    public AtomicLong getInSegs() {
+    public LongAdder getInSegs() {
         return InSegs;
     }
 
-    public void setInSegs(AtomicLong inSegs) {
+    public void setInSegs(LongAdder inSegs) {
         InSegs = inSegs;
     }
 
-    public AtomicLong getOutSegs() {
+    public LongAdder getOutSegs() {
         return OutSegs;
     }
 
-    public void setOutSegs(AtomicLong outSegs) {
+    public void setOutSegs(LongAdder outSegs) {
         OutSegs = outSegs;
     }
 
-    public AtomicLong getInBytes() {
+    public LongAdder getInBytes() {
         return InBytes;
     }
 
-    public void setInBytes(AtomicLong inBytes) {
+    public void setInBytes(LongAdder inBytes) {
         InBytes = inBytes;
     }
 
-    public AtomicLong getOutBytes() {
+    public LongAdder getOutBytes() {
         return OutBytes;
     }
 
-    public void setOutBytes(AtomicLong outBytes) {
+    public void setOutBytes(LongAdder outBytes) {
         OutBytes = outBytes;
     }
 
-    public AtomicLong getRetransSegs() {
+    public LongAdder getRetransSegs() {
         return RetransSegs;
     }
 
-    public void setRetransSegs(AtomicLong retransSegs) {
+    public void setRetransSegs(LongAdder retransSegs) {
         RetransSegs = retransSegs;
     }
 
-    public AtomicLong getFastRetransSegs() {
+    public LongAdder getFastRetransSegs() {
         return FastRetransSegs;
     }
 
-    public void setFastRetransSegs(AtomicLong fastRetransSegs) {
+    public void setFastRetransSegs(LongAdder fastRetransSegs) {
         FastRetransSegs = fastRetransSegs;
     }
 
-    public AtomicLong getEarlyRetransSegs() {
+    public LongAdder getEarlyRetransSegs() {
         return EarlyRetransSegs;
     }
 
-    public void setEarlyRetransSegs(AtomicLong earlyRetransSegs) {
+    public void setEarlyRetransSegs(LongAdder earlyRetransSegs) {
         EarlyRetransSegs = earlyRetransSegs;
     }
 
-    public AtomicLong getLostSegs() {
+    public LongAdder getLostSegs() {
         return LostSegs;
     }
 
-    public void setLostSegs(AtomicLong lostSegs) {
+    public void setLostSegs(LongAdder lostSegs) {
         LostSegs = lostSegs;
     }
 
-    public AtomicLong getRepeatSegs() {
+    public LongAdder getRepeatSegs() {
         return RepeatSegs;
     }
 
-    public void setRepeatSegs(AtomicLong repeatSegs) {
+    public void setRepeatSegs(LongAdder repeatSegs) {
         RepeatSegs = repeatSegs;
     }
 
-    public AtomicLong getFECRecovered() {
+    public LongAdder getFECRecovered() {
         return FECRecovered;
     }
 
-    public void setFECRecovered(AtomicLong FECRecovered) {
+    public void setFECRecovered(LongAdder FECRecovered) {
         this.FECRecovered = FECRecovered;
     }
 
-    public AtomicLong getFECErrs() {
+    public LongAdder getFECErrs() {
         return FECErrs;
     }
 
-    public void setFECErrs(AtomicLong FECErrs) {
+    public void setFECErrs(LongAdder FECErrs) {
         this.FECErrs = FECErrs;
     }
 
-    public AtomicLong getFECDataShards() {
+    public LongAdder getFECDataShards() {
         return FECDataShards;
     }
 
-    public void setFECDataShards(AtomicLong FECDataShards) {
+    public void setFECDataShards(LongAdder FECDataShards) {
         this.FECDataShards = FECDataShards;
     }
 
-    public AtomicLong getFECParityShards() {
+    public LongAdder getFECParityShards() {
         return FECParityShards;
     }
 
-    public void setFECParityShards(AtomicLong FECParityShards) {
+    public void setFECParityShards(LongAdder FECParityShards) {
         this.FECParityShards = FECParityShards;
     }
 
-    public AtomicLong getFECShortShards() {
+    public LongAdder getFECShortShards() {
         return FECShortShards;
     }
 
-    public void setFECShortShards(AtomicLong FECShortShards) {
+    public void setFECShortShards(LongAdder FECShortShards) {
         this.FECShortShards = FECShortShards;
     }
 
-    public AtomicLong getFECRepeatDataShards() {
+    public LongAdder getFECRepeatDataShards() {
         return FECRepeatDataShards;
     }
 
-    public void setFECRepeatDataShards(AtomicLong FECRepeatDataShards) {
+    public void setFECRepeatDataShards(LongAdder FECRepeatDataShards) {
         this.FECRepeatDataShards = FECRepeatDataShards;
     }
 

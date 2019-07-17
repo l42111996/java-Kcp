@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 模拟帧同步测试吞吐和流量
+ * 50ms一帧
  * Created by JinMiao
  * 2019-06-25.
  */
@@ -44,8 +46,8 @@ public class LockStepSynchronizationServer implements KcpListener
             lockStepSynchronizationServer.disruptorExecutorPool.createDisruptorProcessor("logic-"+i);
         }
         DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
-            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.get()/1024.0/1024.0*8.0)+" M");
-            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.longValue()/1024.0/1024.0*8.0)+" M");
             System.out.println();
             Snmp.snmp = new Snmp();
         },1000);

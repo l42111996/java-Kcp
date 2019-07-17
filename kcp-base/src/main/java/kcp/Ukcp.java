@@ -133,8 +133,8 @@ public class Ukcp{
 
     public void input(ByteBuf data,long current) throws IOException {
         lastRecieveTime = System.currentTimeMillis();
-        Snmp.snmp.InPkts.incrementAndGet();
-        Snmp.snmp.InBytes.addAndGet(data.readableBytes());
+        Snmp.snmp.InPkts.increment();
+        Snmp.snmp.InBytes.add(data.readableBytes());
 
         if(crc32Check){
             long checksum =  data.readUnsignedInt();
@@ -142,7 +142,7 @@ public class Ukcp{
             crc32.reset();
             crc32.update(byteBuffer);
             if(checksum!=crc32.getValue()){
-                Snmp.snmp.getInCsumErrors().incrementAndGet();
+                Snmp.snmp.getInCsumErrors().increment();
                 return;
             }
         }

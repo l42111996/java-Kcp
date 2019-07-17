@@ -8,7 +8,6 @@ import threadPool.thread.IMessageExecutor;
 
 import java.net.SocketAddress;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by JinMiao
@@ -27,12 +26,6 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
         this.ukcp = ukcp;
         this.ukcpMap = ukcpMap;
     }
-
-    /**
-     * 是否执行完了
-     **/
-    private AtomicBoolean isExecute = new AtomicBoolean(true);
-
 
     //flush策略
     //1,在send调用后检查缓冲区如果可以发送直接调用update得到时间并存在ukcp内
@@ -62,6 +55,7 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
                 DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
                 return;
             }
+
             //long start = System.currentTimeMillis();
             long next = ukcp.flush(now);
             //System.err.println(next);
@@ -79,7 +73,6 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
 
     @Override
     public void run() {
-        isExecute.set(false);
         this.disruptorSingleExecutor.execute(this);
     }
 

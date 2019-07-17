@@ -12,6 +12,9 @@ import threadPool.thread.DisruptorExecutorPool;
 import java.net.InetSocketAddress;
 
 /**
+ * 模拟帧同步
+ * 50ms一帧
+ * 20字节一个包
  * Created by JinMiao
  * 2019-06-25.
  */
@@ -51,8 +54,8 @@ public class LockStepSynchronizationClient implements KcpListener
         }
 
         DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
-            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.get()/1024.0/1024.0*8.0)+" M");
-            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.get()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M");
+            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.longValue()/1024.0/1024.0*8.0)+" M");
             System.out.println();
 
             Snmp.snmp = new Snmp();
