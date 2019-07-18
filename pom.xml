@@ -8,12 +8,7 @@
     <artifactId>java-Kcp</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>kcp-base</module>
-        <module>kcp-netty</module>
-        <module>kcp-fec</module>
-        <module>kcp-lockStepSynchronization</module>
-    </modules>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netty.version>4.1.37.Final</netty.version>
@@ -21,11 +16,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
