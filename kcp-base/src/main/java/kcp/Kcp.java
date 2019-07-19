@@ -958,6 +958,7 @@ public class Kcp {
 
         if(ackOnly){
             flushBuffer(buffer);
+            seg.recycle(true);
             return interval;
         }
 
