@@ -1,3 +1,5 @@
+package test;
+
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import kcp.ChannelConfig;
@@ -20,7 +22,7 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setFastresend(2);
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
-        channelConfig.setMtu(1400);
+        channelConfig.setMtu(512);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
@@ -30,7 +32,7 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,10003);
+        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,20003);
     }
 
 

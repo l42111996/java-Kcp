@@ -1,3 +1,5 @@
+package test;
+
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -23,9 +25,9 @@ public class KcpPingPongExampleClient implements KcpListener {
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
-        channelConfig.setFecDataShardCount(10);
-        channelConfig.setFecParityShardCount(3);
-        channelConfig.setAckNoDelay(false);
+        //channelConfig.setFecDataShardCount(10);
+        //channelConfig.setFecParityShardCount(3);
+        channelConfig.setAckNoDelay(true);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);

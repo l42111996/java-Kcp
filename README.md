@@ -24,17 +24,20 @@
 
 
 # 使用方法以及参数
-1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleServer.java)
-2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/KcpRttExampleClient.java)
+1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/task.KcpRttExampleServer.java)
+2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/task.KcpRttExampleClient.java)
 3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [大量资料](https://github.com/skywind3000/kcp)
+5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
 
 
 # 已完成测试
 1. 单连接死循环收发包内存检测，性能测试  
 配置:mbp 2.3 GHz Intel Core i9 16GRam
 单连接 带fec 5W/s qps
-单连接 不带fec  8W/s qps
+单连接 不带fec  9W/s qps
+2. java服务端与c#客户端兼容测试
+
 
 
 # TODO 

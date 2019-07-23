@@ -1,3 +1,5 @@
+package test;
+
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -52,18 +54,20 @@ public class KcpRttExampleClient implements KcpListener {
         channelConfig.setFastresend(2);
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
-        channelConfig.setMtu(1400);
-        //channelConfig.setFecDataShardCount(10);
-        //channelConfig.setFecParityShardCount(3);
-        channelConfig.setAckNoDelay(false);
+        channelConfig.setMtu(512);
+        channelConfig.setFecDataShardCount(3);
+        channelConfig.setFecParityShardCount(1);
+        channelConfig.setAckNoDelay(true);
         channelConfig.setInterval(40);
         channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
-        channelConfig.setTimeoutMillis(10000);
+        //channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
 
         KcpRttExampleClient kcpClientRttExample = new KcpRttExampleClient();
-        kcpClient.connect(new InetSocketAddress("127.0.0.1",10003),channelConfig,kcpClientRttExample);
+        //kcpClient.connect(new InetSocketAddress("127.0.0.1",10003),channelConfig,kcpClientRttExample);
+
+        kcpClient.connect(new InetSocketAddress("10.60.100.191",10003),channelConfig,kcpClientRttExample);
     }
 
     @Override

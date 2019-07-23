@@ -1,3 +1,5 @@
+package test;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import kcp.ChannelConfig;
