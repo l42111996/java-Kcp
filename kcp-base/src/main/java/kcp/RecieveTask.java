@@ -2,7 +2,6 @@ package kcp;
 
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.Recycler;
 import threadPool.task.ITask;
 
@@ -17,9 +16,6 @@ public class RecieveTask implements ITask {
     private final Recycler.Handle<RecieveTask> recyclerHandle;
 
     private Ukcp kcp;
-
-
-    private ByteBufAllocator byteBufAllocator = ByteBufAllocator.DEFAULT;
 
     private static final Recycler<RecieveTask> RECYCLER = new Recycler<RecieveTask>() {
         @Override
