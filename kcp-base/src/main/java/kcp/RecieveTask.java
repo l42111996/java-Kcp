@@ -2,6 +2,7 @@ package kcp;
 
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.Recycler;
 import threadPool.task.ITask;
 
@@ -16,6 +17,9 @@ public class RecieveTask implements ITask {
     private final Recycler.Handle<RecieveTask> recyclerHandle;
 
     private Ukcp kcp;
+
+
+    private ByteBufAllocator byteBufAllocator = ByteBufAllocator.DEFAULT;
 
     private static final Recycler<RecieveTask> RECYCLER = new Recycler<RecieveTask>() {
         @Override
@@ -42,51 +46,67 @@ public class RecieveTask implements ITask {
         try {
             //Thread.sleep(1000);
             //查看连接状态
-            if(!kcp.isActive()){
+            if (!kcp.isActive()) {
                 return;
             }
             boolean hasRevieveMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
-            for(;;) {
+            for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
                     break;
                 }
                 hasRevieveMessage = true;
-                kcp.input(byteBuf,current);
+                kcp.input(byteBuf, current);
                 byteBuf.release();
             }
-            if(!hasRevieveMessage){
+            if (!hasRevieveMessage) {
                 return;
             }
-            bufList =  CodecOutputList.newInstance();
-            while (kcp.canRecv()) {
-                kcp.receive(bufList);
-            }
-            for (ByteBuf buf : bufList) {
-                try {
-                    kcp.getKcpListener().handleReceive(buf, kcp);
-                }catch (Throwable throwable){
-                    kcp.getKcpListener().handleException(throwable,kcp);
+            if (kcp.isStream()) {
+                while (kcp.canRecv()) {
+                    if (bufList == null) {
+                        bufList = CodecOutputList.newInstance();
+                    }
+                    kcp.receive(bufList);
                 }
-                buf.release();
+                int size = bufList.size();
+                for (int i = 0; i < size; i++) {
+                    ByteBuf byteBuf = bufList.getUnsafe(i);
+                    readBytebuf(byteBuf);
+                }
+            } else {
+                while (kcp.canRecv()) {
+                    ByteBuf recvBuf = kcp.mergeReceive();
+                    readBytebuf(recvBuf);
+                }
             }
             //判断写事件
-            if(kcp.canSend(false)){
+            if (kcp.canSend(false)) {
                 kcp.notifyWriteEvent();
             }
-        }catch (Throwable e){
+        } catch (Throwable e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             release();
-            if(bufList!=null)
+            if (bufList != null)
                 bufList.recycle();
         }
     }
 
 
-    public void release(){
+    private void readBytebuf(ByteBuf buf) {
+        try {
+            kcp.getKcpListener().handleReceive(buf, kcp);
+        } catch (Throwable throwable) {
+            kcp.getKcpListener().handleException(throwable, kcp);
+        }
+        buf.release();
+
+    }
+
+    public void release() {
         kcp = null;
         recyclerHandle.recycle(this);
     }

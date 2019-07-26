@@ -131,6 +131,12 @@ public class Ukcp{
         kcp.recv(bufList);
     }
 
+
+    public ByteBuf mergeReceive() {
+        return kcp.mergeRecv();
+    }
+
+
     public void input(ByteBuf data,long current) throws IOException {
         lastRecieveTime = System.currentTimeMillis();
         Snmp.snmp.InPkts.increment();

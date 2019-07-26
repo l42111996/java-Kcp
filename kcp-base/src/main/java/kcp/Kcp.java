@@ -358,6 +358,66 @@ public class Kcp {
     }
 
 
+    public ByteBuf mergeRecv() {
+        if (rcvQueue.isEmpty()) {
+            return null;
+        }
+        int peekSize = peekSize();
+
+        if (peekSize < 0) {
+            return null;
+        }
+
+
+        boolean recover = false;
+        if (rcvQueue.size() >= rcvWnd) {
+            recover = true;
+        }
+        ByteBuf byteBuf = null;
+
+        // merge fragment
+        int len = 0;
+        for (Iterator<Segment> itr = rcvQueueItr.rewind(); itr.hasNext(); ) {
+            Segment seg = itr.next();
+            len += seg.data.readableBytes();
+            int fragment = seg.frg;
+            itr.remove();
+
+            // log
+            if (log.isDebugEnabled()) {
+                log.debug("{} recv sn={}", this, seg.sn);
+            }
+            if(byteBuf==null){
+                if(fragment==0){
+                    byteBuf = seg.data;
+                    seg.recycle(false);
+                    break;
+                }
+                byteBuf = byteBufAllocator.buffer(len);
+            }
+            byteBuf.writeBytes(seg.data);
+            seg.recycle(true);
+            if (fragment == 0) {
+                break;
+            }
+        }
+
+        assert len == peekSize;
+
+        // move available data from rcv_buf -> rcv_queue
+        moveRcvData();
+
+        // fast recover
+        if (rcvQueue.size() < rcvWnd && recover) {
+            // ready to send back IKCP_CMD_WINS in ikcp_flush
+            // tell remote my window size
+            probe |= IKCP_ASK_TELL;
+        }
+
+        return byteBuf;
+    }
+
+
     /**
      * 1，判断是否有完整的包，如果有就抛给下一层
      * 2，整理消息接收队列，判断下一个包是否已经收到 收到放入rcvQueue
