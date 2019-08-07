@@ -22,8 +22,9 @@ public class Kcp4sharpExampleServer implements KcpListener {
         channelConfig.setSndwnd(300);
         channelConfig.setRcvwnd(300);
         channelConfig.setMtu(512);
+        channelConfig.setNodelay(true);
         channelConfig.setAckNoDelay(true);
-        channelConfig.setInterval(40);
+        channelConfig.setInterval(10);
         channelConfig.setNocwnd(true);
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
