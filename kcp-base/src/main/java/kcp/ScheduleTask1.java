@@ -13,7 +13,7 @@ import java.util.Map;
  * Created by JinMiao
  * 2018/10/24.
  */
-public class ScheduleTask implements ITask,Runnable, TimerTask {
+public class ScheduleTask1 implements ITask,Runnable, TimerTask {
 
     private IMessageExecutor disruptorSingleExecutor;
 
@@ -21,7 +21,7 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
     private Map<SocketAddress,Ukcp> ukcpMap;
 
 
-    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp, Map<SocketAddress, Ukcp> ukcpMap) {
+    public ScheduleTask1(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp, Map<SocketAddress, Ukcp> ukcpMap) {
         this.disruptorSingleExecutor = disruptorSingleExecutor;
         this.ukcp = ukcp;
         this.ukcpMap = ukcpMap;
@@ -56,17 +56,22 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
                 return;
             }
 
-            //long start = System.currentTimeMillis();
-            long next = ukcp.flush(now);
-            //System.err.println(next);
-            //System.out.println("耗时  "+(System.currentTimeMillis()-start));
-            DisruptorExecutorPool.scheduleHashedWheel(this, next);
+            long nextTsUp =  ukcp.update(now);
+            timeLeft = nextTsUp-now;
+            if(timeLeft<=0){
+                System.out.println("异常"+timeLeft);
+            }
+
+            DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
 
 
+            //long next = ukcp.flush(now);
+            //DisruptorExecutorPool.scheduleHashedWheel(this, next);
             //检测写缓冲区 如果能写则触发写事件
             if(ukcp.canSend(false)
                     &&!ukcp.getSendList().isEmpty()
             ){
+                System.out.println("有事件");
                 ukcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
