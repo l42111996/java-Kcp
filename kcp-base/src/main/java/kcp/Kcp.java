@@ -1238,7 +1238,6 @@ public class Kcp {
      * @param current
      */
     public void update(long current) {
-        //this.current = current;
 
         if (!updated) {
             updated = true;
@@ -1252,24 +1251,23 @@ public class Kcp {
             slap = 0;
         }
 
+        /*if (slap >= 0) {
+            tsFlush += setInterval;
+            if (itimediff(this.current, tsFlush) >= 0) {
+                tsFlush = this.current + setInterval;
+            }
+            flush();
+        }*/
+
         if (slap >= 0) {
             tsFlush += interval;
             if (itimediff(current, tsFlush) >= 0) {
                 tsFlush = current + interval;
             }
-            flush(false,current);
+        } else {
+            tsFlush = current + interval;
         }
-
-        //if (slap >= 0) {
-        //    tsFlush += interval;
-        //    if (itimediff(current, tsFlush) >= 0) {
-        //        tsFlush = current + interval;
-        //    }
-        //} else {
-        //    tsFlush = current + interval;
-        //}
-        //
-        //flush(false,current);
+        flush(false,current);
     }
 
     /**
@@ -1303,7 +1301,7 @@ public class Kcp {
         int tmFlush = itimediff(tsFlush, current);
         int tmPacket = Integer.MAX_VALUE;
 
-        for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext();) {
+        for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext(); ) {
             Segment seg = itr.next();
             int diff = itimediff(seg.resendts, current);
             if (diff <= 0) {
@@ -1318,6 +1316,7 @@ public class Kcp {
         if (minimal >= interval) {
             minimal = interval;
         }
+
         return current + minimal;
     }
 
