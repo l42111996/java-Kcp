@@ -64,11 +64,10 @@ public class Ukcp{
     /**
      * Creates a new instance.
      *
-     * @param conv   conv of kcp
      * @param output output for kcp
      */
-    public Ukcp(int conv, KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
-        this.kcp = new Kcp(conv, output);
+    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
+        this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
         this.kcpListener = kcpListener;
         this.disruptorSingleExecutor = disruptorSingleExecutor;

@@ -84,7 +84,7 @@ public class KcpClient {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
 
-        Ukcp ukcp = new Ukcp(0, kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
+        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
         ukcp.user(user);
 
         disruptorSingleExecutor.execute(() -> {

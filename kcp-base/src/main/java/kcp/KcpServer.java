@@ -41,6 +41,11 @@ public class KcpServer {
 
 
     public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
+        //自动获取conv时 conv应该为0
+        if(channelConfig.isAutoSetConv()){
+            channelConfig.setConv(0);
+        }
+
         boolean epoll = Epoll.isAvailable();
         this.disruptorExecutorPool = disruptorExecutorPool;
         bootstrap = new Bootstrap();

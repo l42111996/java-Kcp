@@ -21,6 +21,7 @@
 4. 优化集合迭代器。
 5. 包含fec,降低延迟
 6. 附带crc32校验
+7. 优化大量连接cpu占用
 
 
 # 使用方法以及参数
@@ -29,7 +30,7 @@
 3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [大量资料](https://github.com/skywind3000/kcp)
 5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
-
+6. [遇到过的问题](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
 
 # 已完成测试
 1. 单连接死循环收发包内存检测，性能测试  

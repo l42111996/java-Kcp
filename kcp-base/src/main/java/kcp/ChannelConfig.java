@@ -5,6 +5,7 @@ package kcp;
  * 2018/9/20.
  */
 public class ChannelConfig {
+    private int conv;
     private boolean nodelay;
     private int interval = Kcp.IKCP_INTERVAL;
     private int fastresend;
@@ -40,6 +41,13 @@ public class ChannelConfig {
         this.nodelay = nodelay;
     }
 
+    public int getConv() {
+        return conv;
+    }
+
+    public void setConv(int conv) {
+        this.conv = conv;
+    }
 
     public int getInterval() {
         return interval;

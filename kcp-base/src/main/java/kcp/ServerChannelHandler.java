@@ -62,7 +62,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                 reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
             }
 
-            Ukcp newUkcp = new Ukcp(0,kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
+            Ukcp newUkcp = new Ukcp(kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
             newUkcp.user(user);
 
             disruptorSingleExecutor.execute(() ->{
