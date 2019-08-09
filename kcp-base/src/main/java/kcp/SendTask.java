@@ -43,6 +43,7 @@ public class SendTask implements ITask {
             if(!kcp.isActive()){
                 return;
             }
+            kcp.setWriteing(true);
             //从发送缓冲区到kcp缓冲区
             MpscArrayQueue<ByteBuf> queue = kcp.getSendList();
             while(kcp.canSend(false)){
@@ -70,6 +71,7 @@ public class SendTask implements ITask {
         }catch (Throwable e){
             e.printStackTrace();
         }finally {
+            kcp.setWriteing(false);
             release();
         }
     }

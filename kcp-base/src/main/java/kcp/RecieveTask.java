@@ -48,6 +48,7 @@ public class RecieveTask implements ITask {
             boolean hasRevieveMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
+            kcp.setReading(true);
             for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
@@ -57,6 +58,7 @@ public class RecieveTask implements ITask {
                 kcp.input(byteBuf, current);
                 byteBuf.release();
             }
+            kcp.setReading(false);
             if (!hasRevieveMessage) {
                 return;
             }

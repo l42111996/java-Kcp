@@ -60,6 +60,10 @@ public class Ukcp{
 
     private CRC32 crc32 = new CRC32();
 
+    private volatile boolean writeing;
+
+    private volatile boolean reading;
+
 
     /**
      * Creates a new instance.
@@ -222,6 +226,22 @@ public class Ukcp{
         return kcp.canRecv();
     }
 
+
+    public boolean isWriteing() {
+        return writeing;
+    }
+
+    public void setWriteing(boolean writeing) {
+        this.writeing = writeing;
+    }
+
+    public boolean isReading() {
+        return reading;
+    }
+
+    public void setReading(boolean reading) {
+        this.reading = reading;
+    }
 
     public long getLastRecieveTime() {
         return lastRecieveTime;
@@ -501,6 +521,7 @@ public class Ukcp{
     public boolean write(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
         if (!sendList.offer(byteBuf)) {
+            System.out.println("满了");
             byteBuf.release();
             return false;
         }
@@ -520,13 +541,19 @@ public class Ukcp{
     }
 
     private void notifyReadEvent() {
-        RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
-        this.disruptorSingleExecutor.execute(recieveTask);
+        if(!reading){
+            RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
+            this.disruptorSingleExecutor.execute(recieveTask);
+        }
     }
 
     protected void notifyWriteEvent() {
-        SendTask sendTask = SendTask.newSendTask(this);
-        this.disruptorSingleExecutor.execute(sendTask);
+        if(!writeing){
+            SendTask sendTask = SendTask.newSendTask(this);
+            this.disruptorSingleExecutor.execute(sendTask);
+        }else{
+            System.out.println("写入中");
+        }
     }
 
 
