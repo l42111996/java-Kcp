@@ -60,7 +60,7 @@ public class Ukcp{
 
     private CRC32 crc32 = new CRC32();
 
-    private volatile boolean writeing;
+    private volatile boolean writing;
 
     private volatile boolean reading;
 
@@ -227,12 +227,12 @@ public class Ukcp{
     }
 
 
-    public boolean isWriteing() {
-        return writeing;
+    public boolean isWriting() {
+        return writing;
     }
 
-    public void setWriteing(boolean writeing) {
-        this.writeing = writeing;
+    public void setWriting(boolean writing) {
+        this.writing = writing;
     }
 
     public boolean isReading() {
@@ -548,7 +548,7 @@ public class Ukcp{
     }
 
     protected void notifyWriteEvent() {
-        if(!writeing){
+        if(!writing){
             SendTask sendTask = SendTask.newSendTask(this);
             this.disruptorSingleExecutor.execute(sendTask);
         }else{
