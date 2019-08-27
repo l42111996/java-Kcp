@@ -72,8 +72,8 @@ public class Ukcp{
         this.kcpListener = kcpListener;
         this.disruptorSingleExecutor = disruptorSingleExecutor;
         //默认2<<16   可以修改
-        sendList = new MpscArrayQueue<>(2 << 16);
-        recieveList = new SpscArrayQueue<>(2<<16);
+        sendList = new MpscArrayQueue<>(2 << 11);
+        recieveList = new SpscArrayQueue<>(2<<11);
         //recieveList = new SpscLinkedQueue<>();
         int headerSize = 0;
         //init encryption
