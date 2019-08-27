@@ -4,6 +4,7 @@ import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
 import threadPool.task.ITask;
+import threadPool.thread.Statistics;
 
 import java.util.Queue;
 
@@ -17,7 +18,7 @@ public class RecieveTask implements ITask {
 
     private Ukcp kcp;
 
-    private static final Recycler<RecieveTask> RECYCLER = new Recycler<RecieveTask>() {
+    private static final Recycler<RecieveTask> RECYCLER = new Recycler<RecieveTask>(2<<16) {
         @Override
         protected RecieveTask newObject(Handle<RecieveTask> handle) {
             return new RecieveTask(handle);
@@ -48,7 +49,6 @@ public class RecieveTask implements ITask {
             boolean hasRevieveMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
-            kcp.setReading(true);
             for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
@@ -58,7 +58,6 @@ public class RecieveTask implements ITask {
                 kcp.input(byteBuf, current);
                 byteBuf.release();
             }
-            kcp.setReading(false);
             if (!hasRevieveMessage) {
                 return;
             }

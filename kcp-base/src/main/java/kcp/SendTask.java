@@ -17,7 +17,7 @@ public class SendTask implements ITask {
 
     private Ukcp kcp;
 
-    private static final Recycler<SendTask> RECYCLER = new Recycler<SendTask>() {
+    private static final Recycler<SendTask> RECYCLER = new Recycler<SendTask>(2<<16) {
         @Override
         protected SendTask newObject(Handle<SendTask> handle) {
             return new SendTask(handle);
@@ -45,7 +45,6 @@ public class SendTask implements ITask {
             }
             //从发送缓冲区到kcp缓冲区
             MpscArrayQueue<ByteBuf> queue = kcp.getSendList();
-            kcp.setWriting(true);
             while(kcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
@@ -59,8 +58,6 @@ public class SendTask implements ITask {
                     return;
                 }
             }
-            kcp.setWriting(false);
-
             //如果有发送 则检测时间
             if(!kcp.canSend(false)||(kcp.checkFlush()&&kcp.isFastFlush())){
                 long now =System.currentTimeMillis();

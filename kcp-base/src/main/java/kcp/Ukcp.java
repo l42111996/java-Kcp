@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscArrayQueue;
-import org.jctools.queues.SpscLinkedQueue;
+import org.jctools.queues.SpscArrayQueue;
 import threadPool.thread.IMessageExecutor;
 
 import java.io.IOException;
@@ -27,13 +27,13 @@ public class Ukcp{
 
     public static final int HEADER_CRC=4,HEADER_NONCESIZE= 16;
 
-    private Kcp kcp;
+    private final Kcp kcp;
 
     private boolean fastFlush = true;
 
     private long tsUpdate = -1;
 
-    private volatile boolean active;
+    private boolean active;
 
     private FecEncode fecEncode = null;
     private FecDecode fecDecode = null;
@@ -42,9 +42,9 @@ public class Ukcp{
 
     private final Queue<ByteBuf> recieveList;
 
-    private IMessageExecutor disruptorSingleExecutor;
+    private final IMessageExecutor disruptorSingleExecutor;
 
-    private KcpListener kcpListener;
+    private final KcpListener kcpListener;
 
     private boolean crc32Check = false;
 
@@ -58,11 +58,7 @@ public class Ukcp{
      **/
     private long timeoutMillis = 0;
 
-    private CRC32 crc32 = new CRC32();
-
-    private volatile boolean writing;
-
-    private volatile boolean reading;
+    private final CRC32 crc32 = new CRC32();
 
 
     /**
@@ -77,8 +73,8 @@ public class Ukcp{
         this.disruptorSingleExecutor = disruptorSingleExecutor;
         //默认2<<16   可以修改
         sendList = new MpscArrayQueue<>(2 << 16);
-        recieveList = new SpscLinkedQueue<>();
-
+        recieveList = new SpscArrayQueue<>(2<<16);
+        //recieveList = new SpscLinkedQueue<>();
         int headerSize = 0;
         //init encryption
 
@@ -227,21 +223,6 @@ public class Ukcp{
     }
 
 
-    public boolean isWriting() {
-        return writing;
-    }
-
-    public void setWriting(boolean writing) {
-        this.writing = writing;
-    }
-
-    public boolean isReading() {
-        return reading;
-    }
-
-    public void setReading(boolean reading) {
-        this.reading = reading;
-    }
 
     public long getLastRecieveTime() {
         return lastRecieveTime;
@@ -541,19 +522,13 @@ public class Ukcp{
     }
 
     private void notifyReadEvent() {
-        if(!reading){
-            RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
-            this.disruptorSingleExecutor.execute(recieveTask);
-        }
+        RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
+        this.disruptorSingleExecutor.execute(recieveTask);
     }
 
     protected void notifyWriteEvent() {
-        if(!writing){
-            SendTask sendTask = SendTask.newSendTask(this);
-            this.disruptorSingleExecutor.execute(sendTask);
-        }else{
-            System.out.println("写入中");
-        }
+        SendTask sendTask = SendTask.newSendTask(this);
+        this.disruptorSingleExecutor.execute(sendTask);
     }
 
 
