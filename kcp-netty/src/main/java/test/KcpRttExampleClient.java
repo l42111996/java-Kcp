@@ -133,11 +133,18 @@ public class KcpRttExampleClient implements KcpListener {
         }
 
         int sum = 0;
+        int max = 0;
         for (int rtt : rtts) {
+            if(rtt>max){
+                max = rtt;
+            }
             sum += rtt;
         }
-        System.out.println("average: "+ (sum / rtts.length));
+        System.out.println("average: "+ (sum / rtts.length)+" max:"+max);
         System.out.println(Snmp.snmp.toString());
+        System.out.println("lost percent: "+(Snmp.snmp.RetransSegs.doubleValue()/Snmp.snmp.OutPkts.doubleValue()));
+
+
     }
 
 

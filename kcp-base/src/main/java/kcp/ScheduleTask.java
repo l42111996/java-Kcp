@@ -64,8 +64,7 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
 
 
             //检测写缓冲区 如果能写则触发写事件
-            if(ukcp.canSend(false)
-                    &&!ukcp.getSendList().isEmpty()
+            if(!ukcp.getSendList().isEmpty()&&ukcp.canSend(false)
             ){
                 ukcp.notifyWriteEvent();
             }

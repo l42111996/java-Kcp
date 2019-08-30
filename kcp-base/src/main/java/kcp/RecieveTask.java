@@ -79,7 +79,7 @@ public class RecieveTask implements ITask {
                 }
             }
             //判断写事件
-            if (kcp.canSend(false)&&!kcp.getSendList().isEmpty()) {
+            if (!kcp.getSendList().isEmpty()&&kcp.canSend(false)) {
                 kcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
