@@ -24,6 +24,7 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 5. 包含fec,降低延迟
 6. 附带crc32校验
 7. 优化大量连接cpu占用
+8. 使用directbuf和对象池，无gc压力
 
 
 # 使用方法以及参数
@@ -33,6 +34,8 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 4. [大量资料](https://github.com/skywind3000/kcp)
 5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
 6. [遇到过的问题](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
+7，[性能测试结果](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
+
 
 # 已完成测试
 1. 单连接死循环收发包内存检测，性能测试  
@@ -41,13 +44,13 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 单连接 不带fec  9W/s qps
 2. java服务端与c#客户端兼容测试
 3. 3000连接保持使用单核30%cpu
+4. fec结合directbuffer检测对应cpu最佳性能方案
 
 
 
 # TODO 
-1. fec结合directbuffer检测对应cpu最佳性能方案
-2. 大量连接性能测试标准
-
+1,高并发吞吐量下，rtt稳定性测试
+   
    
 # 相关资料
 
