@@ -1111,21 +1111,7 @@ public class Kcp {
                 if (log.isDebugEnabled()) {
                     log.debug("{} flush data: sn={}, resendts={}", this, segment.sn, (segment.resendts - current));
                 }
-            } else if (itimediff(current, segment.resendts) >= 0) {
-                needsend = true;
-                if (!nodelay) {
-                    segment.rto += rxRto;
-                } else {
-                    segment.rto += rxRto / 2;
-                }
-                segment.resendts = current + segment.rto;
-                lost = true;
-                lostSegs++;
-                if (log.isDebugEnabled()) {
-                    log.debug("{} resend. sn={}, xmit={}, resendts={}", this, segment.sn, segment.xmit, (segment
-                            .resendts - current));
-                }
-            } else if (segment.fastack >= resent) {
+            }  else if (segment.fastack >= resent) {
                 needsend = true;
                 segment.fastack = 0;
                 segment.rto = rxRto;
@@ -1144,6 +1130,22 @@ public class Kcp {
                 segment.resendts = current + segment.rto;
                 change++;
                 earlyRetransSegs++;
+            }
+            else if (itimediff(current, segment.resendts) >= 0) {
+                needsend = true;
+                if (!nodelay) {
+                    segment.rto += rxRto;
+                } else {
+                    segment.rto += rxRto / 2;
+                }
+                segment.fastack = 0;
+                segment.resendts = current + segment.rto;
+                lost = true;
+                lostSegs++;
+                if (log.isDebugEnabled()) {
+                    log.debug("{} resend. sn={}, xmit={}, resendts={}", this, segment.sn, segment.xmit, (segment
+                            .resendts - current));
+                }
             }
 
 
