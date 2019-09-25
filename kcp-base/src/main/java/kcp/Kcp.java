@@ -77,16 +77,13 @@ public class Kcp {
 
     public static final int IKCP_INTERVAL = 100;
 
-    public static final int IKCP_OVERHEAD = 24;
+    public int IKCP_OVERHEAD = 24;
 
     public static final int IKCP_DEADLINK = 20;
 
     public static final int IKCP_THRESH_INIT = 2;
 
     public static final int IKCP_THRESH_MIN = 2;
-
-    /**头跳过长度**/
-    public static final int IKCP_SKIP_HEADSIZE = 8;
 
     /**
      * 7 secs to probe window size
@@ -97,6 +94,9 @@ public class Kcp {
      * up to 120 secs to probe window
      */
     public static final int IKCP_PROBE_LIMIT = 120000;
+
+
+    private int ackMaskSize = 0;
     /**会话id**/
     private int conv;
     /**最大传输单元**/
@@ -129,6 +129,7 @@ public class Kcp {
     private int rcvWnd = IKCP_WND_RCV;
     /**当前对端可接收窗口**/
     private int rmtWnd = IKCP_WND_RCV;
+
     /**拥塞控制窗口**/
     private int cwnd;
     /**探测标志位**/
@@ -188,6 +189,9 @@ public class Kcp {
     private KcpOutput output;
 
     private ByteBufAllocator byteBufAllocator = ByteBufAllocator.DEFAULT;
+    /**ack二进制标识**/
+    private long ackMask;
+    private long lastRcvNxt;
 
     /**
      * automatically set conv
@@ -235,7 +239,20 @@ public class Kcp {
         buf.writeIntLE((int) seg.sn);
         buf.writeIntLE((int) seg.una);
         buf.writeIntLE(seg.data.readableBytes());
-
+        switch (seg.ackMaskSize){
+            case 8:
+                buf.writeByte((int) seg.ackMask);
+                 break;
+            case 16:
+                buf.writeShortLE((int) seg.ackMask);
+                break;
+            case 32:
+                buf.writeIntLE((int) seg.ackMask);
+                break;
+            case 64:
+                buf.writeLongLE(seg.ackMask);
+                break;
+        }
         Snmp.snmp.OutSegs.increment();
         return buf.writerIndex() - offset;
     }
@@ -266,7 +283,11 @@ public class Kcp {
         /***发送分片的次数，每发送一次加一**/
         private int xmit;
 
+        private long ackMask;
+
         private ByteBuf data;
+
+        private int ackMaskSize;
 
         private static final Recycler<Segment> RECYCLER = new Recycler<Segment>() {
 
@@ -293,6 +314,7 @@ public class Kcp {
             rto = 0;
             fastack = 0;
             xmit = 0;
+            ackMask=0;
             if (releaseBuf) {
                 data.release();
             }
@@ -676,6 +698,33 @@ public class Kcp {
         }
     }
 
+    private void parseAckMask(long una,long ackMask){
+        if(ackMask==0)
+        {
+            return;
+        }
+        //String removeSn = "";
+        for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext(); ) {
+            Segment seg = itr.next();
+            long index = seg.sn-una-1;
+            if(index<0){
+                continue;
+            }
+            if(index>=ackMaskSize)
+                break;
+            long mask = ackMask&1<<index;
+            if(mask!=0){
+                //removeSn+=seg.sn+",";
+                itr.remove();
+                seg.recycle(true);
+            }
+        }
+        //if(ackMask>0&&!removeSn.isEmpty()){
+        //    System.out.println(hashCode()+" input una: "+una+"sndUna: "+sndUna+" ackMask: "+Long.toBinaryString(ackMask)+" removeSn: "+removeSn);
+        //}
+    }
+
+
     private void parseFastack(long sn,long ts) {
         if (itimediff(sn, sndUna) < 0 || itimediff(sn, sndNxt) >= 0) {
             return;
@@ -755,6 +804,7 @@ public class Kcp {
         return repeat;
     }
 
+
     private void moveRcvData() {
         for (Iterator<Segment> itr = rcvBufItr.rewind(); itr.hasNext(); ) {
             Segment seg = itr.next();
@@ -767,6 +817,9 @@ public class Kcp {
             }
         }
     }
+
+
+
 
     public int input(ByteBuf data, boolean regular,long current) {
         long oldSndUna = sndUna;
@@ -787,7 +840,7 @@ public class Kcp {
 
         while (true) {
             int conv, len, wnd;
-            long ts, sn, una;
+            long ts, sn, una,ackMask;
             byte cmd;
             short frg;
             Segment seg;
@@ -808,6 +861,25 @@ public class Kcp {
             sn = data.readUnsignedIntLE();
             una = data.readUnsignedIntLE();
             len = data.readIntLE();
+
+            switch (ackMaskSize){
+                case 8:
+                    ackMask = data.readUnsignedByte();
+                    break;
+                case 16:
+                    ackMask = data.readUnsignedShortLE();
+                    break;
+                case 32:
+                    ackMask = data.readUnsignedIntLE();
+                    break;
+                case 64:
+                    //TODO need unsignedLongLe
+                    ackMask = data.readLongLE();
+                    break;
+                default:
+                    ackMask=0;
+            }
+
 
             if (data.readableBytes() < len) {
                 return -2;
@@ -830,6 +902,7 @@ public class Kcp {
             parseUna(una);
             shrinkBuf();
 
+
             boolean readed = false;
             switch (cmd) {
                 case IKCP_CMD_ACK: {
@@ -838,6 +911,7 @@ public class Kcp {
                     flag = true;
                     latest= ts;
                     int rtt = itimediff(uintCurrent, ts);
+                    //System.out.println(hashCode()+" input ack: sn="+sn+", rtt="+rtt+", rto="+rxRto+" ,regular={}");
                     if (log.isDebugEnabled()) {
                         log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={}", this, sn, rtt, rxRto,regular);
                     }
@@ -891,6 +965,8 @@ public class Kcp {
                 default:
                     return -3;
             }
+
+            parseAckMask(una,ackMask);
 
             if (!readed) {
                 data.skipBytes(len);
@@ -985,14 +1061,49 @@ public class Kcp {
         Segment seg = Segment.createSegment(byteBufAllocator, 0);
         seg.conv = conv;
         seg.cmd = IKCP_CMD_ACK;
+        seg.ackMaskSize=this.ackMaskSize;
         seg.wnd = wndUnused();//可接收数量
         seg.una = rcvNxt;//已接收数量，下次要接收的包的sn，这sn之前的包都已经收到
 
         ByteBuf buffer = createFlushByteBuf();
         buffer.writerIndex(reserved);
 
-        // flush acknowledges有收到的包需要确认，则发确认包
+
+        //计算ackMask
         int count = ackcount;
+
+        if(lastRcvNxt!=rcvNxt){
+            ackMask = 0;
+            lastRcvNxt = rcvNxt;
+        }
+        //String ackListPrint="";
+        //String ackMaskPrint = "";
+        for (int i = 0; i < count; i++) {
+            long sn =  acklist[i * 2];
+            //ackListPrint+=sn+",";
+            if(sn<rcvNxt)
+                continue;
+            long index = sn-rcvNxt-1;
+            if(index>=ackMaskSize)
+                break;
+            if(index>=0){
+                ackMask|=1<<index;
+                //ackMaskPrint+=sn+",";
+            }else{
+                System.out.println("error");
+            }
+        }
+
+        //if(ackMask>0&&!ackMaskPrint.isEmpty()){
+        //    System.out.println(hashCode()+" flush "+ackListPrint);
+        //    System.out.println(hashCode()+" flush rcvNxt: "+rcvNxt+" ackMask: "+Long.toBinaryString(ackMask)+" ackMaskPrint:"+ackMaskPrint);
+        //}
+
+
+        seg.ackMask = ackMask;
+
+
+        // flush acknowledges有收到的包需要确认，则发确认包
         for (int i = 0; i < count; i++) {
 
             buffer =  makeSpace(buffer,IKCP_OVERHEAD);
@@ -1004,9 +1115,11 @@ public class Kcp {
             long sn =  acklist[i * 2];
 
             if (sn >= rcvNxt || count-1 == i) {
-                seg.sn = acklist[i * 2];
+                seg.sn = sn;
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
+                //System.out.println(hashCode()+" flush ack: sn="+sn+", count="+count);
+
                 if (log.isDebugEnabled()) {
                     log.debug("{} flush ack: sn={}, ts={} ,count={}", this, seg.sn, seg.ts,count);
                 }
@@ -1154,6 +1267,8 @@ public class Kcp {
                 segment.ts = long2Uint(current);
                 segment.wnd = seg.wnd;
                 segment.una = rcvNxt;
+                segment.ackMaskSize = this.ackMaskSize;
+                segment.ackMask = ackMask;
 
                 ByteBuf segData = segment.data;
                 int segLen = segData.readableBytes();
@@ -1469,6 +1584,12 @@ public class Kcp {
         this.rcvWnd = rcvWnd;
     }
 
+    public void setAckMaskSize(int ackMaskSize) {
+        this.ackMaskSize = ackMaskSize;
+        this.IKCP_OVERHEAD+=(ackMaskSize/8);
+        this.mss = mtu - IKCP_OVERHEAD-reserved;
+    }
+
     public void setReserved(int reserved) {
         this.reserved = reserved;
     }
@@ -1520,6 +1641,7 @@ public class Kcp {
     public void setOutput(KcpOutput output) {
         this.output = output;
     }
+
 
     public boolean isAckNoDelay() {
         return ackNoDelay;
