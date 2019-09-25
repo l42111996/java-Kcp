@@ -104,11 +104,7 @@ public class Ukcp{
 
 
     private void intKcpConfig(ChannelConfig channelConfig){
-        kcp.setNodelay(channelConfig.isNodelay());
-        kcp.setInterval(channelConfig.getInterval());
-        kcp.setFastresend(channelConfig.getFastresend());
-        kcp.setNocwnd(channelConfig.isNocwnd());
-
+        kcp.nodelay(channelConfig.isNodelay(),channelConfig.getInterval(),channelConfig.getFastresend(),channelConfig.isNocwnd());
         kcp.setSndWnd(channelConfig.getSndwnd());
         kcp.setRcvWnd(channelConfig.getRcvwnd());
         kcp.setMtu(channelConfig.getMtu());
@@ -116,6 +112,8 @@ public class Ukcp{
         kcp.setStream(channelConfig.isStream());
         kcp.setAckNoDelay(channelConfig.isAckNoDelay());
         kcp.setAutoSetConv(channelConfig.isAutoSetConv());
+        kcp.setAckMaskSize(channelConfig.getAckMaskSize());
+
         setFastFlush(channelConfig.isFastFlush());
         setTimeoutMillis(channelConfig.getTimeoutMillis());
     }

@@ -703,7 +703,6 @@ public class Kcp {
         {
             return;
         }
-        //String removeSn = "";
         for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext(); ) {
             Segment seg = itr.next();
             long index = seg.sn-una-1;
@@ -714,14 +713,10 @@ public class Kcp {
                 break;
             long mask = ackMask&1<<index;
             if(mask!=0){
-                //removeSn+=seg.sn+",";
                 itr.remove();
                 seg.recycle(true);
             }
         }
-        //if(ackMask>0&&!removeSn.isEmpty()){
-        //    System.out.println(hashCode()+" input una: "+una+"sndUna: "+sndUna+" ackMask: "+Long.toBinaryString(ackMask)+" removeSn: "+removeSn);
-        //}
     }
 
 
@@ -911,7 +906,6 @@ public class Kcp {
                     flag = true;
                     latest= ts;
                     int rtt = itimediff(uintCurrent, ts);
-                    //System.out.println(hashCode()+" input ack: sn="+sn+", rtt="+rtt+", rto="+rxRto+" ,regular={}");
                     if (log.isDebugEnabled()) {
                         log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={}", this, sn, rtt, rxRto,regular);
                     }
@@ -1076,11 +1070,8 @@ public class Kcp {
             ackMask = 0;
             lastRcvNxt = rcvNxt;
         }
-        //String ackListPrint="";
-        //String ackMaskPrint = "";
         for (int i = 0; i < count; i++) {
             long sn =  acklist[i * 2];
-            //ackListPrint+=sn+",";
             if(sn<rcvNxt)
                 continue;
             long index = sn-rcvNxt-1;
@@ -1088,17 +1079,8 @@ public class Kcp {
                 break;
             if(index>=0){
                 ackMask|=1<<index;
-                //ackMaskPrint+=sn+",";
-            }else{
-                System.out.println("error");
             }
         }
-
-        //if(ackMask>0&&!ackMaskPrint.isEmpty()){
-        //    System.out.println(hashCode()+" flush "+ackListPrint);
-        //    System.out.println(hashCode()+" flush rcvNxt: "+rcvNxt+" ackMask: "+Long.toBinaryString(ackMask)+" ackMaskPrint:"+ackMaskPrint);
-        //}
-
 
         seg.ackMask = ackMask;
 
@@ -1107,18 +1089,11 @@ public class Kcp {
         for (int i = 0; i < count; i++) {
 
             buffer =  makeSpace(buffer,IKCP_OVERHEAD);
-            //if (buffer.readableBytes() + IKCP_OVERHEAD > mtu) {
-            //    output(buffer, this);
-            //    buffer = createFlushByteBuf();
-            //    hasAck = false;
-            //}
             long sn =  acklist[i * 2];
-
             if (sn >= rcvNxt || count-1 == i) {
                 seg.sn = sn;
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
-                //System.out.println(hashCode()+" flush ack: sn="+sn+", count="+count);
 
                 if (log.isDebugEnabled()) {
                     log.debug("{} flush ack: sn={}, ts={} ,count={}", this, seg.sn, seg.ts,count);
@@ -1220,7 +1195,7 @@ public class Kcp {
             if (segment.xmit == 0) {
                 needsend = true;
                 segment.rto = rxRto;
-                segment.resendts = current + segment.rto ;
+                segment.resendts = current + segment.rto;
                 if (log.isDebugEnabled()) {
                     log.debug("{} flush data: sn={}, resendts={}", this, segment.sn, (segment.resendts - current));
                 }
@@ -1592,6 +1567,7 @@ public class Kcp {
 
     public void setReserved(int reserved) {
         this.reserved = reserved;
+        this.mss = mtu - IKCP_OVERHEAD-reserved;
     }
 
     public int getReserved() {

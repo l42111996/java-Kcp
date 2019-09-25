@@ -16,7 +16,7 @@ public class ChannelConfig {
     private int minRto = Kcp.IKCP_RTO_MIN;
     //超时时间 超过一段时间没收到消息断开连接
     private long timeoutMillis;
-    //TODO 有bug还未测试
+    //TODO 可能有bug还未测试
     private boolean stream;
 
     //下面为新增参数
@@ -30,6 +30,16 @@ public class ChannelConfig {
     private boolean crc32Check = false;
 
     private boolean autoSetConv = false;
+    //增加ack包回复成功率 填 /8/16/32
+    private int ackMaskSize = 0;
+
+
+    public void nodelay(boolean nodelay, int interval, int resend, boolean nc){
+        this.nodelay = nodelay;
+        this.interval = interval;
+        this.fastresend = resend;
+        this.nocwnd=nc;
+    }
 
 
     public boolean isNodelay() {
@@ -163,6 +173,14 @@ public class ChannelConfig {
 
     public boolean isCrc32Check() {
         return crc32Check;
+    }
+
+    public int getAckMaskSize() {
+        return ackMaskSize;
+    }
+
+    public void setAckMaskSize(int ackMaskSize) {
+        this.ackMaskSize = ackMaskSize;
     }
 
     public void setCrc32Check(boolean crc32Check) {
