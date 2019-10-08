@@ -206,14 +206,6 @@ public class Kcp {
         return Math.min(Math.max(lower, middle), upper);
     }
 
-    private static long ibound(long lower, long middle, long upper) {
-        return Math.min(Math.max(lower, middle), upper);
-    }
-
-    private static int itimediff(int later, int earlier) {
-        return later - earlier;
-    }
-
     private static int itimediff(long later, long earlier) {
         return (int) (later - earlier);
     }
@@ -259,6 +251,7 @@ public class Kcp {
 
     public static class Segment {
 
+
         private final Recycler.Handle<Segment> recyclerHandle;
         /**会话id**/
         private int conv;
@@ -288,7 +281,6 @@ public class Kcp {
         private ByteBuf data;
 
         private int ackMaskSize;
-
         private static final Recycler<Segment> RECYCLER = new Recycler<Segment>() {
 
             @Override
@@ -415,7 +407,7 @@ public class Kcp {
                     seg.recycle(false);
                     break;
                 }
-                byteBuf = byteBufAllocator.buffer(len);
+                byteBuf = byteBufAllocator.ioBuffer(len);
             }
             byteBuf.writeBytes(seg.data);
             seg.recycle(true);
@@ -463,7 +455,6 @@ public class Kcp {
         }
 
         // merge fragment
-        int count = 0;
         int len = 0;
         for (Iterator<Segment> itr = rcvQueueItr.rewind(); itr.hasNext(); ) {
             Segment seg = itr.next();
@@ -498,19 +489,6 @@ public class Kcp {
         }
 
         return len;
-    }
-
-
-    // ReserveBytes keeps n bytes untouched from the beginning of the buffer
-    // the output_callback function should be aware of this
-    // return false if n >= mss
-    public boolean reserveBytes(int n){
-        if (n >= mtu-IKCP_OVERHEAD || n < 0) {
-            return false;
-        }
-        reserved=n;
-        mss = mtu-IKCP_OVERHEAD-n;
-        return true;
     }
 
     /**
@@ -828,7 +806,7 @@ public class Kcp {
 
         long latest =0; // latest packet
         boolean flag = false;
-        long inSegs = 0;
+        int inSegs = 0;
 
 
         long uintCurrent = long2Uint(current);
@@ -1185,7 +1163,7 @@ public class Kcp {
         current=System.currentTimeMillis();
         int change = 0;
         boolean lost = false;
-        long lostSegs = 0, fastRetransSegs=0, earlyRetransSegs=0;
+        int lostSegs = 0, fastRetransSegs=0, earlyRetransSegs=0;
         long minrto = interval;
 
 
@@ -1278,7 +1256,7 @@ public class Kcp {
         flushBuffer(buffer);
         seg.recycle(true);
 
-        long sum = lostSegs;
+        int sum = lostSegs;
         if (lostSegs > 0) {
             Snmp.snmp.LostSegs.add(lostSegs);
         }
