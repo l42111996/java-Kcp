@@ -13,7 +13,6 @@ public class ChannelConfig {
     private int sndwnd = Kcp.IKCP_WND_SND;
     private int rcvwnd = Kcp.IKCP_WND_RCV;
     private int mtu = Kcp.IKCP_MTU_DEF;
-    private int minRto = Kcp.IKCP_RTO_MIN;
     //超时时间 超过一段时间没收到消息断开连接
     private long timeoutMillis;
     //TODO 可能有bug还未测试
@@ -113,14 +112,6 @@ public class ChannelConfig {
 
     public void setMtu(int mtu) {
         this.mtu = mtu;
-    }
-
-    public int getMinRto() {
-        return minRto;
-    }
-
-    public void setMinRto(int minRto) {
-        this.minRto = minRto;
     }
 
     public long getTimeoutMillis() {

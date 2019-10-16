@@ -108,14 +108,12 @@ public class Ukcp{
         kcp.setSndWnd(channelConfig.getSndwnd());
         kcp.setRcvWnd(channelConfig.getRcvwnd());
         kcp.setMtu(channelConfig.getMtu());
-        kcp.setRxMinrto(channelConfig.getMinRto());
         kcp.setStream(channelConfig.isStream());
         kcp.setAckNoDelay(channelConfig.isAckNoDelay());
         kcp.setAutoSetConv(channelConfig.isAutoSetConv());
         kcp.setAckMaskSize(channelConfig.getAckMaskSize());
-
-        setFastFlush(channelConfig.isFastFlush());
-        setTimeoutMillis(channelConfig.getTimeoutMillis());
+        this.fastFlush = channelConfig.isFastFlush();
+        this.timeoutMillis = channelConfig.getTimeoutMillis();
     }
 
 
@@ -451,11 +449,6 @@ public class Ukcp{
         return this;
     }
 
-    public Ukcp setReserved(int reserved){
-        kcp.setRcvWnd(reserved);
-        return this;
-    }
-
     public int getSndWnd() {
         return kcp.getSndWnd();
     }
@@ -467,11 +460,6 @@ public class Ukcp{
 
     public boolean isFastFlush() {
         return fastFlush;
-    }
-
-    public Ukcp setFastFlush(boolean fastFlush) {
-        this.fastFlush = fastFlush;
-        return this;
     }
 
 
@@ -520,12 +508,12 @@ public class Ukcp{
     }
 
     private void notifyReadEvent() {
-        RecieveTask recieveTask = RecieveTask.newRecieveTask(this);
+        RecieveTask recieveTask = RecieveTask.New(this);
         this.disruptorSingleExecutor.execute(recieveTask);
     }
 
     protected void notifyWriteEvent() {
-        SendTask sendTask = SendTask.newSendTask(this);
+        SendTask sendTask = SendTask.New(this);
         this.disruptorSingleExecutor.execute(sendTask);
     }
 
@@ -593,10 +581,6 @@ public class Ukcp{
 
     public long getTimeoutMillis() {
         return timeoutMillis;
-    }
-
-    public void setTimeoutMillis(long timeoutMillis) {
-        this.timeoutMillis = timeoutMillis;
     }
 
     @SuppressWarnings("unchecked")

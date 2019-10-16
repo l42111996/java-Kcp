@@ -29,7 +29,7 @@ public class RecieveTask implements ITask {
     }
 
 
-    public static RecieveTask newRecieveTask(Ukcp kcp) {
+    public static RecieveTask New(Ukcp kcp) {
         RecieveTask recieveTask = RECYCLER.get();
         recieveTask.kcp = kcp;
         return recieveTask;

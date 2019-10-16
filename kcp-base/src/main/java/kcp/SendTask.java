@@ -30,7 +30,7 @@ public class SendTask implements ITask {
     }
 
 
-    static SendTask newSendTask(Ukcp kcp) {
+    static SendTask New(Ukcp kcp) {
         SendTask sendTask = RECYCLER.get();
         sendTask.kcp = kcp;
         return sendTask;

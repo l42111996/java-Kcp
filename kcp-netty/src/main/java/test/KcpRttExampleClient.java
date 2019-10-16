@@ -101,7 +101,8 @@ public class KcpRttExampleClient implements KcpListener {
                     }
                     System.out.println("average: "+ (sum / rtts.length));
                     System.out.println(Snmp.snmp.toString());
-                    ukcp.setTimeoutMillis(System.currentTimeMillis());
+                    ukcp.notifyCloseEvent();
+                    //ukcp.setTimeoutMillis(System.currentTimeMillis());
                     System.exit(0);
                 }
             }, 3, TimeUnit.SECONDS);
