@@ -808,8 +808,7 @@ public class Kcp {
         boolean flag = false;
         int inSegs = 0;
 
-
-        long uintCurrent = long2Uint(current);
+        long uintCurrent = long2Uint(currentMs(current));
 
         while (true) {
             int conv, len, wnd;
@@ -885,7 +884,7 @@ public class Kcp {
                     latest= ts;
                     int rtt = itimediff(uintCurrent, ts);
                     if (log.isDebugEnabled()) {
-                        log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={}", this, sn, rtt, rxRto,regular);
+                        log.debug("{} input ack: sn={}, rtt={}, rto={} ,regular={} ts={}", this, sn, rtt, rxRto,regular,ts);
                     }
                     break;
                 }
@@ -1016,6 +1015,13 @@ public class Kcp {
 
 
 
+    private  long startTicks = System.currentTimeMillis();
+
+    public long currentMs(long now)
+    {
+        return now-startTicks;
+    }
+
 
     /**
      * ikcp_flush
@@ -1029,6 +1035,7 @@ public class Kcp {
 
         //long current = this.current;
         //long uintCurrent = long2Uint(current);
+        current = currentMs(current);
 
         Segment seg = Segment.createSegment(byteBufAllocator, 0);
         seg.conv = conv;
@@ -1091,7 +1098,6 @@ public class Kcp {
         // probe window size (if remote window size equals zero)
         //拥堵控制 如果对方可接受窗口大小为0  需要询问对方窗口大小
         if (rmtWnd == 0) {
-            current = System.currentTimeMillis();
             if (probeWait == 0) {
                 probeWait = IKCP_PROBE_INIT;
                 tsProbe = current + probeWait;
@@ -1160,7 +1166,6 @@ public class Kcp {
         int resent = fastresend > 0 ? fastresend : Integer.MAX_VALUE;
 
         // flush data segments
-        current=System.currentTimeMillis();
         int change = 0;
         boolean lost = false;
         int lostSegs = 0, fastRetransSegs=0, earlyRetransSegs=0;
