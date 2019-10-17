@@ -6,25 +6,22 @@ import threadPool.task.ITask;
 import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.IMessageExecutor;
 
-import java.net.SocketAddress;
-import java.util.Map;
-
 /**
  * Created by JinMiao
  * 2018/10/24.
  */
-public class ScheduleTask implements ITask,Runnable, TimerTask {
+public class ScheduleTask implements ITask, Runnable, TimerTask {
 
     private IMessageExecutor disruptorSingleExecutor;
 
     private Ukcp ukcp;
-    private Map<SocketAddress,Ukcp> ukcpMap;
+    private IChannelManager channelManager;
 
 
-    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp, Map<SocketAddress, Ukcp> ukcpMap) {
+    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp, IChannelManager channelManager) {
         this.disruptorSingleExecutor = disruptorSingleExecutor;
         this.ukcp = ukcp;
-        this.ukcpMap = ukcpMap;
+        this.channelManager = channelManager;
     }
 
     //flush策略
@@ -39,18 +36,18 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
             long now = System.currentTimeMillis();
             //判断连接是否关闭
             if (ukcp.getTimeoutMillis() != 0 && now - ukcp.getTimeoutMillis() > ukcp.getLastRecieveTime()) {
-                    ukcp.close();
+                ukcp.close();
             }
-            if(!ukcp.isActive()){
+            if (!ukcp.isActive()) {
                 User user = ukcp.user();
                 //抛回网络线程处理连接删除
-                user.getChannel().eventLoop().execute(()-> ukcpMap.remove(user.getRemoteAddress()));
+                user.getChannel().eventLoop().execute(() -> channelManager.del(ukcp));
                 ukcp.release();
                 return;
             }
-            long timeLeft = ukcp.getTsUpdate()-now;
+            long timeLeft = ukcp.getTsUpdate() - now;
             //判断执行时间是否到了
-            if(timeLeft>0){
+            if (timeLeft > 0) {
                 //System.err.println(timeLeft);
                 DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
                 return;
@@ -64,8 +61,8 @@ public class ScheduleTask implements ITask,Runnable, TimerTask {
 
 
             //检测写缓冲区 如果能写则触发写事件
-            if(!ukcp.getSendList().isEmpty()&&ukcp.canSend(false)
-            ){
+            if (!ukcp.getSendList().isEmpty() && ukcp.canSend(false)
+            ) {
                 ukcp.notifyWriteEvent();
             }
         } catch (Throwable e) {

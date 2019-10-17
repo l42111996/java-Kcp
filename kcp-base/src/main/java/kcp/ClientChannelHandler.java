@@ -1,14 +1,11 @@
 package kcp;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.Map;
 
 /**
  * Created by JinMiao
@@ -17,26 +14,24 @@ import java.util.Map;
 public class ClientChannelHandler extends ChannelInboundHandlerAdapter {
     static final Logger logger = LoggerFactory.getLogger(ClientChannelHandler.class);
 
-    private Map<SocketAddress,Ukcp> ukcpMap;
+    private IChannelManager channelManager;
 
-
-    public ClientChannelHandler(Map<SocketAddress, Ukcp> ukcpMap) {
-        this.ukcpMap = ukcpMap;
+    public ClientChannelHandler(IChannelManager channelManager) {
+        this.channelManager = channelManager;
     }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        SocketAddress socketAddress = ctx.channel().localAddress();
-        Ukcp ukcp = ukcpMap.get(socketAddress);
-        ukcp.getKcpListener().handleException(cause,ukcp);
+        logger.error("",cause);
+        //SocketAddress socketAddress = ctx.channel().localAddress();
+        //Ukcp ukcp = ukcpMap.get(socketAddress);
+        //ukcp.getKcpListener().handleException(cause,ukcp);
     }
-
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        InetSocketAddress socketAddress = msg.recipient();
-        Ukcp ukcp = ukcpMap.get(socketAddress);
+        Channel channel  = ctx.channel();
+        Ukcp ukcp = this.channelManager.get(channel,msg);
         ukcp.read(msg.content());
     }
 }

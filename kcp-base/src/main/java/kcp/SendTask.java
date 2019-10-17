@@ -69,7 +69,6 @@ public class SendTask implements ITask {
         }catch (Throwable e){
             e.printStackTrace();
         }finally {
-
             release();
         }
     }

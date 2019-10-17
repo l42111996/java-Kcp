@@ -11,11 +11,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import threadPool.thread.DisruptorExecutorPool;
 
-import java.net.SocketAddress;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by JinMiao
@@ -28,21 +25,21 @@ public class KcpServer {
     private EventLoopGroup group;
     //private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
     private List<Channel> localAddresss = new Vector<>();
-    private Map<SocketAddress,Ukcp> clientMap = new ConcurrentHashMap<>();
+    private IChannelManager channelManager = new ServerAddressChannelManager();
 
 
-    public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
+    public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
         DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
         for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool"+i);
+            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
         }
-        init(disruptorExecutorPool,kcpListener,channelConfig,ports);
+        init(disruptorExecutorPool, kcpListener, channelConfig, ports);
     }
 
 
-    public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int...ports){
+    public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
         //自动获取conv时 conv应该为0
-        if(channelConfig.isAutoSetConv()){
+        if (channelConfig.isAutoSetConv()) {
             channelConfig.setConv(0);
         }
 
@@ -51,21 +48,20 @@ public class KcpServer {
         bootstrap = new Bootstrap();
         int cpuNum = Runtime.getRuntime().availableProcessors();
         int bindTimes = 1;
-        if(epoll){
+        if (epoll) {
             //ADD SO_REUSEPORT ？ https://www.jianshu.com/p/61df929aa98b
             bootstrap.option(EpollChannelOption.SO_REUSEPORT, true);
             bindTimes = cpuNum;
         }
 
-        group = epoll? new EpollEventLoopGroup(cpuNum): new NioEventLoopGroup(ports.length);
-        Class<? extends Channel> channelClass = epoll? EpollDatagramChannel.class:NioDatagramChannel.class;
+        group = epoll ? new EpollEventLoopGroup(cpuNum) : new NioEventLoopGroup(ports.length);
+        Class<? extends Channel> channelClass = epoll ? EpollDatagramChannel.class : NioDatagramChannel.class;
         bootstrap.channel(channelClass);
         bootstrap.group(group);
-        bootstrap.handler(new ChannelInitializer<Channel>()
-        {
+        bootstrap.handler(new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) {
-                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(clientMap,channelConfig,disruptorExecutorPool,kcpListener);
+                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, disruptorExecutorPool, kcpListener);
                 ChannelPipeline cp = ch.pipeline();
                 cp.addLast(serverChannelHandler);
             }
@@ -85,16 +81,16 @@ public class KcpServer {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
-    public void stop(){
+    public void stop() {
         localAddresss.forEach(
                 channel -> channel.close()
         );
-        clientMap.values().forEach(ukcp ->
+        channelManager.getAll().forEach(ukcp ->
                 ukcp.notifyCloseEvent());
-        if(disruptorExecutorPool!=null) {
+        if (disruptorExecutorPool != null) {
             disruptorExecutorPool.stop();
         }
-        if(group !=null)
+        if (group != null)
             group.shutdownGracefully();
         System.out.println(Snmp.snmp);
     }

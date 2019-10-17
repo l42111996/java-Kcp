@@ -12,9 +12,6 @@ import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.IMessageExecutor;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * kcp客户端
@@ -28,7 +25,7 @@ public class KcpClient {
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
     /**客户端的连接集合  key为本地的监听端口**/
-    private Map<SocketAddress, Ukcp> ukcpMap = new ConcurrentHashMap<>();
+    private IChannelManager channelManager = new ClientAddressChannelManager();
 
 
     public void init() {
@@ -47,7 +44,7 @@ public class KcpClient {
             @Override
             protected void initChannel(NioDatagramChannel ch) {
                 ChannelPipeline cp = ch.pipeline();
-                cp.addLast(new ClientChannelHandler(ukcpMap));
+                cp.addLast(new ClientChannelHandler(channelManager));
             }
         });
 
@@ -93,22 +90,18 @@ public class KcpClient {
                 ukcp.getKcpListener().handleException(throwable,ukcp);
             }
         });
+        channelManager.New(channel,ukcp);
 
-        ukcpMap.put(localAddress, ukcp);
-
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, ukcpMap);
+        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, channelManager);
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
 
         return ukcp;
     }
 
-    public Map<SocketAddress, Ukcp> getUkcpMap() {
-        return ukcpMap;
-    }
 
     public void stop() {
         //System.out.println("关闭连接");
-        ukcpMap.values().forEach(ukcp -> {
+        channelManager.getAll().forEach(ukcp -> {
             try {
                 ukcp.notifyCloseEvent();
             } catch (Throwable throwable) {

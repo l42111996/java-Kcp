@@ -1,6 +1,7 @@
 package kcp;
 
 import com.backblaze.erasure.ReedSolomon;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
@@ -9,10 +10,6 @@ import org.slf4j.LoggerFactory;
 import threadPool.thread.DisruptorExecutorPool;
 import threadPool.thread.IMessageExecutor;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.Map;
-
 /**
  * Created by JinMiao
  * 2018/9/20.
@@ -20,7 +17,7 @@ import java.util.Map;
 public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
     static final Logger logger = LoggerFactory.getLogger(ServerChannelHandler.class);
 
-    private Map<SocketAddress,Ukcp> clientMap;
+    private IChannelManager channelManager;
 
     private ChannelConfig channelConfig ;
 
@@ -28,8 +25,8 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     private KcpListener kcpListener;
 
-    public ServerChannelHandler(Map<SocketAddress, Ukcp> clientMap, ChannelConfig channelConfig, DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener) {
-        this.clientMap = clientMap;
+    public ServerChannelHandler(IChannelManager channelManager, ChannelConfig channelConfig, DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener) {
+        this.channelManager = channelManager;
         this.channelConfig = channelConfig;
         this.disruptorExecutorPool = disruptorExecutorPool;
         this.kcpListener = kcpListener;
@@ -37,20 +34,22 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        SocketAddress socketAddress = ctx.channel().remoteAddress();
-        Ukcp ukcp = clientMap.get(socketAddress);
-        if(ukcp==null){
-            logger.error("exceptionCaught ukcp is not exist address"+ctx.channel().remoteAddress(),cause);
-            return;
-        }
-        ukcp.getKcpListener().handleException(cause,ukcp);
+        logger.error("",cause);
+        //SocketAddress socketAddress = ctx.channel().remoteAddress();
+        //Ukcp ukcp = clientMap.get(socketAddress);
+        //if(ukcp==null){
+        //    logger.error("exceptionCaught ukcp is not exist address"+ctx.channel().remoteAddress(),cause);
+        //    return;
+        //}
+        //ukcp.getKcpListener().handleException(cause,ukcp);
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        InetSocketAddress socketAddress = msg.sender();
-        Ukcp ukcp = clientMap.get(socketAddress);
+        Channel channel = ctx.channel();
+
+        Ukcp ukcp = channelManager.get(channel,msg);
         if(ukcp==null){
             User user = new User(ctx.channel(),msg.sender(),msg.recipient());
             //System.out.println("新连接"+Thread.currentThread().getName());
@@ -72,10 +71,10 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                     newUkcp.getKcpListener().handleException(throwable,newUkcp);
                 }
             });
-            clientMap.put(socketAddress,newUkcp);
+            channelManager.New(channel,newUkcp);
             newUkcp.read(msg.content());
 
-            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, clientMap);
+            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, channelManager);
             DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
             return;
         }
