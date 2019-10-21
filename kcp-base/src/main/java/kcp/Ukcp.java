@@ -42,7 +42,7 @@ public class Ukcp{
 
     private final Queue<ByteBuf> recieveList;
 
-    private final IMessageExecutor disruptorSingleExecutor;
+    private final IMessageExecutor iMessageExecutor;
 
     private final KcpListener kcpListener;
 
@@ -66,11 +66,11 @@ public class Ukcp{
      *
      * @param output output for kcp
      */
-    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor disruptorSingleExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
+    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
         this.kcpListener = kcpListener;
-        this.disruptorSingleExecutor = disruptorSingleExecutor;
+        this.iMessageExecutor = iMessageExecutor;
         //默认2<<16   可以修改
         sendList = new MpscArrayQueue<>(2 << 11);
         recieveList = new SpscArrayQueue<>(2<<11);
@@ -496,25 +496,25 @@ public class Ukcp{
         return true;
     }
 
-    public IMessageExecutor getDisruptorSingleExecutor() {
-        return disruptorSingleExecutor;
+    public IMessageExecutor getiMessageExecutor() {
+        return iMessageExecutor;
     }
 
     /**
      * 主动关闭连接调用
      */
     public void notifyCloseEvent() {
-        this.disruptorSingleExecutor.execute(() -> close());
+        this.iMessageExecutor.execute(() -> close());
     }
 
     private void notifyReadEvent() {
         RecieveTask recieveTask = RecieveTask.New(this);
-        this.disruptorSingleExecutor.execute(recieveTask);
+        this.iMessageExecutor.execute(recieveTask);
     }
 
     protected void notifyWriteEvent() {
         SendTask sendTask = SendTask.New(this);
-        this.disruptorSingleExecutor.execute(sendTask);
+        this.iMessageExecutor.execute(sendTask);
     }
 
 

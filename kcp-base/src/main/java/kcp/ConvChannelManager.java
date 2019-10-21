@@ -11,16 +11,22 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 根据conv确定一个sesion
  *  这里conv是从消息第一个字节读取的
- *  TODO 带fec和crc校验的要单独处理
  * Created by JinMiao
  * 2019/10/17.
  */
 public class ConvChannelManager implements IChannelManager {
+
+    private int convIndex;
+
+    public ConvChannelManager(int convIndex) {
+        this.convIndex = convIndex;
+    }
+
     private Map<Integer,Ukcp> ukcpMap = new ConcurrentHashMap<>();
     @Override
     public Ukcp get(Channel channel, DatagramPacket msg) {
         ByteBuf byteBuf = msg.content();
-        int conv =byteBuf.getInt(byteBuf.readerIndex());
+        int conv =byteBuf.getInt(convIndex);
         return ukcpMap.get(conv);
     }
 
