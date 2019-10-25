@@ -127,6 +127,7 @@ public class FecEncode {
         //释放dataShards
         for (int i = 0; i < dataShards; i++) {
             this.shardCache[i].release();
+            this.shardCache[i]=null;
         }
         this.shardCount = 0;
         this.maxSize = 0;
@@ -136,8 +137,6 @@ public class FecEncode {
 
 
     public void release(){
-
-        System.out.println("releaseed");
         this.dataShards=0;
         this.parityShards=0;
         this.shardSize=0;
