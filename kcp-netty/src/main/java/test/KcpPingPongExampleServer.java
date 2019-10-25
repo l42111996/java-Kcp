@@ -19,15 +19,13 @@ public class KcpPingPongExampleServer implements KcpListener {
 
         KcpPingPongExampleServer kcpRttExampleServer = new KcpPingPongExampleServer();
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(true);
-        channelConfig.setInterval(40);
-        channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();

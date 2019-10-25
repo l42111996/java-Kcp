@@ -31,6 +31,8 @@ public class ChannelConfig {
     private boolean autoSetConv = false;
     //增加ack包回复成功率 填 /8/16/32
     private int ackMaskSize = 0;
+    /**使用conv确定一个channel 还是使用 socketAddress确定一个channel**/
+    private boolean useConvChannel=false;
 
 
     public void nodelay(boolean nodelay, int interval, int resend, boolean nc){
@@ -45,11 +47,6 @@ public class ChannelConfig {
         return nodelay;
     }
 
-
-    public void setNodelay(boolean nodelay) {
-        this.nodelay = nodelay;
-    }
-
     public int getConv() {
         return conv;
     }
@@ -62,24 +59,12 @@ public class ChannelConfig {
         return interval;
     }
 
-    public void setInterval(int interval) {
-        this.interval = interval;
-    }
-
     public int getFastresend() {
         return fastresend;
     }
 
-    public void setFastresend(int fastresend) {
-        this.fastresend = fastresend;
-    }
-
     public boolean isNocwnd() {
         return nocwnd;
-    }
-
-    public void setNocwnd(boolean nocwnd) {
-        this.nocwnd = nocwnd;
     }
 
     public int getSndwnd() {
@@ -176,5 +161,13 @@ public class ChannelConfig {
 
     public void setCrc32Check(boolean crc32Check) {
         this.crc32Check = crc32Check;
+    }
+
+    public boolean isUseConvChannel() {
+        return useConvChannel;
+    }
+
+    public void setUseConvChannel(boolean useConvChannel) {
+        this.useConvChannel = useConvChannel;
     }
 }

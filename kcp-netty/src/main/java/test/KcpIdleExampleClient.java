@@ -2,10 +2,7 @@ package test;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import kcp.ChannelConfig;
-import kcp.KcpClient;
-import kcp.KcpListener;
-import kcp.Ukcp;
+import kcp.*;
 
 import java.net.InetSocketAddress;
 
@@ -16,23 +13,23 @@ import java.net.InetSocketAddress;
 public class KcpIdleExampleClient implements KcpListener {
 
     public static void main(String[] args) {
-        KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors());
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
-        channelConfig.setInterval(40);
-        channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
 
-        for (int i = 0; i < 3000; i++) {
+        KcpClient kcpClient = new KcpClient();
+        kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
+
+
+        for (int i = 0; i < 3; i++) {
             if(i%1000==0){
                 try {
                     Thread.sleep(1000);
@@ -41,6 +38,7 @@ public class KcpIdleExampleClient implements KcpListener {
                 }
             }
             KcpIdleExampleClient kcpIdleExampleClient = new KcpIdleExampleClient();
+            //kcpClient.connect(new InetSocketAddress("10.60.100.191", 10020), channelConfig, kcpIdleExampleClient);
             kcpClient.connect(new InetSocketAddress("127.0.0.1", 10020), channelConfig, kcpIdleExampleClient);
         }
 

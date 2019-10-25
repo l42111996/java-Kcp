@@ -1,6 +1,7 @@
 package kcp;
 
 import com.backblaze.erasure.ReedSolomon;
+import com.backblaze.erasure.fec.Fec;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -25,10 +26,22 @@ public class KcpClient {
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
     /**客户端的连接集合  key为本地的监听端口**/
-    private IChannelManager channelManager = new ClientAddressChannelManager();
+    private IChannelManager channelManager;
 
 
-    public void init() {
+    public void init(ChannelConfig channelConfig) {
+        if(channelConfig.isUseConvChannel()){
+            int convIndex = 0;
+            if(channelConfig.isCrc32Check()){
+                convIndex+=Ukcp.HEADER_CRC;
+            }
+            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+                convIndex+= Fec.fecHeaderSizePlus2;
+            }
+            channelManager = new ConvChannelManager(convIndex);
+        }else{
+            channelManager = new ClientAddressChannelManager();
+        }
         int cpuNum = Runtime.getRuntime().availableProcessors();
         if (disruptorExecutorPool == null) {
             this.disruptorExecutorPool = new DisruptorExecutorPool();
@@ -51,18 +64,17 @@ public class KcpClient {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
-    public void init(DisruptorExecutorPool disruptorExecutorPool) {
+    public void init(DisruptorExecutorPool disruptorExecutorPool,ChannelConfig channelConfig) {
         this.disruptorExecutorPool = disruptorExecutorPool;
-        init();
-
+        init(channelConfig);
     }
 
-    public void init(int workSize) {
+    public void init(int workSize,ChannelConfig channelConfig) {
         this.disruptorExecutorPool = new DisruptorExecutorPool();
         for (int i = 0; i < workSize; i++) {
             disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
         }
-        init();
+        init(channelConfig);
     }
 
     public Ukcp connect(InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {

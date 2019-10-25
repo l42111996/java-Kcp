@@ -1,5 +1,6 @@
 package kcp;
 
+import com.backblaze.erasure.fec.Fec;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -25,7 +26,7 @@ public class KcpServer {
     private EventLoopGroup group;
     //private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
     private List<Channel> localAddresss = new Vector<>();
-    private IChannelManager channelManager = new ServerAddressChannelManager();
+    private IChannelManager channelManager;
 
 
     public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
@@ -42,6 +43,20 @@ public class KcpServer {
         if (channelConfig.isAutoSetConv()) {
             channelConfig.setConv(0);
         }
+
+        if(channelConfig.isUseConvChannel()){
+            int convIndex = 0;
+            if(channelConfig.isCrc32Check()){
+                convIndex+=Ukcp.HEADER_CRC;
+            }
+            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+                convIndex+= Fec.fecHeaderSizePlus2;
+            }
+            channelManager = new ConvChannelManager(convIndex);
+        }else{
+            channelManager = new ServerAddressChannelManager();
+        }
+
 
         boolean epoll = Epoll.isAvailable();
         this.disruptorExecutorPool = disruptorExecutorPool;

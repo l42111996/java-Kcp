@@ -25,6 +25,8 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 6. 附带crc32校验
 7. 优化大量连接cpu占用
 8. 使用directbuf和对象池，无gc压力
+9. 增加使用conv或者ip+port确定channel唯一性，游戏建议使用conv与tcp配置使用,[相关资料](https://github.com/skywind3000/kcp/wiki/Cooperate-With-Tcp-Server)
+
 
 
 # 使用方法以及参数
@@ -34,7 +36,7 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 4. [大量资料](https://github.com/skywind3000/kcp)
 5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
 6. [遇到过的问题](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
-7，[性能测试结果](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
+7. [性能测试结果](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
 
 
 # 已完成测试

@@ -1,5 +1,6 @@
 package test;
 
+import com.backblaze.erasure.fec.Snmp;
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -109,10 +110,10 @@ public class LatencySimulator {
     public static void main(String[] args) {
         LatencySimulator latencySimulator = new LatencySimulator();
         try {
-            latencySimulator.test(0);
-            latencySimulator.test(1);
+            //latencySimulator.test(0);
+            //latencySimulator.test(1);
             latencySimulator.test(2);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
         //latencySimulator.BenchmarkFlush();
@@ -166,7 +167,7 @@ public class LatencySimulator {
 
     public void test(int mode) throws InterruptedException {
         LatencySimulator vnet = new LatencySimulator();
-        vnet.init(10, 10, 125);
+        vnet.init(20, 600, 600);
         KcpOutput output1 = (buf, kcp) ->{
             vnet.send(0, buf);
             buf.release();
@@ -178,6 +179,8 @@ public class LatencySimulator {
 
         Kcp kcp1 = new Kcp(0x11223344, output1);
         Kcp kcp2 = new Kcp(0x11223344, output2);
+        //kcp1.setAckMaskSize(8);
+        //kcp2.setAckMaskSize(8);
 
         current = long2Uint(System.currentTimeMillis());
         long slap = current + 20;
@@ -186,10 +189,10 @@ public class LatencySimulator {
         long sumrtt = 0;
         int count = 0;
         int maxrtt = 0;
-        kcp1.setRcvWnd(128);
-        kcp1.setSndWnd(128);
-        kcp2.setRcvWnd(128);
-        kcp2.setSndWnd(128);
+        kcp1.setRcvWnd(512);
+        kcp1.setSndWnd(512);
+        kcp2.setRcvWnd(512);
+        kcp2.setSndWnd(512);
         // 判断测试用例的模式
         if (mode == 0) {
             // 默认模式
@@ -207,6 +210,8 @@ public class LatencySimulator {
             // 第五个参数 为是否禁用常规流控，这里禁止
             kcp1.nodelay(true, 10, 2, true);
             kcp2.nodelay(true, 10, 2, true);
+            kcp1.setRxMinrto(10);
+            kcp1.setFastresend(1);
         }
         int hr;
         long ts1 =  System.currentTimeMillis() ;
@@ -279,6 +284,7 @@ public class LatencySimulator {
                 long ts = byteBuf.readUnsignedIntLE();
                 long rtt = 0;
                 rtt = current - ts;
+                System.out.println("rtt :" +rtt);
 
 
                 if (sn != next) {
@@ -299,7 +305,7 @@ public class LatencySimulator {
 
             }
             bufList.recycle();
-            if (next > 100) {
+            if (next > 1000) {
                 break;
             }
         }
@@ -307,6 +313,8 @@ public class LatencySimulator {
         String[] names = new String[]{"default", "normal", "fast"};
         System.out.format("%s mode result (%dms): \n", names[mode], ts1);
         System.out.format("avgrtt=%d maxrtt=%d \n", (int)(sumrtt/count), maxrtt);
+        System.out.println("lost percent: "+(Snmp.snmp.RetransSegs.doubleValue()));
+        System.out.println("snmp: "+(Snmp.snmp.toString()));
     }
 
 }

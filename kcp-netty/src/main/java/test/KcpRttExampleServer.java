@@ -19,18 +19,16 @@ public class KcpRttExampleServer implements KcpListener {
         KcpRttExampleServer kcpRttExampleServer = new KcpRttExampleServer();
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
         channelConfig.setMtu(512);
-        //channelConfig.setFecDataShardCount(10);
-        //channelConfig.setFecParityShardCount(3);
-        channelConfig.setAckNoDelay(false);
-        channelConfig.setInterval(40);
-        channelConfig.setNocwnd(true);
-        channelConfig.setCrc32Check(true);
+        channelConfig.setFecDataShardCount(3);
+        channelConfig.setFecParityShardCount(1);
+        channelConfig.setAckNoDelay(true);
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
+        channelConfig.setUseConvChannel(true);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,20003);
     }

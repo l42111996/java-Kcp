@@ -18,20 +18,17 @@ public class Kcp4sharpExampleServer implements KcpListener {
         Kcp4sharpExampleServer kcpRttExampleServer = new Kcp4sharpExampleServer();
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,10,2,true);
         channelConfig.setSndwnd(300);
         channelConfig.setRcvwnd(300);
         channelConfig.setMtu(512);
-        channelConfig.setNodelay(true);
         channelConfig.setAckNoDelay(true);
-        channelConfig.setInterval(10);
-        channelConfig.setNocwnd(true);
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
-        //这几个参数c#端未实现
-        channelConfig.setCrc32Check(false);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
+        //c# crc32未实现
+        channelConfig.setCrc32Check(false);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,10009);
     }
