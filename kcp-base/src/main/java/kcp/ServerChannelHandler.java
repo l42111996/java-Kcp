@@ -49,7 +49,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
         DatagramPacket msg = (DatagramPacket) object;
         Channel channel = ctx.channel();
 
-        Ukcp ukcp = channelManager.get(channel,msg);
+        Ukcp ukcp = channelManager.get(msg);
         if(ukcp==null){
             User user = new User(ctx.channel(),msg.sender(),msg.recipient());
             //System.out.println("新连接"+Thread.currentThread().getName());
@@ -71,7 +71,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                     newUkcp.getKcpListener().handleException(throwable,newUkcp);
                 }
             });
-            channelManager.New(channel,newUkcp);
+            channelManager.New(msg.sender(),newUkcp);
             newUkcp.read(msg.content());
 
             ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, channelManager);

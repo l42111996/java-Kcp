@@ -1,8 +1,8 @@
 package kcp;
 
-import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
 
+import java.net.SocketAddress;
 import java.util.Collection;
 
 
@@ -12,9 +12,9 @@ import java.util.Collection;
  */
 public interface IChannelManager {
 
-    Ukcp get(Channel channel, DatagramPacket msg);
+    Ukcp get(DatagramPacket msg);
 
-    void New(Channel channel, Ukcp ukcp);
+    void New(SocketAddress socketAddress, Ukcp ukcp);
 
     void del(Ukcp ukcp);
 

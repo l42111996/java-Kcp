@@ -31,7 +31,7 @@ public class ClientChannelHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
         Channel channel  = ctx.channel();
-        Ukcp ukcp = this.channelManager.get(channel,msg);
+        Ukcp ukcp = this.channelManager.get(msg);
         ukcp.read(msg.content());
     }
 }

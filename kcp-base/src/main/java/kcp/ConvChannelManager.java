@@ -1,9 +1,9 @@
 package kcp;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
 
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,14 +24,14 @@ public class ConvChannelManager implements IChannelManager {
 
     private Map<Integer,Ukcp> ukcpMap = new ConcurrentHashMap<>();
     @Override
-    public Ukcp get(Channel channel, DatagramPacket msg) {
+    public Ukcp get(DatagramPacket msg) {
         ByteBuf byteBuf = msg.content();
         int conv =byteBuf.getInt(convIndex);
         return ukcpMap.get(conv);
     }
 
     @Override
-    public void New(Channel channel, Ukcp ukcp) {
+    public void New(SocketAddress socketAddress, Ukcp ukcp) {
         ukcpMap.put(ukcp.getConv(),ukcp);
     }
 

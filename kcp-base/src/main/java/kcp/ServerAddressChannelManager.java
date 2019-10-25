@@ -1,6 +1,5 @@
 package kcp;
 
-import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
 
 import java.net.SocketAddress;
@@ -16,13 +15,13 @@ public class ServerAddressChannelManager implements IChannelManager {
     private Map<SocketAddress,Ukcp> ukcpMap = new ConcurrentHashMap<>();
 
     @Override
-    public Ukcp get(Channel channel, DatagramPacket msg) {
+    public Ukcp get(DatagramPacket msg) {
         return ukcpMap.get(msg.sender());
     }
 
     @Override
-    public void New(Channel channel, Ukcp ukcp) {
-        ukcpMap.put(channel.localAddress(),ukcp);
+    public void New(SocketAddress socketAddress, Ukcp ukcp) {
+        ukcpMap.put(socketAddress,ukcp);
     }
 
     @Override
