@@ -48,37 +48,42 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
         Channel channel = ctx.channel();
-
         Ukcp ukcp = channelManager.get(msg);
-        if(ukcp==null){
-            User user = new User(ctx.channel(),msg.sender(),msg.recipient());
-            //System.out.println("新连接"+Thread.currentThread().getName());
-            IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
-            KcpOutput kcpOutput = new KcpOutPutImp();
 
-            ReedSolomon reedSolomon = null;
-            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
-                reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
-            }
-
-            Ukcp newUkcp = new Ukcp(kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
-            newUkcp.user(user);
-
-            disruptorSingleExecutor.execute(() ->{
-                try {
-                    newUkcp.getKcpListener().onConnected(newUkcp);
-                }catch (Throwable throwable){
-                    newUkcp.getKcpListener().handleException(throwable,newUkcp);
-                }
-            });
-            channelManager.New(msg.sender(),newUkcp);
-            newUkcp.read(msg.content());
-
-            ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, channelManager);
-            DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
+        if (ukcp != null)
+        {
+            User user = ukcp.user();
+            //每次收到消息重绑定地址
+            user.setRemoteAddress(msg.sender());
+            ukcp.read(msg.content());
             return;
         }
-        ukcp.read(msg.content());
+
+        User user = new User(ctx.channel(),msg.sender(),msg.recipient());
+        //System.out.println("新连接"+Thread.currentThread().getName());
+        IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
+        KcpOutput kcpOutput = new KcpOutPutImp();
+
+        ReedSolomon reedSolomon = null;
+        if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+            reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
+        }
+
+        Ukcp newUkcp = new Ukcp(kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
+        newUkcp.user(user);
+
+        disruptorSingleExecutor.execute(() ->{
+            try {
+                newUkcp.getKcpListener().onConnected(newUkcp);
+            }catch (Throwable throwable){
+                newUkcp.getKcpListener().handleException(throwable,newUkcp);
+            }
+        });
+        channelManager.New(msg.sender(),newUkcp);
+        newUkcp.read(msg.content());
+
+        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, channelManager);
+        DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
     }
 
 }
