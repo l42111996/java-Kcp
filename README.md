@@ -23,10 +23,10 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 4. 优化集合迭代器。
 5. 包含fec,降低延迟
 6. 附带crc32校验
-7. 优化大量连接cpu占用
+7. 使用时间轮,优化大量连接cpu占用
 8. 使用directbuf和对象池，无gc压力
 9. 增加使用conv或者ip+port确定channel唯一性，游戏建议使用conv与tcp配置使用,[相关资料](https://github.com/skywind3000/kcp/wiki/Cooperate-With-Tcp-Server)
-
+10. 增加同通道不可靠udp发送接收，游戏应用更广泛
 
 
 # 使用方法以及参数
