@@ -231,14 +231,14 @@ public class FecEncode {
 
 
     public void markData(ByteBuf byteBuf,int offset){
-        byteBuf.setInt(offset, (int) this.next);
-        byteBuf.setShort(offset+4, Fec.typeData);
+        byteBuf.setIntLE(offset, (int) this.next);
+        byteBuf.setShortLE(offset+4, Fec.typeData);
         this.next++;
     }
 
     public void markParity(ByteBuf byteBuf, int offset){
-        byteBuf.setInt(offset, (int) this.next);
-        byteBuf.setShort(offset+4,Fec.typeParity);
+        byteBuf.setIntLE(offset, (int) this.next);
+        byteBuf.setShortLE(offset+4,Fec.typeParity);
         //if(next==this.paws){
         //    next=0;
         //}else{

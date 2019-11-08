@@ -141,7 +141,7 @@ public class Ukcp{
         Snmp.snmp.InBytes.add(data.readableBytes());
 
         if(channelConfig.isCrc32Check()){
-            long checksum =  data.readUnsignedInt();
+            long checksum =  data.readUnsignedIntLE();
             ByteBuffer byteBuffer = data.nioBuffer(data.readerIndex(),data.readableBytes());
             crc32.reset();
             crc32.update(byteBuffer);

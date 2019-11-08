@@ -23,8 +23,8 @@ public class FecPacket {
 
     public static FecPacket newFecPacket(ByteBuf byteBuf){
         FecPacket pkt = fecPacketRecycler.get();
-        pkt.seqid =byteBuf.readUnsignedInt();
-        pkt.flag = byteBuf.readShort();
+        pkt.seqid =byteBuf.readUnsignedIntLE();
+        pkt.flag = byteBuf.readUnsignedShortLE();
         pkt.data = byteBuf.retainedSlice(byteBuf.readerIndex(),byteBuf.capacity()-byteBuf.readerIndex());
         pkt.data.writerIndex(byteBuf.readableBytes());
         return pkt;
