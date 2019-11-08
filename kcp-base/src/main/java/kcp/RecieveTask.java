@@ -45,7 +45,7 @@ public class RecieveTask implements ITask {
             if (!kcp.isActive()) {
                 return;
             }
-            boolean hasRevieveMessage = false;
+            boolean hasKcpMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = kcp.getRecieveList();
             for (; ; ) {
@@ -53,11 +53,17 @@ public class RecieveTask implements ITask {
                 if (byteBuf == null) {
                     break;
                 }
-                hasRevieveMessage = true;
-                kcp.input(byteBuf, current);
-                byteBuf.release();
+                //区分udp还是kcp消息
+                if (kcp.getChannelConfig().KcpTag && byteBuf.readByte() == Ukcp.UDP_PROTOCOL) {
+                    readBytebuf(byteBuf, current,Ukcp.UDP_PROTOCOL);
+                }
+                else{
+                    hasKcpMessage = true;
+                    kcp.input(byteBuf, current);
+                    byteBuf.release();
+                }
             }
-            if (!hasRevieveMessage) {
+            if (!hasKcpMessage) {
                 return;
             }
             if (kcp.isStream()) {
@@ -70,12 +76,12 @@ public class RecieveTask implements ITask {
                 int size = bufList.size();
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
-                    readBytebuf(byteBuf);
+                    readBytebuf(byteBuf,current,Ukcp.KCP_PROTOCOL);
                 }
             } else {
                 while (kcp.canRecv()) {
                     ByteBuf recvBuf = kcp.mergeReceive();
-                    readBytebuf(recvBuf);
+                    readBytebuf(recvBuf,current,Ukcp.KCP_PROTOCOL);
                 }
             }
             //判断写事件
@@ -92,14 +98,15 @@ public class RecieveTask implements ITask {
     }
 
 
-    private void readBytebuf(ByteBuf buf) {
+    private void readBytebuf(ByteBuf buf,long current,int protocolType) {
+        kcp.setLastRecieveTime(current);
         try {
-            kcp.getKcpListener().handleReceive(buf, kcp);
+            kcp.getKcpListener().handleReceive(buf, kcp,protocolType);
         } catch (Throwable throwable) {
             kcp.getKcpListener().handleException(throwable, kcp);
+        }finally {
+            buf.release();
         }
-        buf.release();
-
     }
 
     public void release() {

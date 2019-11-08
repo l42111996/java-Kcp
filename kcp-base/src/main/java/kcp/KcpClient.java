@@ -32,6 +32,9 @@ public class KcpClient {
     public void init(ChannelConfig channelConfig) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
+            if(channelConfig.KcpTag){
+                convIndex+=Ukcp.KCP_TAG;
+            }
             if(channelConfig.isCrc32Check()){
                 convIndex+=Ukcp.HEADER_CRC;
             }

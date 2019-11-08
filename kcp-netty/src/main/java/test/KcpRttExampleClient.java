@@ -61,22 +61,22 @@ public class KcpRttExampleClient implements KcpListener {
         kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
 
         KcpRttExampleClient kcpClientRttExample = new KcpRttExampleClient();
-        //kcpClient.connect(new InetSocketAddress("127.0.0.1",20003),channelConfig,kcpClientRttExample);
+        kcpClient.connect(new InetSocketAddress("127.0.0.1",20003),channelConfig,kcpClientRttExample);
 
-        kcpClient.connect(new InetSocketAddress("10.60.100.191",20003),channelConfig,kcpClientRttExample);
+        //kcpClient.connect(new InetSocketAddress("10.60.100.191",20003),channelConfig,kcpClientRttExample);
     }
 
     @Override
     public void onConnected(Ukcp ukcp) {
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = rttMsg(++count);
-            ukcp.write(byteBuf);
+            ukcp.writeKcpMessage(byteBuf);
             byteBuf.release();
             if (count >= rtts.length) {
                 // finish
                 future.cancel(true);
                 byteBuf = rttMsg(-1);
-                ukcp.write(byteBuf);
+                ukcp.writeKcpMessage(byteBuf);
                 byteBuf.release();
 
             }
@@ -84,7 +84,7 @@ public class KcpRttExampleClient implements KcpListener {
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp,int protocolType) {
         int curCount = byteBuf.readShort();
 
         if (curCount == -1) {

@@ -4,6 +4,9 @@ import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.jctools.queues.MpscArrayQueue;
@@ -25,7 +28,9 @@ public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
-    public static final int HEADER_CRC=4,HEADER_NONCESIZE= 16;
+    public static final int HEADER_CRC=4,KCP_TAG=1,HEADER_NONCESIZE= 16;
+
+    public static final int  UDP_PROTOCOL = 1, KCP_PROTOCOL = 0, TCP_PROTOCOL = 2;
 
     private final Kcp kcp;
 
@@ -46,19 +51,14 @@ public class Ukcp{
 
     private final KcpListener kcpListener;
 
-    private boolean crc32Check = false;
+    private final ChannelConfig channelConfig;
 
     /**
      * 上次收到消息时间
      **/
     private long lastRecieveTime = System.currentTimeMillis();
 
-    /**
-     * 超时关闭时间
-     **/
-    private long timeoutMillis = 0;
-
-    private final CRC32 crc32 = new CRC32();
+    private CRC32 crc32= null;
 
 
     /**
@@ -67,6 +67,7 @@ public class Ukcp{
      * @param output output for kcp
      */
     public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
+        this.channelConfig = channelConfig;
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
         this.kcpListener = kcpListener;
@@ -77,11 +78,14 @@ public class Ukcp{
         //recieveList = new SpscLinkedQueue<>();
         int headerSize = 0;
         //init encryption
-
+        if (channelConfig.KcpTag)
+        {
+            headerSize += KCP_TAG;
+        }
 
         //init crc32
         if(channelConfig.isCrc32Check()){
-            this.crc32Check = true;
+            crc32 =  new CRC32();
             KcpOutput kcpOutput = kcp.getOutput();
             kcpOutput = new Crc32OutPut(kcpOutput,headerSize);
             kcp.setOutput(kcpOutput);
@@ -113,7 +117,6 @@ public class Ukcp{
         kcp.setAutoSetConv(channelConfig.isAutoSetConv());
         kcp.setAckMaskSize(channelConfig.getAckMaskSize());
         this.fastFlush = channelConfig.isFastFlush();
-        this.timeoutMillis = channelConfig.getTimeoutMillis();
     }
 
 
@@ -133,11 +136,11 @@ public class Ukcp{
 
 
     public void input(ByteBuf data,long current) throws IOException {
-        lastRecieveTime = System.currentTimeMillis();
+        //lastRecieveTime = System.currentTimeMillis();
         Snmp.snmp.InPkts.increment();
         Snmp.snmp.InBytes.add(data.readableBytes());
 
-        if(crc32Check){
+        if(channelConfig.isCrc32Check()){
             long checksum =  data.readUnsignedInt();
             ByteBuffer byteBuffer = data.nioBuffer(data.readerIndex(),data.readableBytes());
             crc32.reset();
@@ -224,6 +227,9 @@ public class Ukcp{
         return lastRecieveTime;
     }
 
+    public void setLastRecieveTime(long lastRecieveTime) {
+        this.lastRecieveTime = lastRecieveTime;
+    }
 
     /**
      * Returns {@code true} if the kcp can send more bytes.
@@ -427,45 +433,10 @@ public class Ukcp{
         return this;
     }
 
-    public boolean isAutoSetConv() {
-        return kcp.isAutoSetConv();
-    }
-
-    public Ukcp setAutoSetConv(boolean autoSetConv) {
-        kcp.setAutoSetConv(autoSetConv);
-        return this;
-    }
-
-    public int waitSnd() {
-        return kcp.waitSnd();
-    }
-
-    public int getRcvWnd() {
-        return kcp.getRcvWnd();
-    }
-
-    public Ukcp setRcvWnd(int rcvWnd) {
-        kcp.setRcvWnd(rcvWnd);
-        return this;
-    }
-
-    public int getSndWnd() {
-        return kcp.getSndWnd();
-    }
-
-    public Ukcp setSndWnd(int sndWnd) {
-        kcp.setSndWnd(sndWnd);
-        return this;
-    }
-
     public boolean isFastFlush() {
         return fastFlush;
     }
 
-
-    public boolean isAckNoDelay() {
-        return this.kcp.isAckNoDelay();
-    }
 
     public Ukcp setAckNoDelay(boolean ackNoDelay) {
         this.kcp.setAckNoDelay(ackNoDelay);
@@ -485,7 +456,7 @@ public class Ukcp{
      * @param byteBuf 发送后需要手动释放
      * @return
      */
-    public boolean write(ByteBuf byteBuf) {
+    public boolean writeKcpMessage(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
         if (!sendList.offer(byteBuf)) {
             System.out.println("满了");
@@ -495,6 +466,24 @@ public class Ukcp{
         notifyWriteEvent();
         return true;
     }
+
+
+    /**
+     * 发送udp消息
+     */
+    public void writeUdpMessage(ByteBuf byteBuffer)
+    {
+        byteBuffer = byteBuffer.retainedDuplicate();
+        //写入头信息
+        ByteBuf head = PooledByteBufAllocator.DEFAULT.directBuffer(1);
+        head.writeByte(UDP_PROTOCOL);
+        ByteBuf content = Unpooled.wrappedBuffer(head, byteBuffer);
+        User user   = (User) kcp.getUser();
+        DatagramPacket temp = new DatagramPacket(content,user.getLocalAddress(), user.getRemoteAddress());
+        user.getChannel().writeAndFlush(temp);
+    }
+
+
 
     public IMessageExecutor getiMessageExecutor() {
         return iMessageExecutor;
@@ -578,9 +567,8 @@ public class Ukcp{
         }
     }
 
-
-    public long getTimeoutMillis() {
-        return timeoutMillis;
+    public ChannelConfig getChannelConfig() {
+        return channelConfig;
     }
 
     @SuppressWarnings("unchecked")

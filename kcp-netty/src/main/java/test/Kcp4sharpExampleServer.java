@@ -40,11 +40,11 @@ public class Kcp4sharpExampleServer implements KcpListener {
     }
 
     @Override
-    public void handleReceive(ByteBuf buf, Ukcp kcp) {
+    public void handleReceive(ByteBuf buf, Ukcp kcp,int protocolType) {
         byte[] bytes = new  byte[buf.readableBytes()];
         buf.getBytes(buf.readerIndex(),bytes);
         System.out.println("收到消息: "+new String(bytes));
-        kcp.write(buf);
+        kcp.writeKcpMessage(buf);
     }
 
     @Override

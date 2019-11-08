@@ -1,6 +1,5 @@
 package kcp;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
@@ -30,7 +29,6 @@ public class ClientChannelHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        Channel channel  = ctx.channel();
         Ukcp ukcp = this.channelManager.get(msg);
         ukcp.read(msg.content());
     }

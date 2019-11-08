@@ -38,7 +38,7 @@ public class ScheduleTask1 implements ITask,Runnable, TimerTask {
         try {
             long now = System.currentTimeMillis();
             //判断连接是否关闭
-            if (ukcp.getTimeoutMillis() != 0 && now - ukcp.getTimeoutMillis() > ukcp.getLastRecieveTime()) {
+            if (ukcp.getChannelConfig().getTimeoutMillis() != 0 && now - ukcp.getChannelConfig().getTimeoutMillis() > ukcp.getLastRecieveTime()) {
                     ukcp.close();
             }
             if(!ukcp.isActive()){

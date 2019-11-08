@@ -59,7 +59,6 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        User user = new User(ctx.channel(),msg.sender(),msg.recipient());
         //System.out.println("新连接"+Thread.currentThread().getName());
         IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
         KcpOutput kcpOutput = new KcpOutPutImp();
@@ -70,6 +69,8 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
         }
 
         Ukcp newUkcp = new Ukcp(kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
+
+        User user = new User(ctx.channel(),msg.sender(),msg.recipient());
         newUkcp.user(user);
 
         disruptorSingleExecutor.execute(() ->{

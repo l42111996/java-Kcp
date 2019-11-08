@@ -73,7 +73,7 @@ public class LockStepSynchronizationClient implements KcpListener
         DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = ByteBufAllocator.DEFAULT.directBuffer(20);
             byteBuf.writeBytes(new byte[20]);
-            ukcp.write(byteBuf);
+            ukcp.writeKcpMessage(byteBuf);
             byteBuf.release();
         },50);
     }

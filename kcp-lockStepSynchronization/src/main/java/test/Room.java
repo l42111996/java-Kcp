@@ -53,7 +53,7 @@ public class Room implements Runnable, ITask {
         }
         //System.out.println("发送"+byteBuf.writerIndex()+"房间人数"+ players.size());
         for (Player player : players.values()) {
-            player.getUkcp().write(byteBuf);
+            player.getUkcp().writeKcpMessage(byteBuf);
         }
         byteBuf.release();
     }
