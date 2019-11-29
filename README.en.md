@@ -40,7 +40,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 
 
 #Test completed
-1.Single connection endless loop sending and receiving packet memory detection, performance test
+1. Single connection endless loop sending and receiving packet memory detection, performance test
 Configuration: mbp 2.3 GHz Intel Core i9 16GRam
 Single connection with fec 5W / s qps
 Single connection without fec 9W / s qps
@@ -50,7 +50,7 @@ Single connection without fec 9W / s qps
 
 
 
-# Do it
+# TO DO
 1. RTT stability test under high concurrent carbonization
 
 
