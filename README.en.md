@@ -12,8 +12,8 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 
 
 #compatibility:
-1.Compatible with c version of kcp
-2.fec implementation based on https://github.com/Backblaze/JavaReedSolomon
+1. Compatible with c version of kcp
+2. fec implementation based on https://github.com/Backblaze/JavaReedSolomon
 
 
 #optimization:
@@ -22,7 +22,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 3. Optimize the check function.
 4. Optimize collection iterators.
 5. Include fec to reduce latency
-6.With crc32 check
+6. With crc32 check
 7. Use the time wheel to optimize the CPU usage of a large number of connections
 8. Use directbuf and object pool, no gc pressure
 9. Increase the use of conv or ip + port to determine the uniqueness of the channel. The game is recommended to use conv and tcp configuration. [Related information](https://github.com/skywind3000/kcp/wiki/Cooperate-With-Tcp-Server)
@@ -50,7 +50,7 @@ Single connection without fec 9W / s qps
 
 
 
-# TO DO
+#TODO
 1. RTT stability test under high concurrent carbonization
 
 
