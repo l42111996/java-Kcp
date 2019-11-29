@@ -445,9 +445,12 @@ public class Ukcp{
 
 
     public void read(ByteBuf byteBuf) {
-        //System.out.println("recieve "+Thread.currentThread().getName());
-        this.recieveList.add(byteBuf);
-        notifyReadEvent();
+        if(this.recieveList.offer(byteBuf)){
+            notifyReadEvent();
+        }else{
+            byteBuf.release();
+            log.error("conv "+kcp.getConv()+" recieveList is full");
+        }
     }
 
     /**
@@ -459,7 +462,7 @@ public class Ukcp{
     public boolean writeKcpMessage(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
         if (!sendList.offer(byteBuf)) {
-            System.out.println("满了");
+            log.error("conv "+kcp.getConv()+" sendList is full");
             byteBuf.release();
             return false;
         }
