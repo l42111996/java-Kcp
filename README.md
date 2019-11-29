@@ -2,6 +2,8 @@
 
 [![Powered][2]][1]
 
+[README in english](https://github.com/l42111996/java-Kcp/blob/master/README.en.md)
+
 基于netty版本实现的kcp(包含fec功能的实现)
 
 KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的带宽的代价，换取平均延迟降低 30%-40%，且最大延迟降低三倍的传输效果。
