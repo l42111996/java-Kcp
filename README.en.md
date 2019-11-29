@@ -37,6 +37,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
 6. [Encountered problems](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
 7. [Performance test results](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
+8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4GoExampleClient.java)
 
 
 #Test completed
