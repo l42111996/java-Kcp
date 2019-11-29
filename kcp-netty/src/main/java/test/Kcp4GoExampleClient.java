@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
  * Created by JinMiao
  * 2019/11/29.
  */
-public class KcpGoExampleClient implements KcpListener {
+public class Kcp4GoExampleClient implements KcpListener {
 
     public static void main(String[] args) {
         ChannelConfig channelConfig = new ChannelConfig();
@@ -25,13 +25,18 @@ public class KcpGoExampleClient implements KcpListener {
         channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
         //channelConfig.setTimeoutMillis(10000);
+
+        //禁用参数
         channelConfig.setCrc32Check(false);
+        channelConfig.setKcpTag(false);
+        channelConfig.setAckMaskSize(0);
+
 
         KcpClient kcpClient = new KcpClient();
         kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
 
 
-        KcpGoExampleClient kcpGoExampleClient = new KcpGoExampleClient();
+        Kcp4GoExampleClient kcpGoExampleClient = new Kcp4GoExampleClient();
         Ukcp ukcp = kcpClient.connect(new InetSocketAddress("127.0.0.1", 10000), channelConfig, kcpGoExampleClient);
         String msg = "hello!!!!!11111111111111111111111111";
         byte[] bytes = msg.getBytes();
