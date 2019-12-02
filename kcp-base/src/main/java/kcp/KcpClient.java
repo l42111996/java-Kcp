@@ -80,11 +80,15 @@ public class KcpClient {
         init(channelConfig);
     }
 
-    public Ukcp connect(InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {
-        ChannelFuture channelFuture = bootstrap.bind(new InetSocketAddress(0));
+    public Ukcp connect(InetSocketAddress localAddress,InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {
+        if(localAddress==null){
+            localAddress = new InetSocketAddress(0);
+        }
+
+        ChannelFuture channelFuture = bootstrap.bind(localAddress);
         ChannelFuture sync = channelFuture.syncUninterruptibly();
         NioDatagramChannel channel = (NioDatagramChannel) sync.channel();
-        InetSocketAddress localAddress = channel.localAddress();
+        localAddress = channel.localAddress();
 
         User user = new User(channel, remoteAddress, localAddress);
         IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
@@ -111,6 +115,10 @@ public class KcpClient {
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
 
         return ukcp;
+    }
+
+    public Ukcp connect(InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {
+        return connect(null,remoteAddress,channelConfig,kcpListener);
     }
 
 
