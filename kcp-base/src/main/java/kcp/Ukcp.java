@@ -30,7 +30,7 @@ public class Ukcp{
 
     public static final int HEADER_CRC=4,KCP_TAG=1,HEADER_NONCESIZE= 16;
 
-    public static final int  UDP_PROTOCOL = 1, KCP_PROTOCOL = 0, TCP_PROTOCOL = 2;
+    public static final int  UNORDERED_UNRELIABLE_PROTOCOL = 1, ORDERLY_RELIABLE_PROTOCOL = 0, TCP_PROTOCOL = 2 ,UNORDERED_RELIABLE_PROTOCOL=3;
 
     private final Kcp kcp;
 
@@ -454,12 +454,12 @@ public class Ukcp{
     }
 
     /**
-     * 主动发消息使用
+     * 发送有序可靠消息
      * 线程安全的
      * @param byteBuf 发送后需要手动释放
      * @return
      */
-    public boolean writeKcpMessage(ByteBuf byteBuf) {
+    public boolean writeOrderedReliableMessage(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
         if (!sendList.offer(byteBuf)) {
             log.error("conv "+kcp.getConv()+" sendList is full");
@@ -471,26 +471,26 @@ public class Ukcp{
     }
 
 
+
+
+
     /**
-     * 发送udp消息
+     * 发送无序不可靠消息
+     * @param byteBuf  发送后需要手动释放
      */
-    public void writeUdpMessage(ByteBuf byteBuffer)
+    public void writeUnorderedUnReliableMessage(ByteBuf byteBuf)
     {
-        byteBuffer = byteBuffer.retainedDuplicate();
+        byteBuf = byteBuf.retainedDuplicate();
         //写入头信息
         ByteBuf head = PooledByteBufAllocator.DEFAULT.directBuffer(1);
-        head.writeByte(UDP_PROTOCOL);
-        ByteBuf content = Unpooled.wrappedBuffer(head, byteBuffer);
+        head.writeByte(UNORDERED_UNRELIABLE_PROTOCOL);
+        ByteBuf content = Unpooled.wrappedBuffer(head, byteBuf);
         User user   = (User) kcp.getUser();
         DatagramPacket temp = new DatagramPacket(content,user.getLocalAddress(), user.getRemoteAddress());
         user.getChannel().writeAndFlush(temp);
     }
 
 
-
-    public IMessageExecutor getiMessageExecutor() {
-        return iMessageExecutor;
-    }
 
     /**
      * 主动关闭连接调用

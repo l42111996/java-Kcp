@@ -51,7 +51,7 @@ public class KcpIdleExampleClient implements KcpListener {
         byteBuf.writeInt(i++);
         byte[] bytes = new byte[120];
         byteBuf.writeBytes(bytes);
-        ukcp.writeKcpMessage(byteBuf);
+        ukcp.writeOrderedReliableMessage(byteBuf);
         byteBuf.release();
     }
     //int j =0;

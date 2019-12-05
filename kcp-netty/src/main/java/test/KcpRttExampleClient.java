@@ -3,7 +3,10 @@ package test;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import kcp.*;
+import kcp.ChannelConfig;
+import kcp.KcpClient;
+import kcp.KcpListener;
+import kcp.Ukcp;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -70,13 +73,13 @@ public class KcpRttExampleClient implements KcpListener {
     public void onConnected(Ukcp ukcp) {
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = rttMsg(++count);
-            ukcp.writeKcpMessage(byteBuf);
+            ukcp.writeOrderedReliableMessage(byteBuf);
             byteBuf.release();
             if (count >= rtts.length) {
                 // finish
                 future.cancel(true);
                 byteBuf = rttMsg(-1);
-                ukcp.writeKcpMessage(byteBuf);
+                ukcp.writeOrderedReliableMessage(byteBuf);
                 byteBuf.release();
 
             }

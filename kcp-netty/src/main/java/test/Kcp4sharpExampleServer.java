@@ -44,7 +44,7 @@ public class Kcp4sharpExampleServer implements KcpListener {
         byte[] bytes = new  byte[buf.readableBytes()];
         buf.getBytes(buf.readerIndex(),bytes);
         System.out.println("收到消息: "+new String(bytes));
-        kcp.writeKcpMessage(buf);
+        kcp.writeOrderedReliableMessage(buf);
     }
 
     @Override

@@ -29,7 +29,7 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
         channelConfig.setUseConvChannel(true);
-        //channelConfig.setCrc32Check(true);
+        channelConfig.setCrc32Check(true);
         channelConfig.setKcpTag(true);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,20003);
@@ -45,7 +45,7 @@ public class KcpRttExampleServer implements KcpListener {
     public void handleReceive(ByteBuf buf, Ukcp kcp,int protocolType) {
         short curCount = buf.getShort(buf.readerIndex());
         System.out.println(Thread.currentThread().getName()+"  收到消息 "+curCount);
-        kcp.writeKcpMessage(buf);
+        kcp.writeOrderedReliableMessage(buf);
         if (curCount == -1) {
             kcp.notifyCloseEvent();
         }

@@ -54,8 +54,8 @@ public class RecieveTask implements ITask {
                     break;
                 }
                 //区分udp还是kcp消息
-                if (kcp.getChannelConfig().KcpTag && byteBuf.readByte() == Ukcp.UDP_PROTOCOL) {
-                    readBytebuf(byteBuf, current,Ukcp.UDP_PROTOCOL);
+                if (kcp.getChannelConfig().KcpTag && byteBuf.readByte() == Ukcp.UNORDERED_UNRELIABLE_PROTOCOL) {
+                    readBytebuf(byteBuf, current,Ukcp.UNORDERED_UNRELIABLE_PROTOCOL);
                 }
                 else{
                     hasKcpMessage = true;
@@ -76,12 +76,12 @@ public class RecieveTask implements ITask {
                 int size = bufList.size();
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
-                    readBytebuf(byteBuf,current,Ukcp.KCP_PROTOCOL);
+                    readBytebuf(byteBuf,current,Ukcp.ORDERLY_RELIABLE_PROTOCOL);
                 }
             } else {
                 while (kcp.canRecv()) {
                     ByteBuf recvBuf = kcp.mergeReceive();
-                    readBytebuf(recvBuf,current,Ukcp.KCP_PROTOCOL);
+                    readBytebuf(recvBuf,current,Ukcp.ORDERLY_RELIABLE_PROTOCOL);
                 }
             }
             //判断写事件

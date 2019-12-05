@@ -51,7 +51,7 @@ public class KcpPingPongExampleServer implements KcpListener {
             start = now;
             i=0;
         }
-        kcp.writeKcpMessage(buf);
+        kcp.writeOrderedReliableMessage(buf);
     }
 
     @Override
