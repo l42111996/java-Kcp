@@ -26,7 +26,7 @@ public class ConvChannelManager implements IChannelManager {
     @Override
     public Ukcp get(DatagramPacket msg) {
         ByteBuf byteBuf = msg.content();
-        int conv =byteBuf.getInt(convIndex);
+        int conv =byteBuf.getInt(byteBuf.readerIndex()+convIndex);
         return ukcpMap.get(conv);
     }
 

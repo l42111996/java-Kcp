@@ -49,9 +49,6 @@ public class KcpServer {
             if(channelConfig.KcpTag){
                 convIndex+=Ukcp.KCP_TAG;
             }
-            if(channelConfig.isCrc32Check()){
-                convIndex+=Ukcp.HEADER_CRC;
-            }
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
@@ -81,6 +78,13 @@ public class KcpServer {
             protected void initChannel(Channel ch) {
                 ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, disruptorExecutorPool, kcpListener);
                 ChannelPipeline cp = ch.pipeline();
+                if(channelConfig.isCrc32Check()){
+                    Crc32Encode crc32Encode = new Crc32Encode();
+                    Crc32Decode crc32Decode = new Crc32Decode();
+                    //这里的crc32放在eventloop网络线程处理的，以后内核有丢包可以优化到单独的一个线程处理
+                    cp.addLast(crc32Encode);
+                    cp.addLast(crc32Decode);
+                }
                 cp.addLast(serverChannelHandler);
             }
         });

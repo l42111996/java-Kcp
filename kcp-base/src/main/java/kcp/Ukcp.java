@@ -28,7 +28,7 @@ public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
-    public static final int HEADER_CRC=4,KCP_TAG=1,HEADER_NONCESIZE= 16;
+    public static final int KCP_TAG=1,HEADER_NONCESIZE= 16;
 
     public static final int  UNORDERED_UNRELIABLE_PROTOCOL = 1, ORDERLY_RELIABLE_PROTOCOL = 0, TCP_PROTOCOL = 2 ,UNORDERED_RELIABLE_PROTOCOL=3;
 
@@ -83,15 +83,6 @@ public class Ukcp{
             headerSize += KCP_TAG;
         }
 
-        //init crc32
-        if(channelConfig.isCrc32Check()){
-            crc32 =  new CRC32();
-            KcpOutput kcpOutput = kcp.getOutput();
-            kcpOutput = new Crc32OutPut(kcpOutput,headerSize);
-            kcp.setOutput(kcpOutput);
-            headerSize+=HEADER_CRC;
-        }
-
         //init fec
         if (reedSolomon != null) {
             KcpOutput kcpOutput = kcp.getOutput();
@@ -140,16 +131,6 @@ public class Ukcp{
         Snmp.snmp.InPkts.increment();
         Snmp.snmp.InBytes.add(data.readableBytes());
 
-        if(channelConfig.isCrc32Check()){
-            long checksum =  data.readUnsignedIntLE();
-            ByteBuffer byteBuffer = data.nioBuffer(data.readerIndex(),data.readableBytes());
-            crc32.reset();
-            crc32.update(byteBuffer);
-            if(checksum!=crc32.getValue()){
-                Snmp.snmp.getInCsumErrors().increment();
-                return;
-            }
-        }
         if (fecDecode != null) {
             FecPacket fecPacket = FecPacket.newFecPacket(data);
             if (fecPacket.getFlag() == Fec.typeData) {

@@ -35,9 +35,6 @@ public class KcpClient {
             if(channelConfig.KcpTag){
                 convIndex+=Ukcp.KCP_TAG;
             }
-            if(channelConfig.isCrc32Check()){
-                convIndex+=Ukcp.HEADER_CRC;
-            }
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
@@ -60,6 +57,12 @@ public class KcpClient {
             @Override
             protected void initChannel(NioDatagramChannel ch) {
                 ChannelPipeline cp = ch.pipeline();
+                if(channelConfig.isCrc32Check()){
+                    Crc32Encode crc32Encode = new Crc32Encode();
+                    Crc32Decode crc32Decode = new Crc32Decode();
+                    cp.addLast(crc32Encode);
+                    cp.addLast(crc32Decode);
+                }
                 cp.addLast(new ClientChannelHandler(channelManager));
             }
         });

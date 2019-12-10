@@ -10,6 +10,7 @@ import java.util.zip.CRC32;
  * Created by JinMiao
  * 2019-06-21.
  */
+@Deprecated
 public class Crc32OutPut implements KcpOutput {
     private KcpOutput output;
     private CRC32 crc32 = new CRC32();
@@ -21,11 +22,11 @@ public class Crc32OutPut implements KcpOutput {
     }
     @Override
     public void out(ByteBuf data, Kcp kcp) {
-        ByteBuffer byteBuffer = data.nioBuffer(headerOffset+Ukcp.HEADER_CRC,data.readableBytes()-headerOffset-Ukcp.HEADER_CRC);
-        crc32.reset();
-        crc32.update(byteBuffer);
-        long checksum = crc32.getValue();
-        data.setInt(headerOffset, (int) checksum);
-        output.out(data,kcp);
+        //ByteBuffer byteBuffer = data.nioBuffer(headerOffset+Ukcp.HEADER_CRC,data.readableBytes()-headerOffset-Ukcp.HEADER_CRC);
+        //crc32.reset();
+        //crc32.update(byteBuffer);
+        //long checksum = crc32.getValue();
+        //data.setInt(headerOffset, (int) checksum);
+        //output.out(data,kcp);
     }
 }
