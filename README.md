@@ -32,8 +32,8 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 
 
 # 使用方法以及参数
-1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/task.KcpRttExampleServer.java)
-2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/task.KcpRttExampleClient.java)
+1. [server端示例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/KcpRttExampleServer.java)
+2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/KcpRttExampleClient.java)
 3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [大量资料](https://github.com/skywind3000/kcp)
 5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
