@@ -67,13 +67,14 @@ public class RecieveTask implements ITask {
                 return;
             }
             if (kcp.isStream()) {
+                int size =0;
                 while (kcp.canRecv()) {
                     if (bufList == null) {
                         bufList = CodecOutputList.newInstance();
                     }
                     kcp.receive(bufList);
+                    size= bufList.size();
                 }
-                int size = bufList.size();
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
                     readBytebuf(byteBuf,current,Ukcp.ORDERLY_RELIABLE_PROTOCOL);
