@@ -28,15 +28,13 @@ public class LockStepSynchronizationServer implements KcpListener
     public static void main(String[] args) {
         LockStepSynchronizationServer lockStepSynchronizationServer = new LockStepSynchronizationServer();
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(300);
         channelConfig.setRcvwnd(300);
         channelConfig.setMtu(500);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
-        channelConfig.setInterval(40);
-        channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
@@ -92,7 +90,7 @@ public class LockStepSynchronizationServer implements KcpListener
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp, int protocolType) {
         //System.out.println("收到消息"+ukcp.user());
         Player player = ukcp.user().getCache();
         Room room = playerRooms.get(player.getId());
@@ -101,7 +99,7 @@ public class LockStepSynchronizationServer implements KcpListener
         byteBufAllocator.readerIndex(0);
         byteBufAllocator.writerIndex(20);
         room.getiMessageExecutor().execute(() ->{
-            player.getMessages().add(byteBufAllocator);
+                    player.getMessages().add(byteBufAllocator);
                 }
         );
     }

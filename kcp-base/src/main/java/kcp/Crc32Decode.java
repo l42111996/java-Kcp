@@ -5,8 +5,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
-import sun.security.krb5.internal.crypto.crc32;
-import test.Utils;
 
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;

@@ -48,18 +48,11 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
             long timeLeft = ukcp.getTsUpdate() - now;
             //判断执行时间是否到了
             if (timeLeft > 0) {
-                //System.err.println(timeLeft);
                 DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
                 return;
             }
-
-            //long start = System.currentTimeMillis();
             long next = ukcp.flush(now);
-            //System.err.println(next);
-            //System.out.println("耗时  "+(System.currentTimeMillis()-start));
             DisruptorExecutorPool.scheduleHashedWheel(this, next);
-
-
             //检测写缓冲区 如果能写则触发写事件
             if (!ukcp.getSendList().isEmpty() && ukcp.canSend(false)
             ) {

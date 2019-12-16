@@ -32,21 +32,20 @@ public class LockStepSynchronizationClient implements KcpListener
         }
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors());
+
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.setFastresend(2);
+        channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(300);
         channelConfig.setRcvwnd(300);
         channelConfig.setMtu(500);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         channelConfig.setAckNoDelay(false);
-        channelConfig.setInterval(40);
-        channelConfig.setNocwnd(true);
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
 
+        kcpClient.init(channelConfig);
         LockStepSynchronizationClient lockStepSynchronizationClient = new LockStepSynchronizationClient();
 
         for (int i = 0; i < number; i++) {
@@ -79,8 +78,8 @@ public class LockStepSynchronizationClient implements KcpListener
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-        //System.out.println("收到数据"+byteBuf.readableBytes());
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp, int protocolType) {
+
     }
 
     @Override
