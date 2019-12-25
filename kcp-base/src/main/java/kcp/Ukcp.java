@@ -16,7 +16,6 @@ import threadPool.thread.IMessageExecutor;
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
-import java.util.zip.CRC32;
 
 /**
  * Wrapper for kcp
@@ -27,7 +26,7 @@ public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
-    public static final int KCP_TAG=1,HEADER_NONCESIZE= 16;
+    public static final int KCP_TAG=1;
 
     public static final int  UNORDERED_UNRELIABLE_PROTOCOL = 1, ORDERLY_RELIABLE_PROTOCOL = 0, TCP_PROTOCOL = 2 ,UNORDERED_RELIABLE_PROTOCOL=3;
 
@@ -56,8 +55,6 @@ public class Ukcp{
      * 上次收到消息时间
      **/
     private long lastRecieveTime = System.currentTimeMillis();
-
-    private CRC32 crc32= null;
 
 
     /**
@@ -444,6 +441,7 @@ public class Ukcp{
         if (!sendList.offer(byteBuf)) {
             log.error("conv "+kcp.getConv()+" sendList is full");
             byteBuf.release();
+            notifyCloseEvent();;
             return false;
         }
         notifyWriteEvent();

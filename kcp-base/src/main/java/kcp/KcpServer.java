@@ -24,7 +24,6 @@ public class KcpServer {
 
     private Bootstrap bootstrap;
     private EventLoopGroup group;
-    //private Map<Integer,Channel> localAddresss = new ConcurrentHashMap<>();
     private List<Channel> localAddresss = new Vector<>();
     private IChannelManager channelManager;
 

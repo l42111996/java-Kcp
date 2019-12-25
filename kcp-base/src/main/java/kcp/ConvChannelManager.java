@@ -9,8 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 根据conv确定一个sesion
- *  这里conv是从消息第一个字节读取的
+ * 根据conv确定一个session
  * Created by JinMiao
  * 2019/10/17.
  */

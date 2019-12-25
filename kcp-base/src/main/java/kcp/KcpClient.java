@@ -25,7 +25,7 @@ public class KcpClient {
     private DisruptorExecutorPool disruptorExecutorPool;
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
-    /**客户端的连接集合  key为本地的监听端口**/
+    /**客户端的连接集合**/
     private IChannelManager channelManager;
 
 
