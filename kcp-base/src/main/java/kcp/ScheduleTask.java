@@ -15,13 +15,11 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
     private IMessageExecutor disruptorSingleExecutor;
 
     private Ukcp ukcp;
-    private IChannelManager channelManager;
 
 
-    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp, IChannelManager channelManager) {
+    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp) {
         this.disruptorSingleExecutor = disruptorSingleExecutor;
         this.ukcp = ukcp;
-        this.channelManager = channelManager;
     }
 
     //flush策略
@@ -39,10 +37,6 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
                 ukcp.close();
             }
             if (!ukcp.isActive()) {
-                User user = ukcp.user();
-                //抛回网络线程处理连接删除
-                user.getChannel().eventLoop().execute(() -> channelManager.del(ukcp));
-                ukcp.release();
                 return;
             }
             long timeLeft = ukcp.getTsUpdate() - now;

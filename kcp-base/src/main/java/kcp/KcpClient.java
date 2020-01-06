@@ -102,7 +102,7 @@ public class KcpClient {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
 
-        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig);
+        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig,channelManager);
         ukcp.user(user);
 
         disruptorSingleExecutor.execute(() -> {
@@ -114,7 +114,7 @@ public class KcpClient {
         });
         channelManager.New(localAddress,ukcp);
 
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp, channelManager);
+        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp);
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
 
         return ukcp;

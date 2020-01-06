@@ -19,7 +19,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     private IChannelManager channelManager;
 
-    private ChannelConfig channelConfig ;
+    private ChannelConfig channelConfig;
 
     private DisruptorExecutorPool disruptorExecutorPool;
 
@@ -34,7 +34,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("",cause);
+        logger.error("", cause);
         //SocketAddress socketAddress = ctx.channel().remoteAddress();
         //Ukcp ukcp = clientMap.get(socketAddress);
         //if(ukcp==null){
@@ -47,43 +47,37 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
         DatagramPacket msg = (DatagramPacket) object;
-        Channel channel = ctx.channel();
         Ukcp ukcp = channelManager.get(msg);
 
-        if (ukcp != null)
-        {
+        if (ukcp != null) {
             User user = ukcp.user();
             //每次收到消息重绑定地址
             user.setRemoteAddress(msg.sender());
             ukcp.read(msg.content());
             return;
         }
-
-        //System.out.println("新连接"+Thread.currentThread().getName());
         IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
         KcpOutput kcpOutput = new KcpOutPutImp();
-
         ReedSolomon reedSolomon = null;
-        if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
-            reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(),channelConfig.getFecParityShardCount());
+        if (channelConfig.getFecDataShardCount() != 0 && channelConfig.getFecParityShardCount() != 0) {
+            reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
+        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon, channelConfig, channelManager);
 
-        Ukcp newUkcp = new Ukcp(kcpOutput,kcpListener,disruptorSingleExecutor,reedSolomon,channelConfig);
-
-        User user = new User(ctx.channel(),msg.sender(),msg.recipient());
+        User user = new User(ctx.channel(), msg.sender(), msg.recipient());
         newUkcp.user(user);
 
-        disruptorSingleExecutor.execute(() ->{
+        disruptorSingleExecutor.execute(() -> {
             try {
                 newUkcp.getKcpListener().onConnected(newUkcp);
-            }catch (Throwable throwable){
-                newUkcp.getKcpListener().handleException(throwable,newUkcp);
+            } catch (Throwable throwable) {
+                newUkcp.getKcpListener().handleException(throwable, newUkcp);
             }
         });
-        channelManager.New(msg.sender(),newUkcp);
+        channelManager.New(msg.sender(), newUkcp);
         newUkcp.read(msg.content());
 
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor,newUkcp, channelManager);
+        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, newUkcp);
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
     }
 

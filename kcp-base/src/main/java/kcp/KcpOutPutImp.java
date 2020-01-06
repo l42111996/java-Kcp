@@ -10,6 +10,7 @@ import io.netty.channel.socket.DatagramPacket;
  * 2018/9/21.
  */
 public class KcpOutPutImp implements KcpOutput {
+
     @Override
     public void out(ByteBuf data, Kcp kcp) {
         Snmp.snmp.OutPkts.increment();

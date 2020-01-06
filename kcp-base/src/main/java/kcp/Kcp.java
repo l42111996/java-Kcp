@@ -1245,9 +1245,9 @@ public class Kcp {
                     buffer.writeBytes(segData, segData.readerIndex(), segLen);
                 }
 
-                if (segment.xmit >= deadLink) {
-                    state = -1;
-                }
+                //if (segment.xmit >= deadLink) {
+                //    state = -1;
+                //}
 
                 // get the nearest rto
                 long rto = itimediff(segment.resendts, current);

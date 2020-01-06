@@ -51,6 +51,8 @@ public class Ukcp{
 
     private final ChannelConfig channelConfig;
 
+    private final IChannelManager channelManager;
+
     /**
      * 上次收到消息时间
      **/
@@ -62,12 +64,13 @@ public class Ukcp{
      *
      * @param output output for kcp
      */
-    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig) {
+    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig,IChannelManager channelManager) {
         this.channelConfig = channelConfig;
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
         this.kcpListener = kcpListener;
         this.iMessageExecutor = iMessageExecutor;
+        this.channelManager = channelManager;
         //默认2<<16   可以修改
         sendList = new MpscArrayQueue<>(2 << 11);
         recieveList = new SpscArrayQueue<>(2<<11);
@@ -441,15 +444,12 @@ public class Ukcp{
         if (!sendList.offer(byteBuf)) {
             log.error("conv "+kcp.getConv()+" sendList is full");
             byteBuf.release();
-            notifyCloseEvent();;
+            notifyCloseEvent();
             return false;
         }
         notifyWriteEvent();
         return true;
     }
-
-
-
 
 
     /**
@@ -458,12 +458,13 @@ public class Ukcp{
      */
     public void writeUnorderedUnReliableMessage(ByteBuf byteBuf)
     {
+        User user   = (User) kcp.getUser();
         byteBuf = byteBuf.retainedDuplicate();
         //写入头信息
         ByteBuf head = PooledByteBufAllocator.DEFAULT.directBuffer(1);
         head.writeByte(UNORDERED_UNRELIABLE_PROTOCOL);
         ByteBuf content = Unpooled.wrappedBuffer(head, byteBuf);
-        User user   = (User) kcp.getUser();
+
         DatagramPacket temp = new DatagramPacket(content,user.getLocalAddress(), user.getRemoteAddress());
         user.getChannel().writeAndFlush(temp);
     }
@@ -520,8 +521,14 @@ public class Ukcp{
 
 
     void close() {
+        if(!active){
+            return;
+        }
         kcpListener.handleClose(this);
         this.active = false;
+        //抛回网络线程处理连接删除
+        user().getChannel().eventLoop().execute(() -> channelManager.del(this));
+        release();
     }
 
     void release() {
