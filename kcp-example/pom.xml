@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kcp-netty</artifactId>
+    <artifactId>kcp-example</artifactId>
 
     <dependencies>
         <dependency>

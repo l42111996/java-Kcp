@@ -8,7 +8,7 @@ import kcp.KcpServer;
 import kcp.Ukcp;
 
 /**
- *
+ * 测试单连接吞吐量
  * mbp 2.3 GHz Intel Core i9 16GRam 单连接 带fec 5W/s qps 单连接 不带fec 8W/s qps
  * Created by JinMiao
  * 2019-06-27.

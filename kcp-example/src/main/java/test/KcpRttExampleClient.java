@@ -12,6 +12,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.*;
 
 /**
+ * 测试延迟的例子
  * Created by JinMiao
  * 2019-06-26.
  */

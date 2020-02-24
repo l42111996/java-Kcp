@@ -30,14 +30,14 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 
 
 #Using method and parameters
-1. [Server-side example](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/KcpRttExampleServer.java)
-2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/KcpRttExampleClient.java)
+1. [Server-side example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleServer.java)
+2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
 3. [Best Practices](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [A lot of information](https://github.com/skywind3000/kcp)
-5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
+5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
 6. [Encountered problems](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
 7. [Performance test results](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
-8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-netty/src/main/java/test/Kcp4GoExampleClient.java)
+8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
 
 
 #Test completed

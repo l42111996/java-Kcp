@@ -10,6 +10,7 @@ import kcp.Ukcp;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 测试大量连接不通讯的例子
  * Created by JinMiao
  * 2019-07-10.
  */

@@ -10,6 +10,7 @@ import kcp.Ukcp;
 import java.net.InetSocketAddress;
 
 /**
+ * 与go版本兼容的客户端
  * Created by JinMiao
  * 2019/11/29.
  */

@@ -8,29 +8,31 @@ import kcp.KcpServer;
 import kcp.Ukcp;
 
 /**
+ * 测试延迟的例子
  * Created by JinMiao
- * 2019-07-23.
+ * 2018/11/2.
  */
-public class Kcp4sharpExampleServer implements KcpListener {
+public class KcpRttExampleServer implements KcpListener {
 
     public static void main(String[] args) {
 
-        Kcp4sharpExampleServer kcpRttExampleServer = new Kcp4sharpExampleServer();
+        KcpRttExampleServer kcpRttExampleServer = new KcpRttExampleServer();
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.nodelay(true,10,2,true);
-        channelConfig.setSndwnd(300);
-        channelConfig.setRcvwnd(300);
+        channelConfig.nodelay(true,40,2,true);
+        channelConfig.setSndwnd(512);
+        channelConfig.setRcvwnd(512);
         channelConfig.setMtu(512);
+        channelConfig.setFecDataShardCount(3);
+        channelConfig.setFecParityShardCount(1);
         channelConfig.setAckNoDelay(true);
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
-        //channelConfig.setFecDataShardCount(10);
-        //channelConfig.setFecParityShardCount(3);
-        //c# crc32未实现
-        channelConfig.setCrc32Check(false);
+        channelConfig.setUseConvChannel(true);
+        channelConfig.setCrc32Check(true);
+        channelConfig.setKcpTag(true);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,10009);
+        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,20003);
     }
 
 
@@ -41,10 +43,12 @@ public class Kcp4sharpExampleServer implements KcpListener {
 
     @Override
     public void handleReceive(ByteBuf buf, Ukcp kcp,int protocolType) {
-        byte[] bytes = new  byte[buf.readableBytes()];
-        buf.getBytes(buf.readerIndex(),bytes);
-        System.out.println("收到消息: "+new String(bytes));
+        short curCount = buf.getShort(buf.readerIndex());
+        System.out.println(Thread.currentThread().getName()+"  收到消息 "+curCount);
         kcp.writeOrderedReliableMessage(buf);
+        if (curCount == -1) {
+            kcp.notifyCloseEvent();
+        }
     }
 
     @Override

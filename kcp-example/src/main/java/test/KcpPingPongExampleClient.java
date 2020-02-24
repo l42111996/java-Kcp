@@ -8,6 +8,7 @@ import kcp.*;
 import java.net.InetSocketAddress;
 
 /**
+ * 测试单连接吞吐量
  * Created by JinMiao
  * 2019-06-27.
  */

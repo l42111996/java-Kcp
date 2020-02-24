@@ -16,6 +16,8 @@
     <modules>
         <module>kcp-base</module>
         <module>kcp-fec</module>
+        <module>kcp-example</module>
+        <module>kcp-lockStepSynchronization</module>
     </modules>
 
     <developers>

@@ -7,6 +7,7 @@ import kcp.*;
 import java.net.InetSocketAddress;
 
 /**
+ * 测试大量连接不通讯的例子
  * Created by JinMiao
  * 2019-07-10.
  */
