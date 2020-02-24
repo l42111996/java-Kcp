@@ -14,7 +14,7 @@ public class FecPacket {
     private Recycler.Handle<FecPacket> recyclerHandle;
 
 
-    private static final Recycler<FecPacket> fecPacketRecycler = new Recycler<FecPacket>() {
+    private static final Recycler<FecPacket> FEC_PACKET_RECYCLER = new Recycler<FecPacket>() {
         @Override
         protected FecPacket newObject(Handle<FecPacket> handle) {
             return new FecPacket(handle);
@@ -22,7 +22,7 @@ public class FecPacket {
     };
 
     public static FecPacket newFecPacket(ByteBuf byteBuf){
-        FecPacket pkt = fecPacketRecycler.get();
+        FecPacket pkt = FEC_PACKET_RECYCLER.get();
         pkt.seqid =byteBuf.readUnsignedIntLE();
         pkt.flag = byteBuf.readUnsignedShortLE();
         pkt.data = byteBuf.retainedSlice(byteBuf.readerIndex(),byteBuf.capacity()-byteBuf.readerIndex());

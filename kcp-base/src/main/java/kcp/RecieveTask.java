@@ -93,8 +93,9 @@ public class RecieveTask implements ITask {
             e.printStackTrace();
         } finally {
             release();
-            if (bufList != null)
+            if (bufList != null) {
                 bufList.recycle();
+            }
         }
     }
 

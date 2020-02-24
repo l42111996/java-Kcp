@@ -136,10 +136,12 @@ public class FecDecode {
             for (int i = searchBegin; i <= searchEnd; i++) {
                 FecPacket fecPacket = rx.get(i);
                 long seqid = fecPacket.getSeqid();
-                if(seqid>shardEnd)
+                if(seqid>shardEnd) {
                     break;
-                if(seqid<shardBegin)
+                }
+                if(seqid<shardBegin) {
                     continue;
+                }
                 shards[(int)(seqid%shardSize)] = fecPacket.getData();
                 shardsflag[(int)(seqid%shardSize)] = true;
                 numshard++;
@@ -240,8 +242,9 @@ public class FecDecode {
         this.parityShards=0;
         this.shardSize=0;
         for (FecPacket fecPacket : this.rx) {
-            if(fecPacket==null)
+            if(fecPacket==null) {
                 continue;
+            }
             fecPacket.release();
         }
         this.zeros.release();
@@ -265,8 +268,9 @@ public class FecDecode {
         //copy(q[first:], q[first+n:])
         for (int i = first; i < q.size(); i++) {
             int index = i+n;
-            if(index==q.size())
+            if(index==q.size()) {
                 break;
+            }
             q.set(i,q.get(index));
         }
         //for (int i = 0; i < n; i++) {
@@ -287,8 +291,9 @@ public class FecDecode {
         }
         for (int i = first; i < q.size(); i++) {
             int index = i+n;
-            if(index==q.size())
+            if(index==q.size()) {
                 break;
+            }
             q.set(i,q.get(index));
         }
         int removeIndex = q.size()-n;

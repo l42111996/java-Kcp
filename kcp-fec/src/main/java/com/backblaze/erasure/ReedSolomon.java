@@ -440,8 +440,9 @@ public class ReedSolomon {
         boolean allShardIsEmpty= true;
         //int shardLength = shards[0].length;
         for (int i = 1; i < shards.length; i++) {
-            if(shards[i]==null)
+            if(shards[i]==null) {
                 continue;
+            }
             allShardIsEmpty = false;
             if(shardLength==0){
                 shardLength = shards[i].length;

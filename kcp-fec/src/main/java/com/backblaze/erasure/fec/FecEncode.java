@@ -110,8 +110,9 @@ public class FecEncode {
         for (int i = 0; i < this.dataShards; i++) {
             ByteBuf shard = shardCache[i];
             int left = this.maxSize-shard.writerIndex();
-            if(left<=0)
+            if(left<=0) {
                 continue;
+            }
             //是否需要扩容  会出现吗？？
             //if(shard.capacity()<this.maxSize){
             //    ByteBuf newByteBuf = ByteBufAllocator.DEFAULT.buffer(this.maxSize);
@@ -149,8 +150,9 @@ public class FecEncode {
         ByteBuf byteBuf = null;
         for (int i = 0; i < dataShards; i++) {
             byteBuf = this.shardCache[i];
-            if(byteBuf!=null)
+            if(byteBuf!=null) {
                 byteBuf.release();
+            }
         }
         zeros.release();
         codec=null;

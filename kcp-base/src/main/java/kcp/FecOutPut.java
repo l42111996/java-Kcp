@@ -25,8 +25,9 @@ public class FecOutPut implements  KcpOutput{
         ByteBuf[] byteBufs = fecEncode.encode(msg);
         //out之后会自动释放你内存
         output.out(msg,kcp);
-        if(byteBufs==null)
+        if(byteBufs==null) {
             return;
+        }
         for (int i = 0; i < byteBufs.length; i++) {
             ByteBuf parityByteBuf = byteBufs[i];
             output.out(parityByteBuf,kcp);

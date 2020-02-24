@@ -78,14 +78,17 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *                                  or the load factor is nonpositive
      */
     public ReItrHashMap(int initialCapacity, float loadFactor) {
-        if (initialCapacity < 0)
+        if (initialCapacity < 0) {
             throw new IllegalArgumentException("Illegal initial capacity: " +
                     initialCapacity);
-        if (initialCapacity > MAXIMUM_CAPACITY)
+        }
+        if (initialCapacity > MAXIMUM_CAPACITY) {
             initialCapacity = MAXIMUM_CAPACITY;
-        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+        }
+        if (loadFactor <= 0 || Float.isNaN(loadFactor)) {
             throw new IllegalArgumentException("Illegal load factor: " +
                     loadFactor);
+        }
 
         this.loadFactor = loadFactor;
         threshold = initialCapacity;
@@ -188,6 +191,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *
      * @return the number of key-value mappings in this map
      */
+    @Override
     public int size() {
         return size;
     }
@@ -197,6 +201,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *
      * @return <tt>true</tt> if this map contains no key-value mappings
      */
+    @Override
     public boolean isEmpty() {
         return size == 0;
     }
@@ -218,9 +223,11 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *
      * @see #put(Object, Object)
      */
+    @Override
     public V get(Object key) {
-        if (key == null)
+        if (key == null) {
             return getForNullKey();
+        }
         Entry<K, V> entry = getEntry(key);
 
         return null == entry ? null : entry.getValue();
@@ -238,8 +245,9 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             return null;
         }
         for (Entry<K, V> e = table[0]; e != null; e = e.next) {
-            if (e.key == null)
+            if (e.key == null) {
                 return e.value;
+            }
         }
         return null;
     }
@@ -252,6 +260,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * @return <tt>true</tt> if this map contains a mapping for the specified
      * key.
      */
+    @Override
     public boolean containsKey(Object key) {
         return getEntry(key) != null;
     }
@@ -272,8 +281,9 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
              e = e.next) {
             Object k;
             if (e.hash == hash &&
-                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    ((k = e.key) == key || (key != null && key.equals(k)))) {
                 return e;
+            }
         }
         return null;
     }
@@ -290,12 +300,14 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * (A <tt>null</tt> return can also indicate that the map
      * previously associated <tt>null</tt> with <tt>key</tt>.)
      */
+    @Override
     public V put(K key, V value) {
         if (table == EMPTY_TABLE) {
             inflateTable(threshold);
         }
-        if (key == null)
+        if (key == null) {
             return putForNullKey(value);
+        }
         int hash = hash(key);
         int i = indexFor(hash, table.length);
         for (Entry<K, V> e = table[i]; e != null; e = e.next) {
@@ -358,8 +370,9 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
     }
 
     private void putAllForCreate(Map<? extends K, ? extends V> m) {
-        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
             putForCreate(e.getKey(), e.getValue());
+        }
     }
 
     /**
@@ -414,10 +427,12 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * @param m mappings to be stored in this map
      * @throws NullPointerException if the specified map is null
      */
+    @Override
     public void putAll(Map<? extends K, ? extends V> m) {
         int numKeysToBeAdded = m.size();
-        if (numKeysToBeAdded == 0)
+        if (numKeysToBeAdded == 0) {
             return;
+        }
 
         if (table == EMPTY_TABLE) {
             inflateTable((int) Math.max(numKeysToBeAdded * loadFactor, threshold));
@@ -434,17 +449,21 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
          */
         if (numKeysToBeAdded > threshold) {
             int targetCapacity = (int) (numKeysToBeAdded / loadFactor + 1);
-            if (targetCapacity > MAXIMUM_CAPACITY)
+            if (targetCapacity > MAXIMUM_CAPACITY) {
                 targetCapacity = MAXIMUM_CAPACITY;
+            }
             int newCapacity = table.length;
-            while (newCapacity < targetCapacity)
+            while (newCapacity < targetCapacity) {
                 newCapacity <<= 1;
-            if (newCapacity > table.length)
+            }
+            if (newCapacity > table.length) {
                 resize(newCapacity);
+            }
         }
 
-        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
             put(e.getKey(), e.getValue());
+        }
     }
 
     /**
@@ -456,6 +475,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * (A <tt>null</tt> return can also indicate that the map
      * previously associated <tt>null</tt> with <tt>key</tt>.)
      */
+    @Override
     public V remove(Object key) {
         Entry<K, V> e = removeEntryForKey(key);
         return (e == null ? null : e.value);
@@ -482,10 +502,11 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
                     ((k = e.key) == key || (key != null && key.equals(k)))) {
                 modCount++;
                 size--;
-                if (prev == e)
+                if (prev == e) {
                     table[i] = next;
-                else
+                } else {
                     prev.next = next;
+                }
                 e.recordRemoval(this);
                 return e;
             }
@@ -501,8 +522,9 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * for matching.
      */
     final Entry<K, V> removeMapping(Object o) {
-        if (size == 0 || !(o instanceof Map.Entry))
+        if (size == 0 || !(o instanceof Map.Entry)) {
             return null;
+        }
 
         Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
         Object key = entry.getKey();
@@ -516,10 +538,11 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             if (e.hash == hash && e.equals(entry)) {
                 modCount++;
                 size--;
-                if (prev == e)
+                if (prev == e) {
                     table[i] = next;
-                else
+                } else {
                     prev.next = next;
+                }
                 e.recordRemoval(this);
                 return e;
             }
@@ -534,6 +557,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * Removes all of the mappings from this map.
      * The map will be empty after this call returns.
      */
+    @Override
     public void clear() {
         modCount++;
         Arrays.fill(table, null);
@@ -548,15 +572,20 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * @return <tt>true</tt> if this map maps one or more keys to the
      * specified value
      */
+    @Override
     public boolean containsValue(Object value) {
-        if (value == null)
+        if (value == null) {
             return containsNullValue();
+        }
 
         Entry[] tab = table;
-        for (int i = 0; i < tab.length; i++)
-            for (Entry e = tab[i]; e != null; e = e.next)
-                if (value.equals(e.value))
+        for (int i = 0; i < tab.length; i++) {
+            for (Entry e = tab[i]; e != null; e = e.next) {
+                if (value.equals(e.value)) {
                     return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -565,10 +594,13 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      */
     private boolean containsNullValue() {
         Entry[] tab = table;
-        for (int i = 0; i < tab.length; i++)
-            for (Entry e = tab[i]; e != null; e = e.next)
-                if (e.value == null)
+        for (int i = 0; i < tab.length; i++) {
+            for (Entry e = tab[i]; e != null; e = e.next) {
+                if (e.value == null) {
                     return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -578,6 +610,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *
      * @return a shallow copy of this map
      */
+    @Override
     public Object clone() {
         ReItrHashMap<K, V> result = null;
         try {
@@ -618,39 +651,47 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             hash = h;
         }
 
+        @Override
         public final K getKey() {
             return key;
         }
 
+        @Override
         public final V getValue() {
             return value;
         }
 
+        @Override
         public final V setValue(V newValue) {
             V oldValue = value;
             value = newValue;
             return oldValue;
         }
 
+        @Override
         public final boolean equals(Object o) {
-            if (!(o instanceof Map.Entry))
+            if (!(o instanceof Map.Entry)) {
                 return false;
+            }
             Map.Entry e = (Map.Entry) o;
             Object k1 = getKey();
             Object k2 = e.getKey();
             if (k1 == k2 || (k1 != null && k1.equals(k2))) {
                 Object v1 = getValue();
                 Object v2 = e.getValue();
-                if (v1 == v2 || (v1 != null && v1.equals(v2)))
+                if (v1 == v2 || (v1 != null && v1.equals(v2))) {
                     return true;
+                }
             }
             return false;
         }
 
+        @Override
         public final int hashCode() {
             return Objects.hashCode(getKey()) ^ Objects.hashCode(getValue());
         }
 
+        @Override
         public final String toString() {
             return getKey() + "=" + getValue();
         }
@@ -712,8 +753,9 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             expectedModCount = modCount;
             if (size > 0) { // advance to first entry
                 Entry[] t = table;
-                while (index < t.length && (next = t[index++]) == null)
+                while (index < t.length && (next = t[index++]) == null) {
                     ;
+                }
             }
         }
 
@@ -723,36 +765,44 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             index = 0;
             if (size > 0) { // advance to first entry
                 Entry[] t = table;
-                while (index < t.length && (next = t[index++]) == null)
+                while (index < t.length && (next = t[index++]) == null) {
                     ;
+                }
             }
         }
 
+        @Override
         public final boolean hasNext() {
             return next != null;
         }
 
         final Entry<K, V> nextEntry() {
-            if (modCount != expectedModCount)
+            if (modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
+            }
             Entry<K, V> e = next;
-            if (e == null)
+            if (e == null) {
                 throw new NoSuchElementException();
+            }
 
             if ((next = e.next) == null) {
                 Entry[] t = table;
-                while (index < t.length && (next = t[index++]) == null)
+                while (index < t.length && (next = t[index++]) == null) {
                     ;
+                }
             }
             current = e;
             return e;
         }
 
+        @Override
         public void remove() {
-            if (current == null)
+            if (current == null) {
                 throw new IllegalStateException();
-            if (modCount != expectedModCount)
+            }
+            if (modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
+            }
             Object k = current.key;
             current = null;
             ReItrHashMap.this.removeEntryForKey(k);
@@ -767,6 +817,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             return this;
         }
 
+        @Override
         public V next() {
             return nextEntry().value;
         }
@@ -779,6 +830,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             return this;
         }
 
+        @Override
         public K next() {
             return nextEntry().getKey();
         }
@@ -791,6 +843,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
             return this;
         }
 
+        @Override
         public Map.Entry<K, V> next() {
             return nextEntry();
         }
@@ -835,28 +888,34 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
      * operations.
      */
+    @Override
     public Set<K> keySet() {
         Set<K> ks = keySet;
         return (ks != null ? ks : (keySet = new KeySet()));
     }
 
     private final class KeySet extends AbstractSet<K> {
+        @Override
         public Iterator<K> iterator() {
             return newKeyIterator();
         }
 
+        @Override
         public int size() {
             return size;
         }
 
+        @Override
         public boolean contains(Object o) {
             return containsKey(o);
         }
 
+        @Override
         public boolean remove(Object o) {
             return ReItrHashMap.this.removeEntryForKey(o) != null;
         }
 
+        @Override
         public void clear() {
             ReItrHashMap.this.clear();
         }
@@ -875,24 +934,29 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
      * support the <tt>add</tt> or <tt>addAll</tt> operations.
      */
+    @Override
     public Collection<V> values() {
         Collection<V> vs = values;
         return (vs != null ? vs : (values = new Values()));
     }
 
     private final class Values extends AbstractCollection<V> {
+        @Override
         public Iterator<V> iterator() {
             return newValueIterator();
         }
 
+        @Override
         public int size() {
             return size;
         }
 
+        @Override
         public boolean contains(Object o) {
             return containsValue(o);
         }
 
+        @Override
         public void clear() {
             ReItrHashMap.this.clear();
         }
@@ -914,6 +978,7 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
      *
      * @return a set view of the mappings contained in this map
      */
+    @Override
     public ReItrSet<Map.Entry<K, V>> entrySet() {
         return entrySet0();
     }
@@ -924,26 +989,32 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
     }
 
     private final class EntrySet extends AbstractSet<Map.Entry<K, V>> implements ReItrSet<Map.Entry<K, V>> {
+        @Override
         public ReusableIterator<Map.Entry<K, V>> iterator() {
             return newEntryIterator();
         }
 
+        @Override
         public boolean contains(Object o) {
-            if (!(o instanceof Map.Entry))
+            if (!(o instanceof Map.Entry)) {
                 return false;
+            }
             Map.Entry<K, V> e = (Map.Entry<K, V>) o;
             Entry<K, V> candidate = getEntry(e.getKey());
             return candidate != null && candidate.equals(e);
         }
 
+        @Override
         public boolean remove(Object o) {
             return removeMapping(o) != null;
         }
 
+        @Override
         public int size() {
             return size;
         }
 
+        @Override
         public void clear() {
             ReItrHashMap.this.clear();
         }
@@ -1007,9 +1078,10 @@ public class ReItrHashMap<K, V> extends AbstractMap<K, V>
 
         // Read number of mappings
         int mappings = s.readInt();
-        if (mappings < 0)
+        if (mappings < 0) {
             throw new InvalidObjectException("Illegal mappings count: " +
                     mappings);
+        }
 
         // capacity chosen by number of mappings and desired load (if >= 0.25)
         int capacity = (int) Math.min(

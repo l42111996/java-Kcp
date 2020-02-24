@@ -111,8 +111,9 @@ public class KcpServer {
         if (disruptorExecutorPool != null) {
             disruptorExecutorPool.stop();
         }
-        if (group != null)
+        if (group != null) {
             group.shutdownGracefully();
+        }
         System.out.println(Snmp.snmp);
     }
 

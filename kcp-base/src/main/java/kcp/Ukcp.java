@@ -536,14 +536,16 @@ public class Ukcp{
         kcp.release();
         for (; ; ) {
             ByteBuf byteBuf = sendList.poll();
-            if (byteBuf == null)
+            if (byteBuf == null) {
                 break;
+            }
             byteBuf.release();
         }
         for (; ; ) {
             ByteBuf byteBuf = recieveList.poll();
-            if (byteBuf == null)
+            if (byteBuf == null) {
                 break;
+            }
             byteBuf.release();
         }
         if (this.fecEncode != null) {

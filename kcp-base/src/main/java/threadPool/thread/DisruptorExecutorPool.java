@@ -31,14 +31,15 @@ public class DisruptorExecutorPool
     private static final DefaultEventLoop EVENT_EXECUTORS = new DefaultEventLoop();
 
 
-    private static final HashedWheelTimer hashedWheelTimer = new HashedWheelTimer(new TimerThreadFactory(),1,TimeUnit.MILLISECONDS);
+    private static final HashedWheelTimer HASHED_WHEEL_TIMER = new HashedWheelTimer(new TimerThreadFactory(),1,TimeUnit.MILLISECONDS);
 
     /**定时器线程工厂**/
     private static class TimerThreadFactory implements ThreadFactory
     {
         private AtomicInteger timeThreadName=new AtomicInteger(0);
 
-        public Thread newThread(Runnable r) {
+        @Override
+		public Thread newThread(Runnable r) {
             Thread thread = new Thread(r,"TimerThread "+timeThreadName.addAndGet(1));
             return thread;
         }
@@ -48,7 +49,7 @@ public class DisruptorExecutorPool
 	}
 
 	public static void scheduleHashedWheel(TimerTask timerTask, long milliseconds){
-		hashedWheelTimer.newTimeout(timerTask,milliseconds,TimeUnit.MILLISECONDS);
+		HASHED_WHEEL_TIMER.newTimeout(timerTask,milliseconds,TimeUnit.MILLISECONDS);
 	}
 
 

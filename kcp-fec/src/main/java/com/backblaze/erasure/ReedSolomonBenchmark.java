@@ -32,7 +32,7 @@ public class ReedSolomonBenchmark {
 
     private static final long MEASUREMENT_DURATION = 2 * 1000;
 
-    private static final Random random = new Random();
+    private static final Random RANDOM = new Random();
 
     private int nextBuffer = 0;
 
@@ -199,13 +199,13 @@ public class ReedSolomonBenchmark {
             for (int iBuffer = 0; iBuffer < TOTAL_COUNT; iBuffer++) {
                 byte [] buffer = buffers[iBuffer];
                 for (int iByte = 0; iByte < BUFFER_SIZE; iByte++) {
-                    buffer[iByte] = (byte) random.nextInt(256);
+                    buffer[iByte] = (byte) RANDOM.nextInt(256);
                 }
             }
 
             bigBuffer = new byte [TOTAL_COUNT * BUFFER_SIZE];
             for (int i = 0; i < TOTAL_COUNT * BUFFER_SIZE; i++) {
-                bigBuffer[i] = (byte) random.nextInt(256);
+                bigBuffer[i] = (byte) RANDOM.nextInt(256);
             }
         }
     }

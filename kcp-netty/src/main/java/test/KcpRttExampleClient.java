@@ -9,10 +9,7 @@ import kcp.KcpListener;
 import kcp.Ukcp;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by JinMiao
@@ -43,7 +40,7 @@ public class KcpRttExampleClient implements KcpListener {
             rtts[i] = -1;
         }
         startTime = System.currentTimeMillis();
-        scheduleSrv = Executors.newSingleThreadScheduledExecutor();
+        scheduleSrv = new ScheduledThreadPoolExecutor(1);
     }
 
     public static void main(String[] args) {

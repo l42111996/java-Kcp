@@ -687,8 +687,9 @@ public class Kcp {
             if(index<0){
                 continue;
             }
-            if(index>=ackMaskSize)
+            if(index>=ackMaskSize) {
                 break;
+            }
             long mask = ackMask&1<<index;
             if(mask!=0){
                 itr.remove();
@@ -1057,11 +1058,13 @@ public class Kcp {
         }
         for (int i = 0; i < count; i++) {
             long sn =  acklist[i * 2];
-            if(sn<rcvNxt)
+            if(sn<rcvNxt) {
                 continue;
+            }
             long index = sn-rcvNxt-1;
-            if(index>=ackMaskSize)
+            if(index>=ackMaskSize) {
                 break;
+            }
             if(index>=0){
                 ackMask|=1<<index;
             }

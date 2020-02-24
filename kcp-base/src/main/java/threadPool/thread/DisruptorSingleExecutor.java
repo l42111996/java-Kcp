@@ -27,7 +27,7 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	
 	private DistriptorEventFactory eventFactory = new DistriptorEventFactory();
 	
-	private static final DistriptorEventHandler handler = new DistriptorEventHandler();
+	private static final DistriptorEventHandler HANDLER = new DistriptorEventHandler();
 	
 	private AtomicBoolean istop = new AtomicBoolean();
 	
@@ -44,13 +44,14 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	}
 	
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public void start() {
 		LoopThreadfactory loopThreadfactory = new LoopThreadfactory(this);
 //		disruptor = new Disruptor<DistriptorHandler>(eventFactory, ringBufferSize, executor, ProducerType.MULTI, strategy);
 		disruptor = new Disruptor<>(eventFactory, ringBufferSize, loopThreadfactory);
 		buffer = disruptor.getRingBuffer();
-		disruptor.handleEventsWith(DisruptorSingleExecutor.handler);
+		disruptor.handleEventsWith(DisruptorSingleExecutor.HANDLER);
 		disruptor.start();
 	}
 	
@@ -64,6 +65,7 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 			this.iMessageExecutor = iMessageExecutor;
 		}
 
+		@Override
 		public Thread newThread(Runnable r) {
 			currentThread = new DisruptorThread(r,iMessageExecutor);
 			currentThread.setName(threadName);
@@ -77,9 +79,11 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	static long lastNum = 0;
 
 
+	@Override
 	public void stop() {
-		if(istop.get())
+		if(istop.get()) {
 			return;
+		}
 		disruptor.shutdown();
 
 		istop.set(true);
@@ -108,6 +112,7 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	}
 	
 
+	@Override
 	public boolean isFull() {
 		return !buffer.hasAvailableCapacity(1);
 	}
