@@ -969,7 +969,11 @@ public class Kcp {
                         }
                         incr += (mss * mss) / incr + (mss / 16);
                         if ((cwnd + 1) * mss <= incr) {
-                            cwnd++;
+                            if (mss > 0) {
+                                cwnd = (incr + mss - 1) / mss;
+                            } else {
+                                cwnd = incr + mss - 1;
+                            }
                         }
                     }
                     if (cwnd > rmtWnd) {
@@ -1078,7 +1082,7 @@ public class Kcp {
 
             buffer =  makeSpace(buffer,IKCP_OVERHEAD);
             long sn =  acklist[i * 2];
-            if (sn >= rcvNxt || count-1 == i) {
+            if (itimediff(sn , rcvNxt)>=0 || count-1 == i) {
                 seg.sn = sn;
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
