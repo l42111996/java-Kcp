@@ -36,11 +36,10 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 2. [client端实例](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
 3. [最佳实践](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [大量资料](https://github.com/skywind3000/kcp)
-5. 兼容C#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/kcp4sharp/blob/master/kcp4sharp/TestKcp.cs)
+5. 兼容c#端，[java服务端](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java) , [c#客户端](https://github.com/l42111996/csharp-kcp/blob/master/example-Kcp/KcpRttExampleClient.cs)
 6. [遇到过的问题](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
 7. [性能测试结果](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
 8. [兼容kcp-go,包含fec兼容](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
-
 
 # 已完成测试
 1. 单连接死循环收发包内存检测，性能测试  
@@ -65,6 +64,7 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 4. https://github.com/LMAX-Exchange/disruptor 高性能的线程间消息传递库
 5. https://github.com/JCTools/JCTools 高性能并发库
 6. https://github.com/szhnet/kcp-netty java版本的一个kcp
+7. https://github.com/l42111996/csharp-kcp 基于dotNetty的c#版本kcp,完美兼容
    
    
 #交流
