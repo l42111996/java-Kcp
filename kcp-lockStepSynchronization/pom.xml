@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>java-Kcp</artifactId>
-        <groupId>java-Kcp</groupId>
+        <groupId>com.github.l42111996</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -13,7 +13,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>java-Kcp</groupId>
+            <groupId>com.github.l42111996</groupId>
             <artifactId>kcp-base</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>

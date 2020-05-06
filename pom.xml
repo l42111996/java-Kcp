@@ -9,7 +9,7 @@
     <url>https://github.com/l42111996/java-Kcp</url>
 
 
-    <groupId>java-Kcp</groupId>
+    <groupId>com.github.l42111996</groupId>
     <artifactId>java-Kcp</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
