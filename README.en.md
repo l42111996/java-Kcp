@@ -2,14 +2,21 @@
 
 [![Powered][2]][1]
 
+[1]: https://github.com/skywind3000/kcp
+[2]: http://skywind3000.github.io/word/images/kcp.svg
+
 Kcp based on netty version (including implementation of fec function)
 
 KCP is a udp-based fast and reliable protocol (rudp), which can reduce the average delay by 30% -40% at the cost of wasting 10% -20% of bandwidth over TCP, and reduce the maximum delay by three times the transmission effect.
 
-
-[1]: https://github.com/skywind3000/kcp
-[2]: http://skywind3000.github.io/word/images/kcp.svg
-
+#maven repository:
+```xml
+<dependency>
+  <groupId>com.github.l42111996</groupId>
+  <artifactId>kcp-base</artifactId>
+  <version>1.0</version>
+</dependency>
+```
 
 #compatibility:
 1. Compatible with c version of kcp

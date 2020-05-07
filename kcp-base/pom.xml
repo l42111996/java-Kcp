@@ -5,7 +5,7 @@
     <parent>
         <artifactId>java-Kcp</artifactId>
         <groupId>com.github.l42111996</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>com.github.l42111996</groupId>
             <artifactId>kcp-fec</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <!--<dependency>-->
             <!--<groupId>ch.qos.logback</groupId>-->

@@ -2,16 +2,23 @@
 
 [![Powered][2]][1]
 
+[1]: https://github.com/skywind3000/kcp
+[2]: http://skywind3000.github.io/word/images/kcp.svg
+
 [README in english](https://github.com/l42111996/java-Kcp/blob/master/README.en.md)
 
 基于netty版本实现的kcp(包含fec功能的实现)
 
 KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的带宽的代价，换取平均延迟降低 30%-40%，且最大延迟降低三倍的传输效果。
 
-
-[1]: https://github.com/skywind3000/kcp
-[2]: http://skywind3000.github.io/word/images/kcp.svg
-
+#maven地址:
+```xml
+<dependency>
+  <groupId>com.github.l42111996</groupId>
+  <artifactId>kcp-base</artifactId>
+  <version>1.0</version>
+</dependency>
+```
 
 # 兼容性:
 1. 兼容c版本kcp
