@@ -19,12 +19,12 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 </dependency>
 ```
 
-#compatibility:
+# compatibility:
 1. Compatible with c version of kcp
 2. fec implementation based on https://github.com/Backblaze/JavaReedSolomon
 
 
-#optimization:
+# optimization:
 1. Based on disruptor event-driven, make full use of multi-core
 2. Optimize fastack logic and reduce traffic by 10%
 3. Optimize the check function.
@@ -37,7 +37,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 10. Increase unreliable udp sending and receiving in the same channel, and the game is more widely used
 
 
-#Using method and parameters
+# Using method and parameters
 1. [Server-side example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleServer.java)
 2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
 3. [Best Practices](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
@@ -48,7 +48,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
 
 
-#Test completed
+# Test completed
 1. Single connection endless loop sending and receiving packet memory detection, performance test
 Configuration: mbp 2.3 GHz Intel Core i9 16GRam
 Single connection with fec 5W / s qps
@@ -59,11 +59,11 @@ Single connection without fec 9W / s qps
 
 
 
-#TODO
+# TODO
 1. RTT stability test under high concurrent carbonization
 
 
-#Relevant information
+# Relevant information
 
 1. https://github.com/skywind3000/kcp The original ccp version of kcp
 2. https://github.com/xtaci/kcp-go go version kcp, with a lot of optimization
@@ -73,6 +73,6 @@ Single connection without fec 9W / s qps
 6. https://github.com/szhnet/kcp-netty A kcp for java version
 7. https://github.com/l42111996/csharp-kcp C# version of kcp based on dotNetty, perfectly compatible
 
-#communicate with
+# communicate with
 
 QQ: 526167774
