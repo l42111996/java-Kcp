@@ -854,7 +854,7 @@ public class Kcp {
             }
 
 
-            if (data.readableBytes() < len) {
+            if (data.readableBytes() < len || len < 0) {
                 return -2;
             }
 
@@ -1049,6 +1049,7 @@ public class Kcp {
         seg.wnd = wndUnused();//可接收数量
         seg.una = rcvNxt;//已接收数量，下次要接收的包的sn，这sn之前的包都已经收到
 
+        //TODO flush时候没有数据发送无需创建buffer
         ByteBuf buffer = createFlushByteBuf();
         buffer.writerIndex(reserved);
 
