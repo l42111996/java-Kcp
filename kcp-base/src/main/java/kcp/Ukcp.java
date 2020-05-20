@@ -9,8 +9,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.jctools.queues.MpscArrayQueue;
-import org.jctools.queues.SpscArrayQueue;
+import io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue;
 import threadPool.thread.IMessageExecutor;
 
 import java.io.IOException;
@@ -41,7 +40,7 @@ public class Ukcp{
     private FecEncode fecEncode = null;
     private FecDecode fecDecode = null;
 
-    private final MpscArrayQueue<ByteBuf> sendList;
+    private final Queue<ByteBuf> sendList;
 
     private final Queue<ByteBuf> recieveList;
 
@@ -72,9 +71,9 @@ public class Ukcp{
         this.iMessageExecutor = iMessageExecutor;
         this.channelManager = channelManager;
         //默认2<<16   可以修改
-        sendList = new MpscArrayQueue<>(2 << 11);
-        recieveList = new SpscArrayQueue<>(2<<11);
-        //recieveList = new SpscLinkedQueue<>();
+        sendList = new MpscChunkedArrayQueue<>(2 << 11);
+        recieveList = new MpscChunkedArrayQueue<>(2<<11);
+
         int headerSize = 0;
         //init encryption
         if (channelConfig.KcpTag)
@@ -507,7 +506,7 @@ public class Ukcp{
     }
 
 
-    public MpscArrayQueue<ByteBuf> getSendList() {
+    public Queue<ByteBuf> getSendList() {
         return sendList;
     }
 

@@ -2,10 +2,10 @@ package kcp;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
-import org.jctools.queues.MpscArrayQueue;
 import threadPool.task.ITask;
 
 import java.io.IOException;
+import java.util.Queue;
 
 /**
  * Created by JinMiao
@@ -44,7 +44,7 @@ public class SendTask implements ITask {
                 return;
             }
             //从发送缓冲区到kcp缓冲区
-            MpscArrayQueue<ByteBuf> queue = kcp.getSendList();
+            Queue<ByteBuf> queue = kcp.getSendList();
             while(kcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
