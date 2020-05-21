@@ -12,13 +12,6 @@
     <artifactId>kcp-base</artifactId>
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.l42111996</groupId>
             <artifactId>kcp-fec</artifactId>
             <version>${project.version}</version>
