@@ -29,8 +29,8 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setAutoSetConv(true);
         channelConfig.setUseConvChannel(true);
-        channelConfig.setCrc32Check(true);
-        channelConfig.setKcpTag(true);
+        //channelConfig.setCrc32Check(true);
+        //channelConfig.setKcpTag(true);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,20003);
     }
