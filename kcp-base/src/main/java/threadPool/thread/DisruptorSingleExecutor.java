@@ -20,6 +20,7 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	int ringBufferSize = 2<<15;
 	
 	private WaitStrategy strategy = new BlockingWaitStrategy();
+
 	
 	private Disruptor<DistriptorHandler> disruptor = null;
 
