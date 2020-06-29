@@ -44,7 +44,7 @@ public class OrderedThreadPoolExecutor extends ThreadPoolExecutor {
     /**
      * A queue used to store the available sessions
      */
-    private final Queue<OrderedThreadSession> waitingSessions = new MpmcArrayQueue<>(2 << 16);
+    private final Queue<OrderedThreadSession> waitingSessions = new ConcurrentLinkedQueue<>();
 
     private final WaitConditionStrategy waitConditionStrategy = new BlockingWaitConditionStrategy();
 
@@ -338,20 +338,22 @@ public class OrderedThreadPoolExecutor extends ThreadPoolExecutor {
             //TODO 队列满了应该怎么办？ 丢弃该消息?
             return;
         }
-        addWorkerIfNecessary();
-        offerWaitSession(session);
+        boolean processing = offerWaitSession(session);
+        if(!processing){
+            addWorkerIfNecessary();
+        }
     }
 
 
-    private void offerWaitSession(OrderedThreadSession session) {
+    private boolean offerWaitSession(OrderedThreadSession session) {
+        boolean processing=false;
         //判断任务是否在执行中
         if (session.getProcessingCompleted().compareAndSet(true, false)) {
-            //TODO 其实这里应该判断一下满的情况 但是大部分情况下不会满
-            if (!waitingSessions.offer(session)) {
-                System.out.println("没有添加成功");
-            }
+            waitingSessions.offer(session);
+            processing = true;
         }
         waitConditionStrategy.signalAllWhenBlocking();
+        return processing;
     }
 
 
