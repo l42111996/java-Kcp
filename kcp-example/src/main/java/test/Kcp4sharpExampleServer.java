@@ -25,7 +25,6 @@ public class Kcp4sharpExampleServer implements KcpListener {
         channelConfig.setMtu(512);
         channelConfig.setAckNoDelay(true);
         channelConfig.setTimeoutMillis(10000);
-        channelConfig.setAutoSetConv(true);
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
         //c# crc32未实现

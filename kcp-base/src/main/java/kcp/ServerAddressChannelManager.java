@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 2019/10/17.
  */
 public class ServerAddressChannelManager implements IChannelManager {
-    private Map<SocketAddress,Ukcp> ukcpMap = new ConcurrentHashMap<>();
+    private Map<SocketAddress, Ukcp> ukcpMap = new ConcurrentHashMap<>();
 
     @Override
     public Ukcp get(DatagramPacket msg) {
@@ -20,8 +20,8 @@ public class ServerAddressChannelManager implements IChannelManager {
     }
 
     @Override
-    public void New(SocketAddress socketAddress, Ukcp ukcp) {
-        ukcpMap.put(socketAddress,ukcp);
+    public void New(SocketAddress socketAddress, Ukcp ukcp,DatagramPacket msg) {
+        ukcpMap.put(socketAddress, ukcp);
     }
 
     @Override

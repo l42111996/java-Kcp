@@ -27,7 +27,6 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setFecParityShardCount(1);
         channelConfig.setAckNoDelay(true);
         channelConfig.setTimeoutMillis(10000);
-        channelConfig.setAutoSetConv(true);
         channelConfig.setUseConvChannel(true);
         //channelConfig.setCrc32Check(true);
         //channelConfig.setKcpTag(true);

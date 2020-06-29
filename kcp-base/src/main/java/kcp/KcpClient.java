@@ -112,7 +112,9 @@ public class KcpClient {
                 ukcp.getKcpListener().handleException(throwable,ukcp);
             }
         });
-        channelManager.New(localAddress,ukcp);
+
+
+        channelManager.New(localAddress,ukcp,null);
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp);
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());

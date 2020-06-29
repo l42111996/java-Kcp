@@ -103,7 +103,6 @@ public class Ukcp{
         kcp.setMtu(channelConfig.getMtu());
         kcp.setStream(channelConfig.isStream());
         kcp.setAckNoDelay(channelConfig.isAckNoDelay());
-        kcp.setAutoSetConv(channelConfig.isAutoSetConv());
         kcp.setAckMaskSize(channelConfig.getAckMaskSize());
         this.fastFlush = channelConfig.isFastFlush();
     }

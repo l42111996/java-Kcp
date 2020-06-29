@@ -193,11 +193,6 @@ public class Kcp {
     private long ackMask;
     private long lastRcvNxt;
 
-    /**
-     * automatically set conv
-     */
-    private boolean autoSetConv;
-
     private static long long2Uint(long n) {
         return n & 0x00000000FFFFFFFFL;
     }
@@ -823,7 +818,7 @@ public class Kcp {
             }
 
             conv = data.readIntLE();
-            if (conv != this.conv && !(this.conv == 0 && autoSetConv)) {
+            if (conv != this.conv) {
                 return -4;
             }
 
@@ -853,17 +848,12 @@ public class Kcp {
                     ackMask=0;
             }
 
-
             if (data.readableBytes() < len || len < 0) {
                 return -2;
             }
 
             if (cmd != IKCP_CMD_PUSH && cmd != IKCP_CMD_ACK && cmd != IKCP_CMD_WASK && cmd != IKCP_CMD_WINS) {
                 return -3;
-            }
-
-            if (this.conv == 0 && autoSetConv) { // automatically set conv
-                this.conv = conv;
             }
 
             //最后收到的来计算远程窗口大小
@@ -1591,14 +1581,6 @@ public class Kcp {
 
     public void setByteBufAllocator(ByteBufAllocator byteBufAllocator) {
         this.byteBufAllocator = byteBufAllocator;
-    }
-
-    public boolean isAutoSetConv() {
-        return autoSetConv;
-    }
-
-    public void setAutoSetConv(boolean autoSetConv) {
-        this.autoSetConv = autoSetConv;
     }
 
     public KcpOutput getOutput() {

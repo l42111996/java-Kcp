@@ -29,7 +29,6 @@ public class ChannelConfig {
     //crc32校验
     private boolean crc32Check = false;
 
-    private boolean autoSetConv = false;
     //增加ack包回复成功率 填 /8/16/32
     private int ackMaskSize = 0;
     /**使用conv确定一个channel 还是使用 socketAddress确定一个channel**/
@@ -80,14 +79,6 @@ public class ChannelConfig {
 
     public int getRcvwnd() {
         return rcvwnd;
-    }
-
-    public boolean isAutoSetConv() {
-        return autoSetConv;
-    }
-
-    public void setAutoSetConv(boolean autoSetConv) {
-        this.autoSetConv = autoSetConv;
     }
 
     public void setRcvwnd(int rcvwnd) {

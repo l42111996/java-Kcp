@@ -51,8 +51,7 @@ public class KcpRttExampleClient implements KcpListener {
         channelConfig.setRcvwnd(512);
         channelConfig.setMtu(512);
         channelConfig.setAckNoDelay(true);
-        channelConfig.setAutoSetConv(true);
-
+        channelConfig.setConv(55);
 
         channelConfig.setFecDataShardCount(3);
         channelConfig.setFecParityShardCount(1);

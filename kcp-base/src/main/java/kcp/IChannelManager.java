@@ -14,7 +14,7 @@ public interface IChannelManager {
 
     Ukcp get(DatagramPacket msg);
 
-    void New(SocketAddress socketAddress, Ukcp ukcp);
+    void New(SocketAddress socketAddress,Ukcp ukcp,DatagramPacket msg);
 
     void del(Ukcp ukcp);
 

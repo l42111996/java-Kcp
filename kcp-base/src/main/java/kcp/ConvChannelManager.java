@@ -21,17 +21,29 @@ public class ConvChannelManager implements IChannelManager {
         this.convIndex = convIndex;
     }
 
-    private Map<Integer,Ukcp> ukcpMap = new ConcurrentHashMap<>();
+    private Map<Integer, Ukcp> ukcpMap = new ConcurrentHashMap<>();
+
     @Override
     public Ukcp get(DatagramPacket msg) {
-        ByteBuf byteBuf = msg.content();
-        int conv =byteBuf.getInt(byteBuf.readerIndex()+convIndex);
+        int conv = getConv(msg);
         return ukcpMap.get(conv);
     }
 
+
+    private int getConv(DatagramPacket msg) {
+        ByteBuf byteBuf = msg.content();
+        return byteBuf.getIntLE(byteBuf.readerIndex() + convIndex);
+    }
+
     @Override
-    public void New(SocketAddress socketAddress, Ukcp ukcp) {
-        ukcpMap.put(ukcp.getConv(),ukcp);
+    public void New(SocketAddress socketAddress, Ukcp ukcp, DatagramPacket msg) {
+        int conv = ukcp.getConv();
+        if (msg != null) {
+            conv = getConv(msg);
+            ukcp.setConv(conv);
+        }
+
+        ukcpMap.put(conv, ukcp);
     }
 
     @Override

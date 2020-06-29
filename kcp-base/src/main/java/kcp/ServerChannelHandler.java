@@ -74,7 +74,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                 newUkcp.getKcpListener().handleException(throwable, newUkcp);
             }
         });
-        channelManager.New(msg.sender(), newUkcp);
+        channelManager.New(msg.sender(), newUkcp, msg);
         newUkcp.read(msg.content());
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, newUkcp);
