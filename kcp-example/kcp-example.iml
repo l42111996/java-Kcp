@@ -11,13 +11,13 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="kcp-base" />
     <orderEntry type="module" module-name="kcp-fec" />
-    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.49.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.50.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jctools:jctools-core:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.2.3" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.2.3" level="project" />
     <orderEntry type="library" name="Maven: com.lmax:disruptor:3.4.2" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-simple:1.7.25" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.30" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-simple:1.7.30" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openjdk.jmh:jmh-core:1.23" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: net.sf.jopt-simple:jopt-simple:4.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.commons:commons-math3:3.2" level="project" />
