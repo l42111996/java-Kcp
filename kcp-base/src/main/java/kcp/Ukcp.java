@@ -4,17 +4,16 @@ import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue;
+import org.jctools.queues.MpscLinkedQueue;
 import threadPool.thread.IMessageExecutor;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Wrapper for kcp
@@ -25,9 +24,6 @@ public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
-    public static final int KCP_TAG=1;
-
-    public static final int  UNORDERED_UNRELIABLE_PROTOCOL = 1, ORDERLY_RELIABLE_PROTOCOL = 0, TCP_PROTOCOL = 2 ,UNORDERED_RELIABLE_PROTOCOL=3;
 
     private final Kcp kcp;
 
@@ -40,9 +36,9 @@ public class Ukcp{
     private FecEncode fecEncode = null;
     private FecDecode fecDecode = null;
 
-    private final Queue<ByteBuf> sendList;
+    private final Queue<ByteBuf> writeQueue;
 
-    private final Queue<ByteBuf> recieveList;
+    private final Queue<ByteBuf> readQueue;
 
     private final IMessageExecutor iMessageExecutor;
 
@@ -51,6 +47,10 @@ public class Ukcp{
     private final ChannelConfig channelConfig;
 
     private final IChannelManager channelManager;
+
+    private AtomicBoolean writeProcessing = new AtomicBoolean(false);
+
+    private AtomicBoolean readProcessing = new AtomicBoolean(false);
 
     /**
      * 上次收到消息时间
@@ -71,16 +71,10 @@ public class Ukcp{
         this.iMessageExecutor = iMessageExecutor;
         this.channelManager = channelManager;
         //默认2<<16   可以修改
-        sendList = new MpscChunkedArrayQueue<>(2 << 11);
-        recieveList = new MpscChunkedArrayQueue<>(2<<11);
+        writeQueue = new MpscLinkedQueue<>();
+        readQueue = new MpscChunkedArrayQueue<>(2<<11);
 
         int headerSize = 0;
-        //init encryption
-        if (channelConfig.KcpTag)
-        {
-            headerSize += KCP_TAG;
-        }
-
         //init fec
         if (reedSolomon != null) {
             KcpOutput kcpOutput = kcp.getOutput();
@@ -423,7 +417,7 @@ public class Ukcp{
 
 
     public void read(ByteBuf byteBuf) {
-        if(this.recieveList.offer(byteBuf)){
+        if(this.readQueue.offer(byteBuf)){
             notifyReadEvent();
         }else{
             byteBuf.release();
@@ -437,35 +431,17 @@ public class Ukcp{
      * @param byteBuf 发送后需要手动释放
      * @return
      */
-    public boolean writeOrderedReliableMessage(ByteBuf byteBuf) {
+    public void writeMessage(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
-        if (!sendList.offer(byteBuf)) {
+        if (!writeQueue.offer(byteBuf)) {
             log.error("conv "+kcp.getConv()+" sendList is full");
             byteBuf.release();
             notifyCloseEvent();
-            return false;
         }
         notifyWriteEvent();
-        return true;
     }
 
 
-    /**
-     * 发送无序不可靠消息
-     * @param byteBuf  发送后需要手动释放
-     */
-    public void writeUnorderedUnReliableMessage(ByteBuf byteBuf)
-    {
-        User user   = (User) kcp.getUser();
-        byteBuf = byteBuf.retainedDuplicate();
-        //写入头信息
-        ByteBuf head = PooledByteBufAllocator.DEFAULT.directBuffer(1);
-        head.writeByte(UNORDERED_UNRELIABLE_PROTOCOL);
-        ByteBuf content = Unpooled.wrappedBuffer(head, byteBuf);
-
-        DatagramPacket temp = new DatagramPacket(content,user.getLocalAddress(), user.getRemoteAddress());
-        user.getChannel().writeAndFlush(temp);
-    }
 
 
 
@@ -477,13 +453,17 @@ public class Ukcp{
     }
 
     private void notifyReadEvent() {
-        RecieveTask recieveTask = RecieveTask.New(this);
-        this.iMessageExecutor.execute(recieveTask);
+        if(readProcessing.compareAndSet(false,true)){
+            ReadTask readTask = ReadTask.New(this);
+            this.iMessageExecutor.execute(readTask);
+        }
     }
 
     protected void notifyWriteEvent() {
-        SendTask sendTask = SendTask.New(this);
-        this.iMessageExecutor.execute(sendTask);
+        if(writeProcessing.compareAndSet(false,true)){
+            WriteTask writeTask = WriteTask.New(this);
+            this.iMessageExecutor.execute(writeTask);
+        }
     }
 
 
@@ -491,8 +471,8 @@ public class Ukcp{
         return tsUpdate;
     }
 
-    public Queue<ByteBuf> getRecieveList() {
-        return recieveList;
+    public Queue<ByteBuf> getReadQueue() {
+        return readQueue;
     }
 
     public Ukcp setTsUpdate(long tsUpdate) {
@@ -505,8 +485,8 @@ public class Ukcp{
     }
 
 
-    public Queue<ByteBuf> getSendList() {
-        return sendList;
+    public Queue<ByteBuf> getWriteQueue() {
+        return writeQueue;
     }
 
     public KcpListener getKcpListener() {
@@ -533,14 +513,14 @@ public class Ukcp{
         kcp.setState(-1);
         kcp.release();
         for (; ; ) {
-            ByteBuf byteBuf = sendList.poll();
+            ByteBuf byteBuf = writeQueue.poll();
             if (byteBuf == null) {
                 break;
             }
             byteBuf.release();
         }
         for (; ; ) {
-            ByteBuf byteBuf = recieveList.poll();
+            ByteBuf byteBuf = readQueue.poll();
             if (byteBuf == null) {
                 break;
             }
@@ -554,6 +534,16 @@ public class Ukcp{
             this.fecDecode.release();
         }
     }
+
+    protected AtomicBoolean getWriteProcessing() {
+        return writeProcessing;
+    }
+
+
+    protected AtomicBoolean getReadProcessing() {
+        return readProcessing;
+    }
+
 
     public ChannelConfig getChannelConfig() {
         return channelConfig;

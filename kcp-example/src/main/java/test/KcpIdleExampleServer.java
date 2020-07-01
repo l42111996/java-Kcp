@@ -52,7 +52,7 @@ public class KcpIdleExampleServer implements KcpListener {
     long start = System.currentTimeMillis();
 
     @Override
-    public void handleReceive(ByteBuf buf, Ukcp kcp,int protocolType) {
+    public void handleReceive(ByteBuf buf, Ukcp kcp) {
         System.out.println("收到消息 "+recieveAtomicInteger.incrementAndGet());
         i++;
         long now = System.currentTimeMillis();

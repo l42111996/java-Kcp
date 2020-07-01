@@ -34,7 +34,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 7. Use the time wheel to optimize the CPU usage of a large number of connections
 8. Use directbuf and object pool, no gc pressure
 9. Increase the use of conv or ip + port to determine the uniqueness of the channel. The game is recommended to use conv and tcp configuration. [Related information](https://github.com/skywind3000/kcp/wiki/Cooperate-With-Tcp-Server)
-10. Increase unreliable udp sending and receiving in the same channel, and the game is more widely used
+
 
 
 # Using method and parameters

@@ -52,13 +52,13 @@ public class KcpIdleExampleClient implements KcpListener {
         byteBuf.writeInt(i++);
         byte[] bytes = new byte[120];
         byteBuf.writeBytes(bytes);
-        ukcp.writeOrderedReliableMessage(byteBuf);
+        ukcp.writeMessage(byteBuf);
         byteBuf.release();
     }
     //int j =0;
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp,int protocolType) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
         //ukcp.write(byteBuf);
         //int id = byteBuf.getInt(0);
         ////if(j-id%10!=0){

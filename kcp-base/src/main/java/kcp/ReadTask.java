@@ -11,28 +11,28 @@ import java.util.Queue;
  * Created by JinMiao
  * 2018/9/11.
  */
-public class RecieveTask implements ITask {
+public class ReadTask implements ITask {
 
-    private final Recycler.Handle<RecieveTask> recyclerHandle;
+    private final Recycler.Handle<ReadTask> recyclerHandle;
 
     private Ukcp kcp;
 
-    private static final Recycler<RecieveTask> RECYCLER = new Recycler<RecieveTask>(2<<16) {
+    private static final Recycler<ReadTask> RECYCLER = new Recycler<ReadTask>(2<<16) {
         @Override
-        protected RecieveTask newObject(Handle<RecieveTask> handle) {
-            return new RecieveTask(handle);
+        protected ReadTask newObject(Handle<ReadTask> handle) {
+            return new ReadTask(handle);
         }
     };
 
-    private RecieveTask(Recycler.Handle<RecieveTask> recyclerHandle) {
+    private ReadTask(Recycler.Handle<ReadTask> recyclerHandle) {
         this.recyclerHandle = recyclerHandle;
     }
 
 
-    public static RecieveTask New(Ukcp kcp) {
-        RecieveTask recieveTask = RECYCLER.get();
-        recieveTask.kcp = kcp;
-        return recieveTask;
+    protected static ReadTask New(Ukcp kcp) {
+        ReadTask readTask = RECYCLER.get();
+        readTask.kcp = kcp;
+        return readTask;
     }
 
 
@@ -47,21 +47,15 @@ public class RecieveTask implements ITask {
             }
             boolean hasKcpMessage = false;
             long current = System.currentTimeMillis();
-            Queue<ByteBuf> recieveList = kcp.getRecieveList();
+            Queue<ByteBuf> recieveList = kcp.getReadQueue();
             for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
                     break;
                 }
-                //区分udp还是kcp消息
-                if (kcp.getChannelConfig().KcpTag && byteBuf.readByte() == Ukcp.UNORDERED_UNRELIABLE_PROTOCOL) {
-                    readBytebuf(byteBuf, current,Ukcp.UNORDERED_UNRELIABLE_PROTOCOL);
-                }
-                else{
-                    hasKcpMessage = true;
-                    kcp.input(byteBuf, current);
-                    byteBuf.release();
-                }
+                hasKcpMessage = true;
+                kcp.input(byteBuf, current);
+                byteBuf.release();
             }
             if (!hasKcpMessage) {
                 return;
@@ -77,16 +71,16 @@ public class RecieveTask implements ITask {
                 }
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
-                    readBytebuf(byteBuf,current,Ukcp.ORDERLY_RELIABLE_PROTOCOL);
+                    readBytebuf(byteBuf,current);
                 }
             } else {
                 while (kcp.canRecv()) {
                     ByteBuf recvBuf = kcp.mergeReceive();
-                    readBytebuf(recvBuf,current,Ukcp.ORDERLY_RELIABLE_PROTOCOL);
+                    readBytebuf(recvBuf,current);
                 }
             }
             //判断写事件
-            if (!kcp.getSendList().isEmpty()&&kcp.canSend(false)) {
+            if (!kcp.getWriteQueue().isEmpty()&&kcp.canSend(false)) {
                 kcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
@@ -100,10 +94,10 @@ public class RecieveTask implements ITask {
     }
 
 
-    private void readBytebuf(ByteBuf buf,long current,int protocolType) {
+    private void readBytebuf(ByteBuf buf,long current) {
         kcp.setLastRecieveTime(current);
         try {
-            kcp.getKcpListener().handleReceive(buf, kcp,protocolType);
+            kcp.getKcpListener().handleReceive(buf, kcp);
         } catch (Throwable throwable) {
             kcp.getKcpListener().handleException(throwable, kcp);
         }finally {
@@ -112,6 +106,7 @@ public class RecieveTask implements ITask {
     }
 
     public void release() {
+        kcp.getReadProcessing().set(false);
         kcp = null;
         recyclerHandle.recycle(this);
     }

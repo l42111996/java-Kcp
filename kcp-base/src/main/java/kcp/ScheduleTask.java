@@ -48,14 +48,13 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
             long next = ukcp.flush(now);
             DisruptorExecutorPool.scheduleHashedWheel(this, next);
             //检测写缓冲区 如果能写则触发写事件
-            if (!ukcp.getSendList().isEmpty() && ukcp.canSend(false)
-            ) {
+            if (!ukcp.getWriteQueue().isEmpty() && ukcp.canSend(false))
+            {
                 ukcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
             e.printStackTrace();
         }
-
     }
 
     @Override

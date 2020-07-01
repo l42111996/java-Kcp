@@ -21,7 +21,7 @@ public interface KcpListener {
      * @param byteBuf the data
      * @param ukcp
      */
-    void handleReceive(ByteBuf byteBuf, Ukcp ukcp,int protocolType);
+    void handleReceive(ByteBuf byteBuf, Ukcp ukcp);
 
     /**
      *

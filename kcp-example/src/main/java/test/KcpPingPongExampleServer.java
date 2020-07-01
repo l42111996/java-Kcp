@@ -43,7 +43,7 @@ public class KcpPingPongExampleServer implements KcpListener {
     long start = System.currentTimeMillis();
 
     @Override
-    public void handleReceive(ByteBuf buf, Ukcp kcp,int protocolType) {
+    public void handleReceive(ByteBuf buf, Ukcp kcp) {
         i++;
         long now = System.currentTimeMillis();
         if(now-start>1000){
@@ -51,7 +51,7 @@ public class KcpPingPongExampleServer implements KcpListener {
             start = now;
             i=0;
         }
-        kcp.writeOrderedReliableMessage(buf);
+        kcp.writeMessage(buf);
     }
 
     @Override

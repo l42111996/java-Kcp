@@ -40,9 +40,6 @@ public class KcpServer {
     public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
-            if(channelConfig.KcpTag){
-                convIndex+=Ukcp.KCP_TAG;
-            }
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }

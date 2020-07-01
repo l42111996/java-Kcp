@@ -11,29 +11,29 @@ import java.util.Queue;
  * Created by JinMiao
  * 2018/9/11.
  */
-public class SendTask implements ITask {
+public class WriteTask implements ITask {
 
-    private final Recycler.Handle<SendTask> recyclerHandle;
+    private final Recycler.Handle<WriteTask> recyclerHandle;
 
     private Ukcp kcp;
 
-    private static final Recycler<SendTask> RECYCLER = new Recycler<SendTask>(2<<16) {
+    private static final Recycler<WriteTask> RECYCLER = new Recycler<WriteTask>(2<<16) {
         @Override
-        protected SendTask newObject(Handle<SendTask> handle) {
-            return new SendTask(handle);
+        protected WriteTask newObject(Handle<WriteTask> handle) {
+            return new WriteTask(handle);
         }
     };
 
 
-    private SendTask(Recycler.Handle<SendTask> recyclerHandle) {
+    private WriteTask(Recycler.Handle<WriteTask> recyclerHandle) {
         this.recyclerHandle = recyclerHandle;
     }
 
 
-    static SendTask New(Ukcp kcp) {
-        SendTask sendTask = RECYCLER.get();
-        sendTask.kcp = kcp;
-        return sendTask;
+    static WriteTask New(Ukcp kcp) {
+        WriteTask writeTask = RECYCLER.get();
+        writeTask.kcp = kcp;
+        return writeTask;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class SendTask implements ITask {
                 return;
             }
             //从发送缓冲区到kcp缓冲区
-            Queue<ByteBuf> queue = kcp.getSendList();
+            Queue<ByteBuf> queue = kcp.getWriteQueue();
             while(kcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
@@ -73,6 +73,7 @@ public class SendTask implements ITask {
 
 
     public void release(){
+        kcp.getWriteProcessing().set(false);
         kcp = null;
         recyclerHandle.recycle(this);
     }

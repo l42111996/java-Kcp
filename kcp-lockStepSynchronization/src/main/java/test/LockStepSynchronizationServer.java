@@ -90,7 +90,7 @@ public class LockStepSynchronizationServer implements KcpListener
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp, int protocolType) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
         //System.out.println("收到消息"+ukcp.user());
         Player player = ukcp.user().getCache();
         Room room = playerRooms.get(player.getId());

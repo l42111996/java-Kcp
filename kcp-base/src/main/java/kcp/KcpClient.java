@@ -32,9 +32,6 @@ public class KcpClient {
     public void init(ChannelConfig channelConfig) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
-            if(channelConfig.KcpTag){
-                convIndex+=Ukcp.KCP_TAG;
-            }
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }

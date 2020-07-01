@@ -55,7 +55,7 @@ public class KcpRttExampleClient implements KcpListener {
 
         channelConfig.setFecDataShardCount(3);
         channelConfig.setFecParityShardCount(1);
-        //channelConfig.setCrc32Check(true);
+        channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
         //channelConfig.setAckMaskSize(32);
         KcpClient kcpClient = new KcpClient();
@@ -71,13 +71,13 @@ public class KcpRttExampleClient implements KcpListener {
     public void onConnected(Ukcp ukcp) {
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = rttMsg(++count);
-            ukcp.writeOrderedReliableMessage(byteBuf);
+            ukcp.writeMessage(byteBuf);
             byteBuf.release();
             if (count >= rtts.length) {
                 // finish
                 future.cancel(true);
                 byteBuf = rttMsg(-1);
-                ukcp.writeOrderedReliableMessage(byteBuf);
+                ukcp.writeMessage(byteBuf);
                 byteBuf.release();
 
             }
@@ -85,7 +85,7 @@ public class KcpRttExampleClient implements KcpListener {
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp,int protocolType) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
         int curCount = byteBuf.readShort();
 
         if (curCount == -1) {

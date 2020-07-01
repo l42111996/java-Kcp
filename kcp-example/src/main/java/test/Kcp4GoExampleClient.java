@@ -29,7 +29,6 @@ public class Kcp4GoExampleClient implements KcpListener {
 
         //禁用参数
         channelConfig.setCrc32Check(false);
-        channelConfig.setKcpTag(false);
         channelConfig.setAckMaskSize(0);
 
 
@@ -43,7 +42,7 @@ public class Kcp4GoExampleClient implements KcpListener {
         byte[] bytes = msg.getBytes();
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.ioBuffer(bytes.length);
         byteBuf.writeBytes(bytes);
-        ukcp.writeOrderedReliableMessage(byteBuf);
+        ukcp.writeMessage(byteBuf);
 
     }
     @Override
@@ -52,7 +51,7 @@ public class Kcp4GoExampleClient implements KcpListener {
     }
 
     @Override
-    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp, int protocolType) {
+    public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
 
     }
 

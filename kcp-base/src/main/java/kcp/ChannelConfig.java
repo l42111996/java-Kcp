@@ -33,8 +33,6 @@ public class ChannelConfig {
     private int ackMaskSize = 0;
     /**使用conv确定一个channel 还是使用 socketAddress确定一个channel**/
     private boolean useConvChannel=false;
-    /**在协议的第一字节标记为kcp对象 用于与非可靠udp整合**/
-    public boolean KcpTag;
 
 
     public void nodelay(boolean nodelay, int interval, int resend, boolean nc){
@@ -163,13 +161,5 @@ public class ChannelConfig {
 
     public void setUseConvChannel(boolean useConvChannel) {
         this.useConvChannel = useConvChannel;
-    }
-
-    public boolean isKcpTag() {
-        return KcpTag;
-    }
-
-    public void setKcpTag(boolean kcpTag) {
-        KcpTag = kcpTag;
     }
 }
