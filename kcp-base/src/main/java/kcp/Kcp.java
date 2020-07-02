@@ -983,7 +983,8 @@ public class Kcp {
 
         if(windowSlides){
             flush(false,current);
-        }else if (ackNoDelay && ackcount > 0) { // ack immediately
+        }else
+            if (ackNoDelay && ackcount > 0) { // ack immediately
             flush(true,current);
         }
 

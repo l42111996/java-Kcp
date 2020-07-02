@@ -5,7 +5,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import static com.backblaze.erasure.fec.Fec.typeData;
 
@@ -26,7 +28,7 @@ public class FecDecode {
     /** dataShards+parityShards **/
     private int shardSize;
     // ordered receive queue
-    private ArrayList<FecPacket> rx;
+    private MyArrayList<FecPacket> rx;
 
     private ByteBuf[] decodeCache;
     /**标记是否已经缓存了**/
@@ -50,7 +52,7 @@ public class FecDecode {
         this.codec =codec;
         this.decodeCache = new ByteBuf[this.shardSize];
         this.flagCache = new boolean[this.shardSize];
-        this.rx = new ArrayList<>(rxlimit);
+        this.rx = new MyArrayList<>(rxlimit);
 
         zeros = ByteBufAllocator.DEFAULT.buffer(mtu);
         zeros.writeBytes(new byte[mtu]);
@@ -261,34 +263,67 @@ public class FecDecode {
      * @param n
      * @param q
      */
-    private static void freeRange(int first,int n,ArrayList<FecPacket> q){
-        for (int i = first; i < first + n; i++) {
+    private static void freeRange(int first,int n,MyArrayList<FecPacket> q){
+        int toIndex = first+n;
+        for (int i = first; i < toIndex; i++) {
             q.get(i).release();
         }
+        q.removeRange(first,toIndex);
         //copy(q[first:], q[first+n:])
-        for (int i = first; i < q.size(); i++) {
-            int index = i+n;
-            if(index==q.size()) {
-                break;
-            }
-            q.set(i,q.get(index));
-        }
-        //for (int i = 0; i < n; i++) {
-        //    q.get(q.size()-1-i).setData(null);
+        //for (int i = first; i < q.size(); i++) {
+        //    int index = i+n;
+        //    if(index==q.size()) {
+        //        break;
+        //    }
+        //    q.set(i,q.get(index));
         //}
-        for (int i = 0; i < n; i++) {
-            q.remove(q.size()-1);
-        }
+        ////for (int i = 0; i < n; i++) {
+        ////    q.get(q.size()-1-i).setData(null);
+        ////}
+        //for (int i = 0; i < n; i++) {
+        //    q.remove(q.size()-1);
+        //}
     }
 
 
+
     public static void main(String[] args) {
-        int first = 0;
-        int n=2;
-        ArrayList<Integer> q = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (;;){
+
+            int size = new Random().nextInt(99)+1;
+            int first = new Random().nextInt(100);
+            if(size<=first){
+                continue;
+            }
+            int n = new Random().nextInt(size-first);
+
+            MyArrayList<Integer> q = build(size);
+            remove(first,n,q);
+            MyArrayList<Integer> newQ = build(size);
+            newQ.removeRange(first,first+n);
+            if(newQ.size()!=q.size()){
+                System.out.println();
+            }
+
+            for (int i = 0; i < newQ.size(); i++) {
+                if(newQ.get(i)!=q.get(i)){
+                    System.out.println();
+                }
+            }
+        }
+
+    }
+
+
+    public static MyArrayList<Integer> build(int size){
+        MyArrayList<Integer> q = new MyArrayList<>(size);
+        for (int i = 0; i < size; i++) {
             q.add(i);
         }
+        return q;
+    }
+
+    private static  void remove(int first,int n,MyArrayList<Integer> q){
         for (int i = first; i < q.size(); i++) {
             int index = i+n;
             if(index==q.size()) {
@@ -296,11 +331,9 @@ public class FecDecode {
             }
             q.set(i,q.get(index));
         }
-        int removeIndex = q.size()-n;
         for (int i = 0; i < n; i++) {
             q.remove(q.size()-1);
         }
-        System.out.println();
     }
 
 
