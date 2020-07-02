@@ -659,16 +659,19 @@ public class Kcp {
         }
     }
 
-    private void parseUna(long una) {
+    private int parseUna(long una) {
+        int count = 0;
         for (Iterator<Segment> itr = sndBufItr.rewind(); itr.hasNext(); ) {
             Segment seg = itr.next();
             if (itimediff(una, seg.sn) > 0) {
+                count++;
                 itr.remove();
                 seg.recycle(true);
             } else {
                 break;
             }
         }
+        return count;
     }
 
     private void parseAckMask(long una,long ackMask){
@@ -803,6 +806,7 @@ public class Kcp {
         long latest =0; // latest packet
         boolean flag = false;
         int inSegs = 0;
+        boolean windowSlides = false;
 
         long uintCurrent = long2Uint(currentMs(current));
 
@@ -862,7 +866,10 @@ public class Kcp {
             }
 
             //this.rmtWnd = wnd;
-            parseUna(una);
+            if(parseUna(una)>0)
+            {
+                windowSlides = true;
+            }
             shrinkBuf();
 
 
@@ -974,8 +981,9 @@ public class Kcp {
             }
         }
 
-
-        if (ackNoDelay && ackcount > 0) { // ack immediately
+        if(windowSlides){
+            flush(false,current);
+        }else if (ackNoDelay && ackcount > 0) { // ack immediately
             flush(true,current);
         }
 

@@ -15,11 +15,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Wrapper for kcp
- *
- * @author <a href="mailto:szhnet@gmail.com">szh</a>
- */
 public class Ukcp{
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
