@@ -84,6 +84,7 @@ public class ReadTask implements ITask {
                 kcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
+            kcp.close();
             e.printStackTrace();
         } finally {
             release();
