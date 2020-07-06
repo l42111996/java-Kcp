@@ -107,12 +107,12 @@ public class Ukcp{
     }
 
 
-    public ByteBuf mergeReceive() {
+    protected ByteBuf mergeReceive() {
         return kcp.mergeRecv();
     }
 
 
-    public void input(ByteBuf data,long current) throws IOException {
+    protected void input(ByteBuf data,long current) throws IOException {
         //lastRecieveTime = System.currentTimeMillis();
         Snmp.snmp.InPkts.increment();
         Snmp.snmp.InBytes.add(data.readableBytes());
@@ -170,21 +170,13 @@ public class Ukcp{
         }
     }
 
-    /**
-     * The size of the first msg of the kcp.
-     *
-     * @return The size of the first msg of the kcp, or -1 if none of msg
-     */
-    public int peekSize() {
-        return kcp.peekSize();
-    }
 
     /**
      * Returns {@code true} if there are bytes can be received.
      *
      * @return
      */
-    public boolean canRecv() {
+    protected boolean canRecv() {
         return kcp.canRecv();
     }
 
@@ -194,7 +186,7 @@ public class Ukcp{
         return lastRecieveTime;
     }
 
-    public void setLastRecieveTime(long lastRecieveTime) {
+    protected void setLastRecieveTime(long lastRecieveTime) {
         this.lastRecieveTime = lastRecieveTime;
     }
 
@@ -221,7 +213,7 @@ public class Ukcp{
      * @param current current time in milliseconds
      * @return the next time to update
      */
-    public long update(long current) {
+    protected long update(long current) {
         kcp.update(current);
         long nextTsUp = check(current);
         setTsUpdate(nextTsUp);
@@ -229,7 +221,7 @@ public class Ukcp{
         return nextTsUp;
     }
 
-    public long flush(long current){
+    protected long flush(long current){
         return kcp.flush(false,current);
     }
 
@@ -240,7 +232,7 @@ public class Ukcp{
      * @return
      * @see Kcp#check(long)
      */
-    public long check(long current) {
+    protected long check(long current) {
         return kcp.check(current);
     }
 
@@ -249,7 +241,7 @@ public class Ukcp{
      *
      * @return {@code true} if the kcp need to flush
      */
-    public boolean checkFlush() {
+    protected boolean checkFlush() {
         return kcp.checkFlush();
     }
 
@@ -384,10 +376,6 @@ public class Ukcp{
         return kcp.getDeadLink();
     }
 
-    public Ukcp setDeadLink(int deadLink) {
-        kcp.setDeadLink(deadLink);
-        return this;
-    }
 
     /**
      * Sets the {@link ByteBufAllocator} which is used for the kcp to allocate buffers.
@@ -411,7 +399,7 @@ public class Ukcp{
     }
 
 
-    public void read(ByteBuf byteBuf) {
+    protected void read(ByteBuf byteBuf) {
         if(this.readQueue.offer(byteBuf)){
             notifyReadEvent();
         }else{
@@ -466,11 +454,11 @@ public class Ukcp{
         return tsUpdate;
     }
 
-    public Queue<ByteBuf> getReadQueue() {
+    protected Queue<ByteBuf> getReadQueue() {
         return readQueue;
     }
 
-    public Ukcp setTsUpdate(long tsUpdate) {
+    protected Ukcp setTsUpdate(long tsUpdate) {
         this.tsUpdate = tsUpdate;
         return this;
     }
@@ -480,11 +468,11 @@ public class Ukcp{
     }
 
 
-    public Queue<ByteBuf> getWriteQueue() {
+    protected Queue<ByteBuf> getWriteQueue() {
         return writeQueue;
     }
 
-    public KcpListener getKcpListener() {
+    protected KcpListener getKcpListener() {
         return kcpListener;
     }
 
