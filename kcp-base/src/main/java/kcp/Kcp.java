@@ -225,7 +225,8 @@ public class Kcp {
         buf.writeIntLE((int) seg.ts);
         buf.writeIntLE((int) seg.sn);
         buf.writeIntLE((int) seg.una);
-        buf.writeIntLE(seg.data.readableBytes());
+        int dataSize = seg.data==null?0:seg.data.readableBytes();
+        buf.writeIntLE(dataSize);
         switch (seg.ackMaskSize){
             case 8:
                 buf.writeByte((int) seg.ackMask);
@@ -302,7 +303,7 @@ public class Kcp {
             fastack = 0;
             xmit = 0;
             ackMask=0;
-            if (releaseBuf) {
+            if (releaseBuf&&data!=null) {
                 data.release();
             }
             data = null;
@@ -313,7 +314,7 @@ public class Kcp {
         static Segment createSegment(ByteBufAllocator byteBufAllocator, int size) {
             Segment seg = RECYCLER.get();
             if (size == 0) {
-                seg.data = byteBufAllocator.ioBuffer(0, 0);
+                seg.data = null;
             } else {
                 seg.data = byteBufAllocator.ioBuffer(size);
             }
@@ -1000,7 +1001,10 @@ public class Kcp {
 
 
     private ByteBuf makeSpace(ByteBuf buffer ,int space){
-        if (buffer.readableBytes() + space > mtu) {
+        if (buffer == null) {
+            buffer = createFlushByteBuf();
+            buffer.writerIndex(reserved);
+        } else if (buffer.readableBytes() + space > mtu) {
             output(buffer, this);
             buffer = createFlushByteBuf();
             buffer.writerIndex(reserved);
@@ -1009,6 +1013,8 @@ public class Kcp {
     }
 
     private void flushBuffer(ByteBuf buffer){
+        if(buffer==null)
+            return;
         if (buffer.readableBytes() > reserved) {
             output(buffer, this);
             return;
@@ -1048,11 +1054,8 @@ public class Kcp {
         seg.wnd = wndUnused();//可接收数量
         seg.una = rcvNxt;//已接收数量，下次要接收的包的sn，这sn之前的包都已经收到
 
-        //TODO flush时候没有数据发送无需创建buffer
-        ByteBuf buffer = createFlushByteBuf();
-        buffer.writerIndex(reserved);
-
-
+        //flush时候没有数据发送无需创建buffer
+        ByteBuf buffer = null;
         //计算ackMask
         int count = ackcount;
 
@@ -1079,10 +1082,9 @@ public class Kcp {
 
         // flush acknowledges有收到的包需要确认，则发确认包
         for (int i = 0; i < count; i++) {
-
-            buffer =  makeSpace(buffer,IKCP_OVERHEAD);
             long sn =  acklist[i * 2];
             if (itimediff(sn , rcvNxt)>=0 || count-1 == i) {
+                buffer =  makeSpace(buffer,IKCP_OVERHEAD);
                 seg.sn = sn;
                 seg.ts = acklist[i * 2 + 1];
                 encodeSeg(buffer, seg);
@@ -1239,12 +1241,6 @@ public class Kcp {
                 int segLen = segData.readableBytes();
                 int need = IKCP_OVERHEAD + segLen;
                 buffer = makeSpace(buffer,need);
-
-                //if (buffer.readableBytes() + need > mtu) {
-                //    output(buffer, this);
-                //    buffer = createFlushByteBuf();
-                //}
-
                 encodeSeg(buffer, segment);
 
                 if (segLen > 0) {
