@@ -66,6 +66,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
         User user = new User(ctx.channel(), msg.sender(), msg.recipient());
         newUkcp.user(user);
+        channelManager.New(msg.sender(), newUkcp, msg);
 
         disruptorSingleExecutor.execute(() -> {
             try {
@@ -74,7 +75,6 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
                 newUkcp.getKcpListener().handleException(throwable, newUkcp);
             }
         });
-        channelManager.New(msg.sender(), newUkcp, msg);
         newUkcp.read(msg.content());
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, newUkcp);

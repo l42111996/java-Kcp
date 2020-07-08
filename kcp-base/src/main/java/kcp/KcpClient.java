@@ -102,6 +102,7 @@ public class KcpClient {
         Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig,channelManager);
         ukcp.user(user);
 
+        channelManager.New(localAddress,ukcp,null);
         disruptorSingleExecutor.execute(() -> {
             try {
                 ukcp.getKcpListener().onConnected(ukcp);
@@ -109,9 +110,6 @@ public class KcpClient {
                 ukcp.getKcpListener().handleException(throwable,ukcp);
             }
         });
-
-
-        channelManager.New(localAddress,ukcp,null);
 
         ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp);
         DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
