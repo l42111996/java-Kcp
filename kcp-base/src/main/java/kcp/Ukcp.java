@@ -39,7 +39,7 @@ public class Ukcp{
 
     private final KcpListener kcpListener;
 
-    private final ChannelConfig channelConfig;
+    private final long timeoutMillis;
 
     private final IChannelManager channelManager;
 
@@ -59,7 +59,7 @@ public class Ukcp{
      * @param output output for kcp
      */
     public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig,IChannelManager channelManager) {
-        this.channelConfig = channelConfig;
+        this.timeoutMillis = channelConfig.getTimeoutMillis();
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
         this.kcpListener = kcpListener;
@@ -527,9 +527,8 @@ public class Ukcp{
         return readProcessing;
     }
 
-
-    public ChannelConfig getChannelConfig() {
-        return channelConfig;
+    public long getTimeoutMillis() {
+        return timeoutMillis;
     }
 
     @SuppressWarnings("unchecked")
