@@ -80,6 +80,24 @@ public class KcpClient {
         init(channelConfig);
     }
 
+    /**
+     * 重连接口
+     * 使用旧的kcp对象，出口ip和端口替换为新的
+     * 在4G切换为wifi等场景使用
+     * @param ukcp
+     */
+    public void reconnect(Ukcp ukcp){
+        if(!(channelManager instanceof ConvChannelManager)){
+            throw new UnsupportedOperationException("reconnect can only be used in convChannel");
+        }
+        ukcp.getiMessageExecutor().execute(() -> {
+            ukcp.user().getChannel().close();
+            InetSocketAddress  localAddress = new InetSocketAddress(0);
+            ChannelFuture channelFuture = bootstrap.bind(localAddress);
+            ukcp.user().setChannel(channelFuture.channel());
+        });
+    }
+
     public Ukcp connect(InetSocketAddress localAddress,InetSocketAddress remoteAddress, ChannelConfig channelConfig, KcpListener kcpListener) {
         if(localAddress==null){
             localAddress = new InetSocketAddress(0);

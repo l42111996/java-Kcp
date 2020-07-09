@@ -527,6 +527,10 @@ public class Ukcp{
         return readProcessing;
     }
 
+    protected IMessageExecutor getiMessageExecutor() {
+        return iMessageExecutor;
+    }
+
     public long getTimeoutMillis() {
         return timeoutMillis;
     }
