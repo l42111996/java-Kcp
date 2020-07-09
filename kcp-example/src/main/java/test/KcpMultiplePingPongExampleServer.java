@@ -63,6 +63,6 @@ public class KcpMultiplePingPongExampleServer implements KcpListener {
     public void handleClose(Ukcp kcp) {
         System.out.println(Snmp.snmp.toString());
         Snmp.snmp= new Snmp();
-        System.out.println("连接断开了"+kcp.getConv()+" "+kcp.getReadProcessing()+" "+kcp.getWriteProcessing()+"  "+System.currentTimeMillis());
+        System.out.println("连接断开了"+kcp.getConv()+" "+System.currentTimeMillis());
     }
 }
