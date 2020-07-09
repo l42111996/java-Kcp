@@ -95,6 +95,8 @@ public class Kcp {
      */
     public static final int IKCP_PROBE_LIMIT = 120000;
 
+    public static final int IKCP_SN_OFFSET   = 12;
+
 
     private int ackMaskSize = 0;
     /**会话id**/
