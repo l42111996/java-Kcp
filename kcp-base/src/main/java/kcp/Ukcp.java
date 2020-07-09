@@ -81,11 +81,11 @@ public class Ukcp{
         }
 
         kcp.setReserved(headerSize);
-        intKcpConfig(channelConfig);
+        initKcpConfig(channelConfig);
     }
 
 
-    private void intKcpConfig(ChannelConfig channelConfig){
+    private void initKcpConfig(ChannelConfig channelConfig){
         kcp.nodelay(channelConfig.isNodelay(),channelConfig.getInterval(),channelConfig.getFastresend(),channelConfig.isNocwnd());
         kcp.setSndWnd(channelConfig.getSndwnd());
         kcp.setRcvWnd(channelConfig.getRcvwnd());
