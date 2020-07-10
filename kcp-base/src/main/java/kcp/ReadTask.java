@@ -15,7 +15,7 @@ public class ReadTask implements ITask {
 
     private final Recycler.Handle<ReadTask> recyclerHandle;
 
-    private Ukcp kcp;
+    private Ukcp ukcp;
 
     private static final Recycler<ReadTask> RECYCLER = new Recycler<ReadTask>(2<<16) {
         @Override
@@ -31,7 +31,7 @@ public class ReadTask implements ITask {
 
     protected static ReadTask New(Ukcp kcp) {
         ReadTask readTask = RECYCLER.get();
-        readTask.kcp = kcp;
+        readTask.ukcp = kcp;
         return readTask;
     }
 
@@ -39,52 +39,52 @@ public class ReadTask implements ITask {
     @Override
     public void execute() {
         CodecOutputList<ByteBuf> bufList = null;
+        Ukcp ukcp = this.ukcp;
         try {
-            //Thread.sleep(1000);
             //查看连接状态
-            if (!kcp.isActive()) {
+            if (!ukcp.isActive()) {
                 return;
             }
             boolean hasKcpMessage = false;
             long current = System.currentTimeMillis();
-            Queue<ByteBuf> recieveList = kcp.getReadQueue();
+            Queue<ByteBuf> recieveList = ukcp.getReadQueue();
             for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
                     break;
                 }
                 hasKcpMessage = true;
-                kcp.input(byteBuf, current);
+                ukcp.input(byteBuf, current);
                 byteBuf.release();
             }
             if (!hasKcpMessage) {
                 return;
             }
-            if (kcp.isStream()) {
+            if (ukcp.isStream()) {
                 int size =0;
-                while (kcp.canRecv()) {
+                while (ukcp.canRecv()) {
                     if (bufList == null) {
                         bufList = CodecOutputList.newInstance();
                     }
-                    kcp.receive(bufList);
+                    ukcp.receive(bufList);
                     size= bufList.size();
                 }
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
-                    readBytebuf(byteBuf,current);
+                    readBytebuf(byteBuf,current,ukcp);
                 }
             } else {
-                while (kcp.canRecv()) {
-                    ByteBuf recvBuf = kcp.mergeReceive();
-                    readBytebuf(recvBuf,current);
+                while (ukcp.canRecv()) {
+                    ByteBuf recvBuf = ukcp.mergeReceive();
+                    readBytebuf(recvBuf,current,ukcp);
                 }
             }
             //判断写事件
-            if (!kcp.getWriteQueue().isEmpty()&&kcp.canSend(false)) {
-                kcp.notifyWriteEvent();
+            if (!ukcp.getWriteQueue().isEmpty()&& ukcp.canSend(false)) {
+                ukcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
-            kcp.close();
+            ukcp.close();
             e.printStackTrace();
         } finally {
             release();
@@ -95,20 +95,20 @@ public class ReadTask implements ITask {
     }
 
 
-    private void readBytebuf(ByteBuf buf,long current) {
-        kcp.setLastRecieveTime(current);
+    private void readBytebuf(ByteBuf buf,long current,Ukcp ukcp) {
+        ukcp.setLastRecieveTime(current);
         try {
-            kcp.getKcpListener().handleReceive(buf, kcp);
+            ukcp.getKcpListener().handleReceive(buf, ukcp);
         } catch (Throwable throwable) {
-            kcp.getKcpListener().handleException(throwable, kcp);
+            ukcp.getKcpListener().handleException(throwable, ukcp);
         }finally {
             buf.release();
         }
     }
 
     public void release() {
-        kcp.getReadProcessing().set(false);
-        kcp = null;
+        ukcp.getReadProcessing().set(false);
+        ukcp = null;
         recyclerHandle.recycle(this);
     }
 

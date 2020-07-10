@@ -48,6 +48,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object object) {
+        final ChannelConfig channelConfig = this.channelConfig;
         DatagramPacket msg = (DatagramPacket) object;
         Ukcp ukcp = channelManager.get(msg);
         ByteBuf byteBuf = msg.content();

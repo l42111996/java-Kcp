@@ -15,7 +15,7 @@ public class WriteTask implements ITask {
 
     private final Recycler.Handle<WriteTask> recyclerHandle;
 
-    private Ukcp kcp;
+    private Ukcp ukcp;
 
     private static final Recycler<WriteTask> RECYCLER = new Recycler<WriteTask>(2<<16) {
         @Override
@@ -30,39 +30,40 @@ public class WriteTask implements ITask {
     }
 
 
-    static WriteTask New(Ukcp kcp) {
+    static WriteTask New(Ukcp ukcp) {
         WriteTask writeTask = RECYCLER.get();
-        writeTask.kcp = kcp;
+        writeTask.ukcp = ukcp;
         return writeTask;
     }
 
     @Override
     public void execute() {
+        Ukcp ukcp = this.ukcp;
         try {
             //查看连接状态
-            if(!kcp.isActive()){
+            if(!ukcp.isActive()){
                 return;
             }
             //从发送缓冲区到kcp缓冲区
-            Queue<ByteBuf> queue = kcp.getWriteQueue();
-            while(kcp.canSend(false)){
+            Queue<ByteBuf> queue = ukcp.getWriteQueue();
+            while(ukcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
                     break;
                 }
                 try {
-                    this.kcp.send(byteBuf);
+                    ukcp.send(byteBuf);
                     byteBuf.release();
                 } catch (IOException e) {
-                    kcp.getKcpListener().handleException(e,kcp);
+                    ukcp.getKcpListener().handleException(e, ukcp);
                     return;
                 }
             }
             //如果有发送 则检测时间
-            if(!kcp.canSend(false)||(kcp.checkFlush()&&kcp.isFastFlush())){
+            if(!ukcp.canSend(false)||(ukcp.checkFlush()&& ukcp.isFastFlush())){
                 long now =System.currentTimeMillis();
-                long next = kcp.flush(now);
-                kcp.setTsUpdate(now+next);
+                long next = ukcp.flush(now);
+                ukcp.setTsUpdate(now+next);
             }
         }catch (Throwable e){
             e.printStackTrace();
@@ -73,8 +74,8 @@ public class WriteTask implements ITask {
 
 
     public void release(){
-        kcp.getWriteProcessing().set(false);
-        kcp = null;
+        ukcp.getWriteProcessing().set(false);
+        ukcp = null;
         recyclerHandle.recycle(this);
     }
 
