@@ -56,7 +56,7 @@ Single connection without fec 9W / s qps
 2. Java server and c # client compatibility test
 3. 3000 connections remain using single core 30% cpu
 4. fec combined with directbuffer detection for the best CPU performance plan
-
+5. A large number of clients continue to connect, disconnect, send messages, and troubleshoot memory leaks
 
 
 # TODO
