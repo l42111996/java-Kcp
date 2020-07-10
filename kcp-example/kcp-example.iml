@@ -11,7 +11,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="kcp-base" />
     <orderEntry type="module" module-name="kcp-fec" />
-    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.50.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.51.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jctools:jctools-core:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.2.3" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.2.3" level="project" />

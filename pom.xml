@@ -12,7 +12,7 @@
     <artifactId>java-Kcp</artifactId>
     <groupId>com.github.l42111996</groupId>
     <packaging>pom</packaging>
-    <version>1.1</version>
+    <version>1.2</version>
     <modules>
         <module>kcp-fec</module>
         <module>kcp-base</module>
@@ -23,7 +23,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netty.version>4.1.50.Final</netty.version>
+        <netty.version>4.1.51.Final</netty.version>
         <slf4j.version>1.7.30</slf4j.version>
         <disruptor.version>3.4.2</disruptor.version>
     </properties>
