@@ -57,17 +57,21 @@ public class KcpDisconnectExampleClient implements KcpListener {
 
     @Override
     public void onConnected(Ukcp ukcp) {
-        ByteBuf byteBuf = UnpooledByteBufAllocator.DEFAULT.buffer(1024);
-        byteBuf.writeInt(1);
-        byte[] bytes = new byte[1020];
-        byteBuf.writeBytes(bytes);
-        ukcp.write(byteBuf);
-        byteBuf.release();
+        for (int i = 0; i < 100; i++) {
+            ByteBuf byteBuf = UnpooledByteBufAllocator.DEFAULT.buffer(1024);
+            byteBuf.writeInt(i);
+            byte[] bytes = new byte[1020];
+            byteBuf.writeBytes(bytes);
+            ukcp.write(byteBuf);
+            byteBuf.release();
+        }
     }
 
     @Override
     public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-        ukcp.close();
+        if(byteBuf.getInt(0)==99){
+            ukcp.close();
+        }
     }
 
     @Override

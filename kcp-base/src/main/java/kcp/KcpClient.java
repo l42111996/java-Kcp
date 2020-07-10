@@ -35,7 +35,7 @@ public class KcpClient {
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
-            channelManager = new ConvChannelManager(convIndex);
+            channelManager = new ClientConvChannelManager(convIndex);
         }else{
             channelManager = new ClientAddressChannelManager();
         }
@@ -87,14 +87,15 @@ public class KcpClient {
      * @param ukcp
      */
     public void reconnect(Ukcp ukcp){
-        if(!(channelManager instanceof ConvChannelManager)){
+        if(!(channelManager instanceof ServerConvChannelManager)){
             throw new UnsupportedOperationException("reconnect can only be used in convChannel");
         }
         ukcp.getiMessageExecutor().execute(() -> {
-            ukcp.user().getChannel().close();
+            User user = ukcp.user();
+            user.getChannel().close();
             InetSocketAddress  localAddress = new InetSocketAddress(0);
-            ChannelFuture channelFuture = bootstrap.bind(localAddress);
-            ukcp.user().setChannel(channelFuture.channel());
+            ChannelFuture channelFuture = bootstrap.connect(user.getRemoteAddress(),localAddress);
+            user.setChannel(channelFuture.channel());
         });
     }
 
@@ -160,5 +161,9 @@ public class KcpClient {
         }
         //System.out.println(Snmp.snmp);
         //System.out.println("关闭连接3");
+    }
+
+    public IChannelManager getChannelManager() {
+        return channelManager;
     }
 }

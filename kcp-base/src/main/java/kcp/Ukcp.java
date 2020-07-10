@@ -379,10 +379,14 @@ public class Ukcp{
         if(!active){
             return;
         }
-        kcpListener.handleClose(this);
         this.active = false;
-        //抛回网络线程处理连接删除
-        user().getChannel().eventLoop().execute(() -> channelManager.del(this));
+        notifyReadEvent();
+        kcpListener.handleClose(this);
+        //关闭之前尽量把消息都发出去
+        notifyWriteEvent();
+        kcp.flush(false,System.currentTimeMillis());
+        //连接删除
+        channelManager.del(this);
         release();
     }
 

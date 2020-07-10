@@ -13,11 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by JinMiao
  * 2019/10/17.
  */
-public class ConvChannelManager implements IChannelManager {
+public class ClientConvChannelManager implements IChannelManager {
 
     private int convIndex;
 
-    public ConvChannelManager(int convIndex) {
+    public ClientConvChannelManager(int convIndex) {
         this.convIndex = convIndex;
     }
 
@@ -49,6 +49,7 @@ public class ConvChannelManager implements IChannelManager {
     @Override
     public void del(Ukcp ukcp) {
         ukcpMap.remove(ukcp.getConv());
+        ukcp.user().getChannel().close();
     }
 
     @Override

@@ -29,6 +29,7 @@ public class ClientAddressChannelManager implements IChannelManager {
     @Override
     public void del(Ukcp ukcp) {
         ukcpMap.remove(ukcp.user().getLocalAddress());
+        ukcp.user().getChannel().close();
     }
 
     @Override

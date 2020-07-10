@@ -43,7 +43,7 @@ public class KcpServer {
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
-            channelManager = new ConvChannelManager(convIndex);
+            channelManager = new ServerConvChannelManager(convIndex);
         }else{
             channelManager = new ServerAddressChannelManager();
         }
@@ -109,4 +109,7 @@ public class KcpServer {
         System.out.println(Snmp.snmp);
     }
 
+    public IChannelManager getChannelManager() {
+        return channelManager;
+    }
 }
