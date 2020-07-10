@@ -102,8 +102,9 @@ public class KcpClient {
         if(localAddress==null){
             localAddress = new InetSocketAddress(0);
         }
+        ChannelFuture channelFuture  = bootstrap.connect(remoteAddress,localAddress);
 
-        ChannelFuture channelFuture = bootstrap.bind(localAddress);
+        //= bootstrap.bind(localAddress);
         ChannelFuture sync = channelFuture.syncUninterruptibly();
         NioDatagramChannel channel = (NioDatagramChannel) sync.channel();
         localAddress = channel.localAddress();
@@ -144,7 +145,7 @@ public class KcpClient {
         //System.out.println("关闭连接");
         channelManager.getAll().forEach(ukcp -> {
             try {
-                ukcp.notifyCloseEvent();
+                ukcp.close();
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }

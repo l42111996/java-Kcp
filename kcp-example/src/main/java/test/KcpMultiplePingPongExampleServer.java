@@ -51,7 +51,7 @@ public class KcpMultiplePingPongExampleServer implements KcpListener {
         //    start = now;
         //    i=0;
         //}
-        kcp.writeMessage(buf);
+        kcp.write(buf);
     }
 
     @Override

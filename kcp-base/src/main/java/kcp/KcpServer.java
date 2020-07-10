@@ -99,7 +99,7 @@ public class KcpServer {
                 channel -> channel.close()
         );
         channelManager.getAll().forEach(ukcp ->
-                ukcp.notifyCloseEvent());
+                ukcp.close());
         if (disruptorExecutorPool != null) {
             disruptorExecutorPool.stop();
         }

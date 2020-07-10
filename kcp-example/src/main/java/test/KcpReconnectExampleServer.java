@@ -9,7 +9,6 @@ import kcp.Ukcp;
 
 /**
  * 重连测试服务器
- * mbp 2.3 GHz Intel Core i9 16GRam 单连接 带fec 5W/s qps 单连接 不带fec 8W/s qps
  * Created by JinMiao
  * 2019-06-27.
  */
@@ -52,7 +51,7 @@ public class KcpReconnectExampleServer implements KcpListener {
             start = now;
             i=0;
         }
-        kcp.writeMessage(buf);
+        kcp.write(buf);
     }
 
     @Override

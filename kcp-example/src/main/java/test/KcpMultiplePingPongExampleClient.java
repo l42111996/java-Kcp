@@ -1,6 +1,5 @@
 package test;
 
-import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import kcp.ChannelConfig;
@@ -55,7 +54,7 @@ public class KcpMultiplePingPongExampleClient implements KcpListener {
                 byteBuf.writeInt(1);
                 byte[] bytes = new byte[1000];
                 byteBuf.writeBytes(bytes);
-                ukcp.writeMessage(byteBuf);
+                ukcp.write(byteBuf);
                 byteBuf.release();
             }
         },100,100);

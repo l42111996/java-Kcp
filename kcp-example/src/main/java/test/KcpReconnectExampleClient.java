@@ -54,7 +54,7 @@ public class KcpReconnectExampleClient implements KcpListener {
             byteBuf.writeInt(i++);
             byte[] bytes = new byte[1020];
             byteBuf.writeBytes(bytes);
-            ukcp.writeMessage(byteBuf);
+            ukcp.write(byteBuf);
             byteBuf.release();
         }
     }
@@ -62,7 +62,7 @@ public class KcpReconnectExampleClient implements KcpListener {
 
     @Override
     public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-        ukcp.writeMessage(byteBuf);
+        ukcp.write(byteBuf);
         int id = byteBuf.getInt(0);
         //if(j-id%10!=0){
         //    System.out.println("id"+id +"  j" +j);

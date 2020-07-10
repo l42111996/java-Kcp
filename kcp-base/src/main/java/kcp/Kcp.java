@@ -1578,14 +1578,6 @@ public class Kcp {
         this.stream = stream;
     }
 
-    public int getDeadLink() {
-        return deadLink;
-    }
-
-    public void setDeadLink(int deadLink) {
-        this.deadLink = deadLink;
-    }
-
     public void setByteBufAllocator(ByteBufAllocator byteBufAllocator) {
         this.byteBufAllocator = byteBufAllocator;
     }

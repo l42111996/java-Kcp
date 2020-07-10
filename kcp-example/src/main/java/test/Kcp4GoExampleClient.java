@@ -42,7 +42,7 @@ public class Kcp4GoExampleClient implements KcpListener {
         byte[] bytes = msg.getBytes();
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.ioBuffer(bytes.length);
         byteBuf.writeBytes(bytes);
-        ukcp.writeMessage(byteBuf);
+        ukcp.write(byteBuf);
 
     }
     @Override

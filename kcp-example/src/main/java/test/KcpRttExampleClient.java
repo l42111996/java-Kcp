@@ -71,13 +71,13 @@ public class KcpRttExampleClient implements KcpListener {
     public void onConnected(Ukcp ukcp) {
         future = scheduleSrv.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = rttMsg(++count);
-            ukcp.writeMessage(byteBuf);
+            ukcp.write(byteBuf);
             byteBuf.release();
             if (count >= rtts.length) {
                 // finish
                 future.cancel(true);
                 byteBuf = rttMsg(-1);
-                ukcp.writeMessage(byteBuf);
+                ukcp.write(byteBuf);
                 byteBuf.release();
 
             }
@@ -98,7 +98,7 @@ public class KcpRttExampleClient implements KcpListener {
                     }
                     System.out.println("average: "+ (sum / rtts.length));
                     System.out.println(Snmp.snmp.toString());
-                    ukcp.notifyCloseEvent();
+                    ukcp.close();
                     //ukcp.setTimeoutMillis(System.currentTimeMillis());
                     System.exit(0);
                 }

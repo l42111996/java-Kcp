@@ -182,7 +182,7 @@ public class Ukcp{
 
 
 
-    public long getLastRecieveTime() {
+    protected long getLastRecieveTime() {
         return lastRecieveTime;
     }
 
@@ -246,19 +246,6 @@ public class Ukcp{
     }
 
     /**
-     * Sets params of nodelay.
-     *
-     * @param nodelay  {@code true} if nodelay mode is enabled
-     * @param interval protocol internal work interval, in milliseconds
-     * @param resend   fast retransmission mode, 0 represents off by default, 2 can be set (2 ACK spans will result
-     *                 in direct retransmission)
-     * @param nc       {@code true} if turn off flow control
-     */
-    public void nodelay(boolean nodelay, int interval, int resend, boolean nc) {
-        kcp.nodelay(nodelay, interval, resend, nc);
-    }
-
-    /**
      * Returns conv of kcp.
      *
      * @return conv of kcp
@@ -276,105 +263,22 @@ public class Ukcp{
         kcp.setConv(conv);
     }
 
-    /**
-     * Returns {@code true} if and only if nodelay is enabled.
-     *
-     * @return {@code true} if and only if nodelay is enabled
-     */
-    public boolean isNodelay() {
-        return kcp.isNodelay();
-    }
-
-    /**
-     * Sets whether enable nodelay.
-     *
-     * @param nodelay {@code true} if enable nodelay
-     * @return this object
-     */
-    public Ukcp setNodelay(boolean nodelay) {
-        kcp.setNodelay(nodelay);
-        return this;
-    }
 
     /**
      * Returns update interval.
      *
      * @return update interval
      */
-    public int getInterval() {
+    protected int getInterval() {
         return kcp.getInterval();
     }
 
-    /**
-     * Sets update interval
-     *
-     * @param interval update interval
-     * @return this object
-     */
-    public Ukcp setInterval(int interval) {
-        kcp.setInterval(interval);
-        return this;
-    }
 
-    /**
-     * Returns the fastresend of kcp.
-     *
-     * @return the fastresend of kcp
-     */
-    public int getFastResend() {
-        return kcp.getFastresend();
-    }
 
-    /**
-     * Sets the fastresend of kcp.
-     *
-     * @param fastResend
-     * @return this object
-     */
-    public Ukcp setFastResend(int fastResend) {
-        kcp.setFastresend(fastResend);
-        return this;
-    }
-
-    public boolean isNocwnd() {
-        return kcp.isNocwnd();
-    }
-
-    public Ukcp setNocwnd(boolean nocwnd) {
-        kcp.setNocwnd(nocwnd);
-        return this;
-    }
-
-    public int getMinRto() {
-        return kcp.getRxMinrto();
-    }
-
-    public Ukcp setMinRto(int minRto) {
-        kcp.setRxMinrto(minRto);
-        return this;
-    }
-
-    public int getMtu() {
-        return kcp.getMtu();
-    }
-
-    public Ukcp setMtu(int mtu) {
-        kcp.setMtu(mtu);
-        return this;
-    }
-
-    public boolean isStream() {
+    protected boolean isStream() {
         return kcp.isStream();
     }
 
-    public Ukcp setStream(boolean stream) {
-        kcp.setStream(stream);
-        return this;
-    }
-
-    public int getDeadLink() {
-        return kcp.getDeadLink();
-    }
 
 
     /**
@@ -388,15 +292,10 @@ public class Ukcp{
         return this;
     }
 
-    public boolean isFastFlush() {
+    protected boolean isFastFlush() {
         return fastFlush;
     }
 
-
-    public Ukcp setAckNoDelay(boolean ackNoDelay) {
-        this.kcp.setAckNoDelay(ackNoDelay);
-        return this;
-    }
 
 
     protected void read(ByteBuf byteBuf) {
@@ -414,12 +313,12 @@ public class Ukcp{
      * @param byteBuf 发送后需要手动释放
      * @return
      */
-    public void writeMessage(ByteBuf byteBuf) {
+    public void write(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
         if (!writeQueue.offer(byteBuf)) {
             log.error("conv "+kcp.getConv()+" sendList is full");
             byteBuf.release();
-            notifyCloseEvent();
+            close();
         }
         notifyWriteEvent();
     }
@@ -431,8 +330,8 @@ public class Ukcp{
     /**
      * 主动关闭连接调用
      */
-    public void notifyCloseEvent() {
-        this.iMessageExecutor.execute(() -> close());
+    public void close() {
+        this.iMessageExecutor.execute(() -> internalClose());
     }
 
     private void notifyReadEvent() {
@@ -450,7 +349,7 @@ public class Ukcp{
     }
 
 
-    public long getTsUpdate() {
+    protected long getTsUpdate() {
         return tsUpdate;
     }
 
@@ -462,11 +361,6 @@ public class Ukcp{
         this.tsUpdate = tsUpdate;
         return this;
     }
-
-    public int getState() {
-        return kcp.getState();
-    }
-
 
     protected Queue<ByteBuf> getWriteQueue() {
         return writeQueue;
@@ -481,7 +375,7 @@ public class Ukcp{
     }
 
 
-    void close() {
+    void internalClose() {
         if(!active){
             return;
         }
@@ -531,7 +425,7 @@ public class Ukcp{
         return iMessageExecutor;
     }
 
-    public long getTimeoutMillis() {
+    protected long getTimeoutMillis() {
         return timeoutMillis;
     }
 
