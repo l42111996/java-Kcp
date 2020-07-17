@@ -85,12 +85,20 @@ public class FecEncode {
      * @param byteBuf
      * @return
      */
-    public ByteBuf[] encode(ByteBuf byteBuf){
+    public ByteBuf[] encode(final ByteBuf byteBuf){
+        int headerOffset = this.headerOffset;
+        int payloadOffset = this.payloadOffset;
+        int dataShards = this.dataShards;
+        int parityShards = this.parityShards;
+        ByteBuf[] shardCache = this.shardCache;
+        ByteBuf[] encodeCache = this.encodeCache;
+        ByteBuf zeros = this.zeros;
+
         markData(byteBuf,headerOffset);
         int sz = byteBuf.writerIndex();
         byteBuf.setShort(payloadOffset,sz-headerOffset- Fec.fecHeaderSizePlus2);
-        this.shardCache[shardCount] = byteBuf.retainedDuplicate();
-        this.shardCount ++;
+        shardCache[shardCount] = byteBuf.retainedDuplicate();
+        shardCount ++;
         if (sz > this.maxSize) {
             this.maxSize = sz;
         }
@@ -107,7 +115,7 @@ public class FecEncode {
         }
 
         //按着最大长度不足补充0
-        for (int i = 0; i < this.dataShards; i++) {
+        for (int i = 0; i < dataShards; i++) {
             ByteBuf shard = shardCache[i];
             int left = this.maxSize-shard.writerIndex();
             if(left<=0) {
@@ -127,12 +135,12 @@ public class FecEncode {
         codec.encodeParity(shardCache,payloadOffset,this.maxSize-payloadOffset);
         //释放dataShards
         for (int i = 0; i < dataShards; i++) {
-            this.shardCache[i].release();
-            this.shardCache[i]=null;
+            shardCache[i].release();
+            shardCache[i]=null;
         }
         this.shardCount = 0;
         this.maxSize = 0;
-        return this.encodeCache;
+        return encodeCache;
     }
 
 

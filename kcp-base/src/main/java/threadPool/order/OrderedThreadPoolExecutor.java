@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  *
  * M:N队列 均衡使用cpu
+ * TODO 消费者执行一定任务释放线程给其他队列，防止其他队列服务饿死
  * Created by JinMiao
  * 2020/6/19.
  */

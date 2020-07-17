@@ -71,7 +71,13 @@ public class FecDecode {
      * @param
      * @return
      */
-    public List<ByteBuf> decode(FecPacket pkt){
+    public List<ByteBuf> decode(final FecPacket pkt){
+        int shardSize= this.shardSize;
+        MyArrayList<FecPacket> rx = this.rx;
+        int dataShards = this.dataShards;
+        ByteBuf zeros = this.zeros;
+        int typeData =Fec.typeData;
+
         if(pkt.getFlag()==Fec.typeParity){
             Snmp.snmp.FECParityShards.increment();
         }else{
@@ -94,7 +100,7 @@ public class FecDecode {
         }
         //插入 rx中
         if(insertIdx==n+1){
-            this.rx.add(pkt);
+            rx.add(pkt);
         }else{
             rx.add(insertIdx,pkt);
         }
@@ -171,12 +177,12 @@ public class FecDecode {
                     }
                     int left = maxlen-shard.readableBytes();
                     if(left>0){
-                        shard.writeBytes(this.zeros,left);
+                        shard.writeBytes(zeros,left);
                         zeros.resetReaderIndex();
                     }
                 }
                 codec.decodeMissing(shards,shardsflag,0,maxlen);
-                result = new ArrayList<>(this.dataShards);
+                result = new ArrayList<>(dataShards);
                 for (int i = 0; i < shardSize; i++) {
                     if(shardsflag[i]){
                         continue;
