@@ -9,24 +9,20 @@ import kcp.KcpServer;
 import kcp.Ukcp;
 import threadPool.thread.DisruptorExecutorPool;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * 模拟帧同步测试吞吐和流量
  * 50ms一帧
  * Created by JinMiao
  * 2019-06-25.
  */
-public class LockStepSynchronizationServer implements KcpListener
+public class KcpLockStepSynchronizationServer implements KcpListener
 {
-    Map<Integer,Room> playerRooms = new ConcurrentHashMap<>();
 
-    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
+    private RoomManager roomManager;
 
 
     public static void main(String[] args) {
-        LockStepSynchronizationServer lockStepSynchronizationServer = new LockStepSynchronizationServer();
+        KcpLockStepSynchronizationServer kcpLockStepSynchronizationServer = new KcpLockStepSynchronizationServer();
         ChannelConfig channelConfig = new ChannelConfig();
         channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(300);
@@ -38,62 +34,54 @@ public class LockStepSynchronizationServer implements KcpListener
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(1, lockStepSynchronizationServer, channelConfig, 10009);
+        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpLockStepSynchronizationServer, channelConfig, 10009);
 
-        for (int i = 0; i < 1; i++) {
-            lockStepSynchronizationServer.disruptorExecutorPool.createDisruptorProcessor("logic-"+i);
-        }
+        kcpLockStepSynchronizationServer.roomManager = new RoomManager();
+        kcpLockStepSynchronizationServer.roomManager.init();
+
+
         DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
-            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M");
-            System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.longValue()/1024.0/1024.0*8.0)+" M");
-            System.out.println();
-            Snmp.snmp = new Snmp();
+            try {
+                long inSegs = Snmp.snmp.InSegs.longValue();
+                if(inSegs==0){
+                    inSegs = 1;
+                }
+                System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M"+" 丢包率 "+(Snmp.snmp.LostSegs.longValue()/inSegs));
+                System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.longValue()/1024.0/1024.0*8.0)+" M");
+                System.out.println();
+                Snmp.snmp = new Snmp();
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         },1000);
-
-
     }
 
 
 
 
-    public synchronized void joinRoom(Player player){
-        Room room = null;
-        for (Room value : playerRooms.values()) {
-            if(value.getPlayers().size()==8)
-            {
-                continue;
-            }
-            if(room==null){
-                room = value;
-                continue;
-            }
-            if(room.getPlayers().size()>value.getPlayers().size()){
-                room = value;
-            }
-        }
-        if(room==null){
-            room = new Room();
-            room.setiMessageExecutor(disruptorExecutorPool.getAutoDisruptorProcessor());
-            DisruptorExecutorPool.scheduleWithFixedDelay(room,50);
-        }
-        playerRooms.put(player.getId(),room);
-        room.getPlayers().put(player.getId(),player);
-    }
+
 
 
     @Override
     public void onConnected(Ukcp ukcp) {
         System.out.println("有连接进来"+ukcp.user());
-        Player player = new Player(ukcp);
+
+        Player player = new Player(new IWriter() {
+            @Override
+            public void write(ByteBuf byteBuf) {
+                ukcp.write(byteBuf);
+            }
+        });
         ukcp.user().setCache(player);
-        joinRoom(player);
+        roomManager.joinRoom(player);
     }
 
     @Override
     public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
         //System.out.println("收到消息"+ukcp.user());
         Player player = ukcp.user().getCache();
-        Room room = playerRooms.get(player.getId());
+        Room room = roomManager.getRoom(player.getId());
         ByteBuf byteBufAllocator = ByteBufAllocator.DEFAULT.directBuffer(20);
         byteBuf.readBytes(byteBufAllocator);
         byteBufAllocator.readerIndex(0);
@@ -112,7 +100,7 @@ public class LockStepSynchronizationServer implements KcpListener
     @Override
     public void handleClose(Ukcp ukcp) {
         Player player = ukcp.user().getCache();
-        playerRooms.remove(player.getId());
+        roomManager.remove(player.getId());
         System.out.println("连接断开了"+ukcp.user().getRemoteAddress());
     }
 }

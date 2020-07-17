@@ -19,7 +19,6 @@ public class Room implements Runnable, ITask {
 
     private volatile boolean executed;
 
-
     public Map<Integer, Player> getPlayers() {
         return players;
     }
@@ -43,7 +42,7 @@ public class Room implements Runnable, ITask {
             for (ByteBuf message : player.getMessages()) {
                 needSend = true;
                 byteBuf.writeBytes(message);
-                message.release();
+                //message.release();
             }
             player.getMessages().clear();
         }
@@ -53,7 +52,8 @@ public class Room implements Runnable, ITask {
         }
         //System.out.println("发送"+byteBuf.writerIndex()+"房间人数"+ players.size());
         for (Player player : players.values()) {
-            player.getUkcp().write(byteBuf);
+            ByteBuf b = byteBuf.retain();
+            player.write(b);
         }
         byteBuf.release();
     }

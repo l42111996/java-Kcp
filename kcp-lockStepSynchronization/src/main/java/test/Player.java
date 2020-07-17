@@ -14,15 +14,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Player {
 
     private static final AtomicInteger idGen = new AtomicInteger();
-    private Ukcp ukcp;
+    private IWriter iWriter;
 
     private int id ;
 
     private List<ByteBuf> messages= new ArrayList<>();
 
 
-    public Player(Ukcp ukcp) {
-        this.ukcp = ukcp;
+    public Player(IWriter iWriter) {
+        this.iWriter = iWriter;
         this.id = idGen.incrementAndGet();
     }
 
@@ -39,15 +39,13 @@ public class Player {
         return messages;
     }
 
-    public void setMessages(List<ByteBuf> messages) {
-        this.messages = messages;
+
+    public void write(ByteBuf byteBuf){
+        iWriter.write(byteBuf);
     }
 
-    public Ukcp getUkcp() {
-        return ukcp;
-    }
 
-    public void setUkcp(Ukcp ukcp) {
-        this.ukcp = ukcp;
-    }
+
+
+
 }
