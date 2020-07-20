@@ -19,7 +19,7 @@ import java.util.ListIterator;
  *
  * @author <a href="mailto:szhnet@gmail.com">szh</a>
  */
-public class Kcp {
+public class Kcp implements IKcp {
 
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Kcp.class);
 
@@ -247,111 +247,12 @@ public class Kcp {
         return buf.writerIndex() - offset;
     }
 
-    public static class Segment {
-
-
-        private final Recycler.Handle<Segment> recyclerHandle;
-        /**会话id**/
-        private int conv;
-        /**命令**/
-        private byte cmd;
-        /**message中的segment分片ID（在message中的索引，由大到小，0表示最后一个分片）**/
-        private short frg;
-        /**剩余接收窗口大小(接收窗口大小-接收队列大小)**/
-        private int wnd;
-        /**message发送时刻的时间戳**/
-        private long ts;
-        /**message分片segment的序号**/
-        private long sn;
-        /**待接收消息序号(接收滑动窗口左端)**/
-        private long una;
-        /**下次超时重传的时间戳**/
-        private long resendts;
-        /**该分片的超时重传等待时间**/
-        private int rto;
-        /**收到ack时计算的该分片被跳过的累计次数，即该分片后的包都被对方收到了，达到一定次数，重传当前分片**/
-        private int fastack;
-        /***发送分片的次数，每发送一次加一**/
-        private int xmit;
-
-        private long ackMask;
-
-        private ByteBuf data;
-
-        private int ackMaskSize;
-        private static final Recycler<Segment> RECYCLER = new Recycler<Segment>() {
-
-            @Override
-            protected Segment newObject(Handle<Segment> handle) {
-                return new Segment(handle);
-            }
-
-        };
-
-        private Segment(Recycler.Handle<Segment> recyclerHandle) {
-            this.recyclerHandle = recyclerHandle;
-        }
-
-        void recycle(boolean releaseBuf) {
-            conv = 0;
-            cmd = 0;
-            frg = 0;
-            wnd = 0;
-            ts = 0;
-            sn = 0;
-            una = 0;
-            resendts = 0;
-            rto = 0;
-            fastack = 0;
-            xmit = 0;
-            ackMask=0;
-            if (releaseBuf&&data!=null) {
-                data.release();
-            }
-            data = null;
-
-            recyclerHandle.recycle(this);
-        }
-
-        static Segment createSegment(ByteBufAllocator byteBufAllocator, int size) {
-            Segment seg = RECYCLER.get();
-            if (size == 0) {
-                seg.data = null;
-            } else {
-                seg.data = byteBufAllocator.ioBuffer(size);
-            }
-            return seg;
-        }
-
-        public static Segment createSegment(ByteBuf buf) {
-            Segment seg = RECYCLER.get();
-            seg.data = buf;
-            return seg;
-        }
-
-
-        public long getResendts() {
-            return resendts;
-        }
-
-        public void setResendts(long resendts) {
-            this.resendts = resendts;
-        }
-
-        public int getXmit() {
-            return xmit;
-        }
-
-        public void setXmit(int xmit) {
-            this.xmit = xmit;
-        }
-    }
-
     public Kcp(int conv, KcpOutput output) {
         this.conv = conv;
         this.output = output;
     }
 
+    @Override
     public void release() {
         release(sndBuf);
         release(rcvBuf);
@@ -370,6 +271,7 @@ public class Kcp {
     }
 
 
+    @Override
     public ByteBuf mergeRecv() {
         if (rcvQueue.isEmpty()) {
             return null;
@@ -437,6 +339,7 @@ public class Kcp {
      * @param bufList
      * @return
      */
+    @Override
     public int recv(List<ByteBuf> bufList) {
         if (rcvQueue.isEmpty()) {
             return -1;
@@ -494,6 +397,7 @@ public class Kcp {
      * 检查接收队列里面是否有完整的一个包，如果有返回该包的字节长度
      * @return -1 没有完整包， >0 一个完整包所含字节
      */
+    @Override
     public int peekSize() {
         if (rcvQueue.isEmpty()) {
             return -1;
@@ -525,6 +429,7 @@ public class Kcp {
      * 判断一条消息是否完整收全了
      * @return
      */
+    @Override
     public boolean canRecv() {
         if (rcvQueue.isEmpty()) {
             return false;
@@ -543,6 +448,7 @@ public class Kcp {
     }
 
 
+    @Override
     public int send(ByteBuf buf) {
         assert mss > 0;
 
@@ -796,7 +702,8 @@ public class Kcp {
 
 
 
-    public int input(ByteBuf data, boolean regular,long current) {
+    @Override
+    public int input(ByteBuf data, boolean regular, long current) {
         long oldSndUna = sndUna;
         if (data == null || data.readableBytes() < IKCP_OVERHEAD) {
             return -1;
@@ -1029,6 +936,7 @@ public class Kcp {
 
     private  long startTicks = System.currentTimeMillis();
 
+    @Override
     public long currentMs(long now)
     {
         return now-startTicks;
@@ -1038,7 +946,8 @@ public class Kcp {
     /**
      * ikcp_flush
      */
-    public long flush(boolean ackOnly,long current) {
+    @Override
+    public long flush(boolean ackOnly, long current) {
 
         // 'ikcp_update' haven't been called.
         //if (!updated) {
@@ -1317,6 +1226,7 @@ public class Kcp {
      *
      * @param current
      */
+    @Override
     public void update(long current) {
 
         if (!updated) {
@@ -1362,6 +1272,7 @@ public class Kcp {
      * @param current
      * @return
      */
+    @Override
     public long check(long current) {
         if (!updated) {
             return current;
@@ -1400,6 +1311,7 @@ public class Kcp {
         return current + minimal;
     }
 
+    @Override
     public boolean checkFlush() {
         if (ackcount > 0) {
             return true;
@@ -1416,10 +1328,8 @@ public class Kcp {
         return false;
     }
 
-    public int getMtu() {
-        return mtu;
-    }
 
+    @Override
     public int setMtu(int mtu) {
         if (mtu < IKCP_OVERHEAD || mtu < 50) {
             return -1;
@@ -1433,21 +1343,12 @@ public class Kcp {
         return 0;
     }
 
+    @Override
     public int getInterval() {
         return interval;
     }
 
-    public int setInterval(int interval) {
-        if (interval > 5000) {
-            interval = 5000;
-        } else if (interval < 10) {
-            interval = 10;
-        }
-        this.interval = interval;
-
-        return 0;
-    }
-
+    @Override
     public int nodelay(boolean nodelay, int interval, int resend, boolean nc) {
         this.nodelay = nodelay;
         if (nodelay) {
@@ -1474,38 +1375,47 @@ public class Kcp {
         return 0;
     }
 
+    @Override
     public int waitSnd() {
         return this.sndBuf.size() + this.sndQueue.size();
     }
 
+    @Override
     public int getConv() {
         return conv;
     }
 
+    @Override
     public void setConv(int conv) {
         this.conv = conv;
     }
 
+    @Override
     public Object getUser() {
         return user;
     }
 
+    @Override
     public void setUser(Object user) {
         this.user = user;
     }
 
+    @Override
     public int getState() {
         return state;
     }
 
+    @Override
     public void setState(int state) {
         this.state = state;
     }
 
+    @Override
     public boolean isNodelay() {
         return nodelay;
     }
 
+    @Override
     public void setNodelay(boolean nodelay) {
         this.nodelay = nodelay;
         if (nodelay) {
@@ -1515,86 +1425,75 @@ public class Kcp {
         }
     }
 
-    public int getFastresend() {
-        return fastresend;
-    }
 
+    @Override
     public void setFastresend(int fastresend) {
         this.fastresend = fastresend;
     }
 
-    public boolean isNocwnd() {
-        return nocwnd;
-    }
 
-    public void setNocwnd(boolean nocwnd) {
-        this.nocwnd = nocwnd;
-    }
 
-    public int getRxMinrto() {
-        return rxMinrto;
-    }
-
+    @Override
     public void setRxMinrto(int rxMinrto) {
         this.rxMinrto = rxMinrto;
     }
 
-    public int getRcvWnd() {
-        return rcvWnd;
-    }
-
+    @Override
     public void setRcvWnd(int rcvWnd) {
         this.rcvWnd = rcvWnd;
     }
 
+    @Override
     public void setAckMaskSize(int ackMaskSize) {
         this.ackMaskSize = ackMaskSize;
         this.IKCP_OVERHEAD+=(ackMaskSize/8);
         this.mss = mtu - IKCP_OVERHEAD-reserved;
     }
 
+    @Override
     public void setReserved(int reserved) {
         this.reserved = reserved;
         this.mss = mtu - IKCP_OVERHEAD-reserved;
     }
 
-    public int getReserved() {
-        return reserved;
-    }
 
+    @Override
     public int getSndWnd() {
         return sndWnd;
     }
 
+    @Override
     public void setSndWnd(int sndWnd) {
         this.sndWnd = sndWnd;
     }
 
+    @Override
     public boolean isStream() {
         return stream;
     }
 
+    @Override
     public void setStream(boolean stream) {
         this.stream = stream;
     }
 
+    @Override
     public void setByteBufAllocator(ByteBufAllocator byteBufAllocator) {
         this.byteBufAllocator = byteBufAllocator;
     }
 
+    @Override
     public KcpOutput getOutput() {
         return output;
     }
 
+    @Override
     public void setOutput(KcpOutput output) {
         this.output = output;
     }
 
 
-    public boolean isAckNoDelay() {
-        return ackNoDelay;
-    }
-
+    @Override
     public void setAckNoDelay(boolean ackNoDelay) {
         this.ackNoDelay = ackNoDelay;
     }
@@ -1604,6 +1503,107 @@ public class Kcp {
         return "Kcp(" +
                 "conv=" + conv +
                 ')';
+    }
+
+
+    public static class Segment {
+
+
+        private final Recycler.Handle<Kcp.Segment> recyclerHandle;
+        /**会话id**/
+        private int conv;
+        /**命令**/
+        private byte cmd;
+        /**message中的segment分片ID（在message中的索引，由大到小，0表示最后一个分片）**/
+        private short frg;
+        /**剩余接收窗口大小(接收窗口大小-接收队列大小)**/
+        private int wnd;
+        /**message发送时刻的时间戳**/
+        private long ts;
+        /**message分片segment的序号**/
+        private long sn;
+        /**待接收消息序号(接收滑动窗口左端)**/
+        private long una;
+        /**下次超时重传的时间戳**/
+        private long resendts;
+        /**该分片的超时重传等待时间**/
+        private int rto;
+        /**收到ack时计算的该分片被跳过的累计次数，即该分片后的包都被对方收到了，达到一定次数，重传当前分片**/
+        private int fastack;
+        /***发送分片的次数，每发送一次加一**/
+        private int xmit;
+
+        private long ackMask;
+
+        private ByteBuf data;
+
+        private int ackMaskSize;
+        private static final Recycler<Kcp.Segment> RECYCLER = new Recycler<Kcp.Segment>() {
+
+            @Override
+            protected Segment newObject(Recycler.Handle<Segment> handle) {
+                return new Segment(handle);
+            }
+
+        };
+
+        private Segment(Recycler.Handle<Kcp.Segment> recyclerHandle) {
+            this.recyclerHandle = recyclerHandle;
+        }
+
+        void recycle(boolean releaseBuf) {
+            conv = 0;
+            cmd = 0;
+            frg = 0;
+            wnd = 0;
+            ts = 0;
+            sn = 0;
+            una = 0;
+            resendts = 0;
+            rto = 0;
+            fastack = 0;
+            xmit = 0;
+            ackMask=0;
+            if (releaseBuf&&data!=null) {
+                data.release();
+            }
+            data = null;
+
+            recyclerHandle.recycle(this);
+        }
+
+        static Segment createSegment(ByteBufAllocator byteBufAllocator, int size) {
+            Segment seg = RECYCLER.get();
+            if (size == 0) {
+                seg.data = null;
+            } else {
+                seg.data = byteBufAllocator.ioBuffer(size);
+            }
+            return seg;
+        }
+
+        public static Segment createSegment(ByteBuf buf) {
+            Segment seg = RECYCLER.get();
+            seg.data = buf;
+            return seg;
+        }
+
+
+        public long getResendts() {
+            return resendts;
+        }
+
+        public void setResendts(long resendts) {
+            this.resendts = resendts;
+        }
+
+        public int getXmit() {
+            return xmit;
+        }
+
+        public void setXmit(int xmit) {
+            this.xmit = xmit;
+        }
     }
 
 }

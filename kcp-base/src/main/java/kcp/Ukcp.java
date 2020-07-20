@@ -20,7 +20,7 @@ public class Ukcp{
     private static final InternalLogger log = InternalLoggerFactory.getInstance(Ukcp.class);
 
 
-    private final Kcp kcp;
+    private final IKcp kcp;
 
     private boolean fastFlush = true;
 

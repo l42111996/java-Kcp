@@ -12,7 +12,7 @@ import io.netty.channel.socket.DatagramPacket;
 public class KcpOutPutImp implements KcpOutput {
 
     @Override
-    public void out(ByteBuf data, Kcp kcp) {
+    public void out(ByteBuf data, IKcp kcp) {
         Snmp.snmp.OutPkts.increment();
         Snmp.snmp.OutBytes.add(data.writerIndex());
         User user = (User) kcp.getUser();

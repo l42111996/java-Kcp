@@ -5,6 +5,7 @@ import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import kcp.Kcp;
+import kcp.IKcp;
 import kcp.KcpOutput;
 
 import java.util.Iterator;
@@ -177,8 +178,8 @@ public class LatencySimulator {
             buf.release();
         };
 
-        Kcp kcp1 = new Kcp(0x11223344, output1);
-        Kcp kcp2 = new Kcp(0x11223344, output2);
+        IKcp kcp1 = new Kcp(0x11223344, output1);
+        IKcp kcp2 = new Kcp(0x11223344, output2);
         //kcp1.setAckMaskSize(8);
         //kcp2.setAckMaskSize(8);
 

@@ -21,7 +21,7 @@ public class FecOutPut implements  KcpOutput{
     }
 
     @Override
-    public void out(ByteBuf msg, Kcp kcp) {
+    public void out(ByteBuf msg, IKcp kcp) {
         ByteBuf[] byteBufs = fecEncode.encode(msg);
         //out之后会自动释放你内存
         output.out(msg,kcp);
