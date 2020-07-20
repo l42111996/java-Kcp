@@ -310,7 +310,7 @@ public class Ukcp{
     /**
      * 发送有序可靠消息
      * 线程安全的
-     * @param byteBuf 发送后需要手动释放
+     * @param byteBuf 发送后需要手动调用 {@link ByteBuf#release()}
      * @return
      */
     public void write(ByteBuf byteBuf) {
