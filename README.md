@@ -24,7 +24,7 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 # 兼容性:
 1. 兼容c版本kcp
 2. fec基于 https://github.com/Backblaze/JavaReedSolomon 实现
-
+3. 完美兼容的C#版本，https://github.com/l42111996/csharp-kcp ，快速构建游戏前后端网络库
 
 # 优化:
 1. 基于disruptor事件驱动,充分利用多核

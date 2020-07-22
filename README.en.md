@@ -22,7 +22,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 # compatibility:
 1. Compatible with c version of kcp
 2. fec implementation based on https://github.com/Backblaze/JavaReedSolomon
-
+3. Perfectly compatible C# version, https://github.com/l42111996/csharp-kcp, quickly build the network library before the game
 
 # optimization:
 1. Based on disruptor event-driven, make full use of multi-core
