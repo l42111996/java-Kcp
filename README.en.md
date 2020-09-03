@@ -22,7 +22,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 # compatibility:
 1. Compatible with c version of kcp
 2. fec implementation based on https://github.com/Backblaze/JavaReedSolomon
-3. Perfectly compatible C# version, https://github.com/l42111996/csharp-kcp, quickly build the network library before the game
+3. Perfectly compatible C#(unity) version, https://github.com/l42111996/csharp-kcp, quickly build the network library before the game
 
 # optimization:
 1. Based on disruptor event-driven, make full use of multi-core
@@ -42,7 +42,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
 3. [Best Practices](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
 4. [A lot of information](https://github.com/skywind3000/kcp)
-5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/csharp-kcp/blob/master/example-Kcp/KcpRttExampleClient.cs)
+5. Compatible with C #(unity), [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/csharp-kcp/blob/master/example-Kcp/KcpRttExampleClient.cs)
 6. [Encountered problems](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
 7. [Performance test results](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
 8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
@@ -71,7 +71,7 @@ Single connection without fec 9W / s qps
 4. https://github.com/LMAX-Exchange/disruptor High-performance inter-thread messaging library
 5. https://github.com/JCTools/JCTools efficient concurrent library
 6. https://github.com/szhnet/kcp-netty A kcp for java version
-7. https://github.com/l42111996/csharp-kcp C# version of kcp based on dotNetty, perfectly compatible
+7. https://github.com/l42111996/csharp-kcp C#(unity)`` version of kcp based on dotNetty, perfectly compatible
 
 # communicate with
 
