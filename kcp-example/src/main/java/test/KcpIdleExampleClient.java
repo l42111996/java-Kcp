@@ -16,7 +16,7 @@ public class KcpIdleExampleClient implements KcpListener {
     public static void main(String[] args) {
 
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.nodelay(true,40,2,true);
+        channelConfig.nodelay(true,10,2,true);
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
@@ -30,7 +30,7 @@ public class KcpIdleExampleClient implements KcpListener {
         kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
 
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3000; i++) {
             if(i%1000==0){
                 try {
                     Thread.sleep(1000);

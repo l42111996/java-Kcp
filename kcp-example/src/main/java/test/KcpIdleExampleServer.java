@@ -20,7 +20,7 @@ public class KcpIdleExampleServer implements KcpListener {
 
         KcpIdleExampleServer kcpIdleExampleServer = new KcpIdleExampleServer();
         ChannelConfig channelConfig = new ChannelConfig();
-        channelConfig.nodelay(true,40,2,true);
+        channelConfig.nodelay(true,10,2,true);
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
@@ -31,6 +31,7 @@ public class KcpIdleExampleServer implements KcpListener {
         //channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpIdleExampleServer, channelConfig, 10020);
+        System.out.println("ce");
     }
 
     private AtomicInteger atomicInteger = new AtomicInteger();
