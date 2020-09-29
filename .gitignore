@@ -26,3 +26,5 @@ hs_err_pid*
 kcp-base/target
 kcp-fec/target
 kcp-lockStepSynchronization/target
+kcp-example/target
+target
