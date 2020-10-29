@@ -53,8 +53,13 @@ public class KcpLockStepSynchronizationClient implements KcpListener
         }
 
         DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
-            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M");
+            long inSegs = Snmp.snmp.InSegs.longValue();
+            if(inSegs==0){
+                inSegs = 1;
+            }
+            System.out.println("每秒收包"+ (Snmp.snmp.InBytes.longValue()/1024.0/1024.0*8.0)+" M"+" 丢包率 "+((double)Snmp.snmp.LostSegs.longValue()/inSegs));
             System.out.println("每秒发包"+ (Snmp.snmp.OutBytes.longValue()/1024.0/1024.0*8.0)+" M");
+            System.out.println(Snmp.snmp.toString());
             System.out.println();
 
             Snmp.snmp = new Snmp();
