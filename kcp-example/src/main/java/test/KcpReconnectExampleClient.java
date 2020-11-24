@@ -34,7 +34,7 @@ public class KcpReconnectExampleClient implements KcpListener {
         channelConfig.setUseConvChannel(true);
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(1,channelConfig);
+        kcpClient.init(channelConfig);
 
         KcpReconnectExampleClient kcpClientRttExample = new KcpReconnectExampleClient();
         Ukcp ukcp = kcpClient.connect(new InetSocketAddress("127.0.0.1", 10021), channelConfig, kcpClientRttExample);

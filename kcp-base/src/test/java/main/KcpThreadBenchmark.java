@@ -1,10 +1,9 @@
 package main;
 
-import io.netty.buffer.ByteBuf;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Setup;
-import threadPool.thread.DisruptorSingleExecutor;
-import threadPool.thread.IMessageExecutor;
+import threadPool.disruptor.DisruptorSingleExecutor;
+import threadPool.IMessageExecutor;
 
 import java.util.Queue;
 

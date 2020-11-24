@@ -3,7 +3,7 @@ package kcp;
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
-import threadPool.task.ITask;
+import threadPool.ITask;
 
 import java.util.Queue;
 

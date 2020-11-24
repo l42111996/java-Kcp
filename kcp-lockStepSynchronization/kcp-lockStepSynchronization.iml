@@ -13,9 +13,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="kcp-base" />
     <orderEntry type="module" module-name="kcp-fec" />
-    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.51.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.54.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jctools:jctools-core:3.0.0" level="project" />
-    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.4.2" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.30" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-simple:1.7.30" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openjdk.jmh:jmh-core:1.23" level="project" />

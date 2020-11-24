@@ -34,7 +34,7 @@ public class KcpDisconnectExampleClient implements KcpListener {
         channelConfig.setUseConvChannel(true);
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(1, channelConfig);
+        kcpClient.init(channelConfig);
 
         KcpDisconnectExampleClient kcpClientRttExample = new KcpDisconnectExampleClient();
         Timer timer = new Timer();

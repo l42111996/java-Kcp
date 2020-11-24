@@ -27,7 +27,7 @@ public class KcpIdleExampleClient implements KcpListener {
         //channelConfig.setTimeoutMillis(10000);
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
+        kcpClient.init(channelConfig);
 
 
         for (int i = 0; i < 3; i++) {

@@ -5,11 +5,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import test.tcp.NetConnector;
 import test.tcp.TcpChannelInitializer;
-import threadPool.thread.DisruptorExecutorPool;
+import threadPool.TimerThreadPool;
 
 import java.net.InetSocketAddress;
 
@@ -44,7 +42,7 @@ public class TcpLockStepSynchronizationClient extends SimpleChannelInboundHandle
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         //模拟按键事件
-        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+        TimerThreadPool.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = ByteBufAllocator.DEFAULT.directBuffer(20);
             byteBuf.writeBytes(new byte[20]);
             ctx.channel().writeAndFlush(byteBuf);

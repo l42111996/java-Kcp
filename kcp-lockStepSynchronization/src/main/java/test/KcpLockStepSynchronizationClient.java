@@ -7,7 +7,7 @@ import kcp.ChannelConfig;
 import kcp.KcpClient;
 import kcp.KcpListener;
 import kcp.Ukcp;
-import threadPool.thread.DisruptorExecutorPool;
+import threadPool.TimerThreadPool;
 
 import java.net.InetSocketAddress;
 
@@ -52,7 +52,7 @@ public class KcpLockStepSynchronizationClient implements KcpListener
             kcpClient.connect(new InetSocketAddress(ip, 10009), channelConfig, lockStepSynchronizationClient);
         }
 
-        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+        TimerThreadPool.scheduleWithFixedDelay(() -> {
             long inSegs = Snmp.snmp.InSegs.longValue();
             if(inSegs==0){
                 inSegs = 1;
@@ -74,7 +74,7 @@ public class KcpLockStepSynchronizationClient implements KcpListener
     public void onConnected(Ukcp ukcp)
     {
         //模拟按键事件
-        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+        TimerThreadPool.scheduleWithFixedDelay(() -> {
             ByteBuf byteBuf = ByteBufAllocator.DEFAULT.directBuffer(20);
             byteBuf.writeBytes(new byte[20]);
             ukcp.write(byteBuf);

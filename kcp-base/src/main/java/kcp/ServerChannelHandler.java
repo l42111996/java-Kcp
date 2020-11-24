@@ -3,14 +3,14 @@ package kcp;
 import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.Fec;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import threadPool.thread.DisruptorExecutorPool;
-import threadPool.thread.IMessageExecutor;
+import threadPool.TimerThreadPool;
+import threadPool.IMessageExecutor;
+import threadPool.IMessageExecutorPool;
 
 /**
  * Created by JinMiao
@@ -23,14 +23,14 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     private ChannelConfig channelConfig;
 
-    private DisruptorExecutorPool disruptorExecutorPool;
+    private IMessageExecutorPool iMessageExecutorPool;
 
     private KcpListener kcpListener;
 
-    public ServerChannelHandler(IChannelManager channelManager, ChannelConfig channelConfig, DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener) {
+    public ServerChannelHandler(IChannelManager channelManager, ChannelConfig channelConfig, IMessageExecutorPool iMessageExecutorPool, KcpListener kcpListener) {
         this.channelManager = channelManager;
         this.channelConfig = channelConfig;
-        this.disruptorExecutorPool = disruptorExecutorPool;
+        this.iMessageExecutorPool = iMessageExecutorPool;
         this.kcpListener = kcpListener;
     }
 
@@ -67,19 +67,19 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
             msg.release();
             return;
         }
-        IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
+        IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
         ReedSolomon reedSolomon = null;
         if (channelConfig.getFecDataShardCount() != 0 && channelConfig.getFecParityShardCount() != 0) {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
-        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon, channelConfig, channelManager);
+        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, reedSolomon, channelConfig, channelManager);
 
         User user = new User(ctx.channel(), msg.sender(), msg.recipient());
         newUkcp.user(user);
         channelManager.New(msg.sender(), newUkcp, msg);
 
-        disruptorSingleExecutor.execute(() -> {
+        iMessageExecutor.execute(() -> {
             try {
                 newUkcp.getKcpListener().onConnected(newUkcp);
             } catch (Throwable throwable) {
@@ -90,8 +90,8 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
         newUkcp.read(byteBuf);
 
 
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, newUkcp);
-        DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
+        ScheduleTask scheduleTask = new ScheduleTask(iMessageExecutor, newUkcp);
+        TimerThreadPool.scheduleHashedWheel(scheduleTask, newUkcp.getInterval());
     }
 
 

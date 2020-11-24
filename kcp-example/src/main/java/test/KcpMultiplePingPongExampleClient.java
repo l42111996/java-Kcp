@@ -32,7 +32,7 @@ public class KcpMultiplePingPongExampleClient implements KcpListener {
         //channelConfig.setTimeoutMillis(10000);
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
+        kcpClient.init(channelConfig);
         KcpMultiplePingPongExampleClient kcpMultiplePingPongExampleClient = new KcpMultiplePingPongExampleClient();
 
         int clientNumber = 1000;

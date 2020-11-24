@@ -6,6 +6,7 @@ import kcp.ChannelConfig;
 import kcp.KcpListener;
 import kcp.KcpServer;
 import kcp.Ukcp;
+import threadPool.disruptor.DisruptorExecutorPool;
 
 /**
  * 测试单连接吞吐量
@@ -23,13 +24,14 @@ public class KcpPingPongExampleServer implements KcpListener {
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
+        channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
-        channelConfig.setAckNoDelay(true);
-        channelConfig.setCrc32Check(true);
+        //channelConfig.setAckNoDelay(true);
+        //channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer, channelConfig, 10001);
+        kcpServer.init(kcpRttExampleServer, channelConfig, 10001);
     }
 
 

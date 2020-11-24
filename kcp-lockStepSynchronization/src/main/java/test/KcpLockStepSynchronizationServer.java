@@ -7,7 +7,7 @@ import kcp.ChannelConfig;
 import kcp.KcpListener;
 import kcp.KcpServer;
 import kcp.Ukcp;
-import threadPool.thread.DisruptorExecutorPool;
+import threadPool.TimerThreadPool;
 
 /**
  * 模拟帧同步测试吞吐和流量
@@ -34,13 +34,12 @@ public class KcpLockStepSynchronizationServer implements KcpListener
         channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpLockStepSynchronizationServer, channelConfig, 10009);
+        kcpServer.init(kcpLockStepSynchronizationServer, channelConfig, 10009);
 
         kcpLockStepSynchronizationServer.roomManager = new RoomManager();
-        kcpLockStepSynchronizationServer.roomManager.init();
 
 
-        DisruptorExecutorPool.scheduleWithFixedDelay(() -> {
+        TimerThreadPool.scheduleWithFixedDelay(() -> {
             try {
                 long inSegs = Snmp.snmp.InSegs.longValue();
                 if(inSegs==0){

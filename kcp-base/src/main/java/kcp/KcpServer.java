@@ -10,7 +10,7 @@ import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import threadPool.thread.DisruptorExecutorPool;
+import threadPool.IMessageExecutorPool;
 
 import java.util.List;
 import java.util.Vector;
@@ -20,7 +20,7 @@ import java.util.Vector;
  * 2018/9/20.
  */
 public class KcpServer {
-    private DisruptorExecutorPool disruptorExecutorPool;
+    private IMessageExecutorPool iMessageExecutorPool;
 
     private Bootstrap bootstrap;
     private EventLoopGroup group;
@@ -28,16 +28,16 @@ public class KcpServer {
     private IChannelManager channelManager;
 
 
-    public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
-        DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
-        for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
-        }
-        init(disruptorExecutorPool, kcpListener, channelConfig, ports);
-    }
+    //public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
+    //    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
+    //    for (int i = 0; i < workSize; i++) {
+    //        disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
+    //    }
+    //    init(disruptorExecutorPool, kcpListener, channelConfig, ports);
+    //}
 
 
-    public void init(DisruptorExecutorPool disruptorExecutorPool, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
+    public void init(KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
             if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
@@ -50,7 +50,7 @@ public class KcpServer {
 
 
         boolean epoll = Epoll.isAvailable();
-        this.disruptorExecutorPool = disruptorExecutorPool;
+        this.iMessageExecutorPool = channelConfig.getiMessageExecutorPool();
         bootstrap = new Bootstrap();
         int cpuNum = Runtime.getRuntime().availableProcessors();
         int bindTimes = 1;
@@ -67,7 +67,7 @@ public class KcpServer {
         bootstrap.handler(new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) {
-                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, disruptorExecutorPool, kcpListener);
+                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, iMessageExecutorPool, kcpListener);
                 ChannelPipeline cp = ch.pipeline();
                 if(channelConfig.isCrc32Check()){
                     Crc32Encode crc32Encode = new Crc32Encode();
@@ -100,8 +100,8 @@ public class KcpServer {
         );
         channelManager.getAll().forEach(ukcp ->
                 ukcp.close());
-        if (disruptorExecutorPool != null) {
-            disruptorExecutorPool.stop();
+        if (iMessageExecutorPool != null) {
+            iMessageExecutorPool.stop();
         }
         if (group != null) {
             group.shutdownGracefully();

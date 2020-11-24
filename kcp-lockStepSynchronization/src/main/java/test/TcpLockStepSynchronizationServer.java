@@ -26,7 +26,6 @@ public class TcpLockStepSynchronizationServer extends SimpleChannelInboundHandle
         TcpChannelInitializer tcpChannelInitializer = new TcpChannelInitializer(tcpLockStepSynchronizationServer);
         new NetAcceptor(tcpChannelInitializer,new InetSocketAddress(11009));
 
-        tcpLockStepSynchronizationServer.roomManager.init();
     }
 
     public static final AttributeKey<Player> playerAttributeKey = AttributeKey.newInstance("player");

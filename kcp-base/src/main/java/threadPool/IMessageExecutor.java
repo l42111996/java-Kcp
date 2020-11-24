@@ -1,16 +1,9 @@
-package threadPool.thread;
-
-import threadPool.task.ITask;
+package threadPool;
 
 /**
  * 消息处理器
  */
 public interface IMessageExecutor{
-	/**
-	 * 启动消息处理器
-	 */
-	void start();
-
 	/**
 	 * 停止消息处理器
 	 */

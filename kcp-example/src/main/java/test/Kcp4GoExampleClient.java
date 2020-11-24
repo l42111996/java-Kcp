@@ -33,7 +33,7 @@ public class Kcp4GoExampleClient implements KcpListener {
 
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
+        kcpClient.init(channelConfig);
 
 
         Kcp4GoExampleClient kcpGoExampleClient = new Kcp4GoExampleClient();

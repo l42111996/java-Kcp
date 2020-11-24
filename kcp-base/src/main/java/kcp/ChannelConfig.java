@@ -1,5 +1,8 @@
 package kcp;
 
+import threadPool.IMessageExecutorPool;
+import threadPool.netty.NettyMessageExecutorPool;
+
 /**
  * Created by JinMiao
  * 2018/9/20.
@@ -33,6 +36,8 @@ public class ChannelConfig {
     private int ackMaskSize = 0;
     /**使用conv确定一个channel 还是使用 socketAddress确定一个channel**/
     private boolean useConvChannel=false;
+    /**处理kcp消息接收和发送的线程池**/
+    private IMessageExecutorPool iMessageExecutorPool = new NettyMessageExecutorPool(Runtime.getRuntime().availableProcessors());
 
 
     public void nodelay(boolean nodelay, int interval, int resend, boolean nc){
@@ -42,6 +47,14 @@ public class ChannelConfig {
         this.nocwnd=nc;
     }
 
+
+    public IMessageExecutorPool getiMessageExecutorPool() {
+        return iMessageExecutorPool;
+    }
+
+    public void setiMessageExecutorPool(IMessageExecutorPool iMessageExecutorPool) {
+        this.iMessageExecutorPool = iMessageExecutorPool;
+    }
 
     public boolean isNodelay() {
         return nodelay;

@@ -30,7 +30,7 @@ public class Kcp4sharpExampleServer implements KcpListener {
         //c# crc32未实现
         channelConfig.setCrc32Check(false);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpRttExampleServer,channelConfig,10009);
+        kcpServer.init(kcpRttExampleServer,channelConfig,10009);
     }
 
 

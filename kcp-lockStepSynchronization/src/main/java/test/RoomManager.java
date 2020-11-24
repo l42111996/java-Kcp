@@ -1,6 +1,7 @@
 package test;
 
-import threadPool.thread.DisruptorExecutorPool;
+import threadPool.TimerThreadPool;
+import threadPool.disruptor.DisruptorExecutorPool;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,13 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RoomManager {
     Map<Integer,Room> playerRooms = new ConcurrentHashMap<>();
 
-    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
-
-    public void init(){
-        for (int i = 0; i < 1; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("logic-"+i);
-        }
-    }
+    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool(1);
 
     public void remove(Integer playerId){
         this.playerRooms.remove(playerId);
@@ -49,8 +44,8 @@ public class RoomManager {
         }
         if(room==null){
             room = new Room();
-            room.setiMessageExecutor(disruptorExecutorPool.getAutoDisruptorProcessor());
-            DisruptorExecutorPool.scheduleWithFixedDelay(room,50);
+            room.setiMessageExecutor(disruptorExecutorPool.getIMessageExecutor());
+            TimerThreadPool.scheduleWithFixedDelay(room,50);
         }
         playerRooms.put(player.getId(),room);
         room.getPlayers().put(player.getId(),player);

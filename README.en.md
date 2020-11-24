@@ -25,7 +25,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 3. Perfectly compatible C# version, https://github.com/l42111996/csharp-kcp, quickly build the network library before the game
 
 # optimization:
-1. Based on disruptor event-driven, make full use of multi-core
+1. Based on event-driven, make full use of multi-core
 2. Optimize fastack logic and reduce traffic by 10%
 3. Optimize the check function.
 4. Optimize collection iterators.

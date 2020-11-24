@@ -3,8 +3,8 @@ package main;
 import threadPool.order.IOrderTask;
 import threadPool.order.OrderedThreadPoolExecutor;
 import threadPool.order.OrderedThreadSession;
-import threadPool.thread.DisruptorExecutorPool;
-import threadPool.thread.IMessageExecutor;
+import threadPool.disruptor.DisruptorExecutorPool;
+import threadPool.IMessageExecutor;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,7 +24,7 @@ public class TestThreadLoop {
     AtomicInteger id = new AtomicInteger();
 
     OrderedThreadPoolExecutor orderedThreadPoolExecutor = new OrderedThreadPoolExecutor(5,5,1000000, TimeUnit.HOURS,r -> new Thread(r,"executor  "+id.incrementAndGet()));
-    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
+    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool(5);
 
 
     public static void main(String[] args) {

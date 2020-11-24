@@ -29,7 +29,7 @@ public class KcpMultiplePingPongExampleServer implements KcpListener {
         //channelConfig.setCrc32Check(true);
         channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
-        kcpServer.init(Runtime.getRuntime().availableProcessors(), kcpMultiplePingPongExampleServer, channelConfig, 10011);
+        kcpServer.init(kcpMultiplePingPongExampleServer, channelConfig, 10011);
     }
 
 

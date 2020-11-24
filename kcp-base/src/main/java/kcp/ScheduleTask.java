@@ -2,9 +2,9 @@ package kcp;
 
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
-import threadPool.task.ITask;
-import threadPool.thread.DisruptorExecutorPool;
-import threadPool.thread.IMessageExecutor;
+import threadPool.ITask;
+import threadPool.TimerThreadPool;
+import threadPool.IMessageExecutor;
 
 /**
  * Created by JinMiao
@@ -43,11 +43,11 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
             long timeLeft = ukcp.getTsUpdate() - now;
             //判断执行时间是否到了
             if (timeLeft > 0) {
-                DisruptorExecutorPool.scheduleHashedWheel(this, timeLeft);
+                TimerThreadPool.scheduleHashedWheel(this, timeLeft);
                 return;
             }
             long next = ukcp.flush(now);
-            DisruptorExecutorPool.scheduleHashedWheel(this, next);
+            TimerThreadPool.scheduleHashedWheel(this, next);
             //检测写缓冲区 如果能写则触发写事件
             if (!ukcp.getWriteQueue().isEmpty() && ukcp.canSend(false))
             {

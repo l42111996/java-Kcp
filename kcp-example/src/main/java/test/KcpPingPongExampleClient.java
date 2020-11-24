@@ -4,6 +4,7 @@ import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import kcp.*;
+import threadPool.disruptor.DisruptorExecutorPool;
 
 import java.net.InetSocketAddress;
 
@@ -20,14 +21,15 @@ public class KcpPingPongExampleClient implements KcpListener {
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
+        channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
         //channelConfig.setFecDataShardCount(10);
         //channelConfig.setFecParityShardCount(3);
-        channelConfig.setAckNoDelay(true);
-        channelConfig.setCrc32Check(true);
+        //channelConfig.setAckNoDelay(true);
+        //channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
 
         KcpClient kcpClient = new KcpClient();
-        kcpClient.init(Runtime.getRuntime().availableProcessors(),channelConfig);
+        kcpClient.init(channelConfig);
 
         KcpPingPongExampleClient kcpClientRttExample = new KcpPingPongExampleClient();
         kcpClient.connect(new InetSocketAddress("127.0.0.1", 10001), channelConfig, kcpClientRttExample);

@@ -9,8 +9,9 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import threadPool.thread.DisruptorExecutorPool;
-import threadPool.thread.IMessageExecutor;
+import threadPool.IMessageExecutor;
+import threadPool.IMessageExecutorPool;
+import threadPool.TimerThreadPool;
 
 import java.net.InetSocketAddress;
 
@@ -22,7 +23,7 @@ import java.net.InetSocketAddress;
 public class KcpClient {
 
 
-    private DisruptorExecutorPool disruptorExecutorPool;
+    private IMessageExecutorPool iMessageExecutorPool;
     private Bootstrap bootstrap;
     private EventLoopGroup nioEventLoopGroup;
     /**客户端的连接集合**/
@@ -40,12 +41,13 @@ public class KcpClient {
             channelManager = new ClientAddressChannelManager();
         }
         int cpuNum = Runtime.getRuntime().availableProcessors();
-        if (disruptorExecutorPool == null) {
-            this.disruptorExecutorPool = new DisruptorExecutorPool();
-            for (int i = 0; i < cpuNum; i++) {
-                disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
-            }
-        }
+        this.iMessageExecutorPool = channelConfig.getiMessageExecutorPool();
+        //if (disruptorExecutorPool == null) {
+        //    this.disruptorExecutorPool = new DisruptorExecutorPool();
+        //    for (int i = 0; i < cpuNum; i++) {
+        //        disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
+        //    }
+        //}
         nioEventLoopGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
         bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
@@ -67,18 +69,7 @@ public class KcpClient {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> stop()));
     }
 
-    public void init(DisruptorExecutorPool disruptorExecutorPool,ChannelConfig channelConfig) {
-        this.disruptorExecutorPool = disruptorExecutorPool;
-        init(channelConfig);
-    }
 
-    public void init(int workSize,ChannelConfig channelConfig) {
-        this.disruptorExecutorPool = new DisruptorExecutorPool();
-        for (int i = 0; i < workSize; i++) {
-            disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
-        }
-        init(channelConfig);
-    }
 
     /**
      * 重连接口
@@ -111,7 +102,7 @@ public class KcpClient {
         localAddress = channel.localAddress();
 
         User user = new User(channel, remoteAddress, localAddress);
-        IMessageExecutor disruptorSingleExecutor = disruptorExecutorPool.getAutoDisruptorProcessor();
+        IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
 
         ReedSolomon reedSolomon = null;
@@ -119,11 +110,11 @@ public class KcpClient {
             reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
         }
 
-        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, disruptorSingleExecutor, reedSolomon,channelConfig,channelManager);
+        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, reedSolomon,channelConfig,channelManager);
         ukcp.user(user);
 
         channelManager.New(localAddress,ukcp,null);
-        disruptorSingleExecutor.execute(() -> {
+        iMessageExecutor.execute(() -> {
             try {
                 ukcp.getKcpListener().onConnected(ukcp);
             }catch (Throwable throwable){
@@ -131,8 +122,8 @@ public class KcpClient {
             }
         });
 
-        ScheduleTask scheduleTask = new ScheduleTask(disruptorSingleExecutor, ukcp);
-        DisruptorExecutorPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
+        ScheduleTask scheduleTask = new ScheduleTask(iMessageExecutor, ukcp);
+        TimerThreadPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
 
         return ukcp;
     }
@@ -152,8 +143,8 @@ public class KcpClient {
             }
         });
         //System.out.println("关闭连接1");
-        if (disruptorExecutorPool != null) {
-            disruptorExecutorPool.stop();
+        if (iMessageExecutorPool != null) {
+            iMessageExecutorPool.stop();
         }
         //System.out.println("关闭连接2");
         if (nioEventLoopGroup != null) {

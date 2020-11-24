@@ -8,7 +8,7 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue;
 import org.jctools.queues.MpscLinkedQueue;
-import threadPool.thread.IMessageExecutor;
+import threadPool.IMessageExecutor;
 
 import java.io.IOException;
 import java.util.List;

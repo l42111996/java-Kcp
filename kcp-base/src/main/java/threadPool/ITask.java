@@ -1,4 +1,4 @@
-package threadPool.task;
+package threadPool;
 
 /**
  * Created by JinMiao

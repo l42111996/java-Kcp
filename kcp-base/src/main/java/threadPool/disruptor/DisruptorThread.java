@@ -1,4 +1,6 @@
-package threadPool.thread;
+package threadPool.disruptor;
+
+import threadPool.IMessageExecutor;
 
 /**
  * Created by JinMiao

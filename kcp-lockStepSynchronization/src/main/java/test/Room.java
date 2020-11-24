@@ -2,8 +2,8 @@ package test;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import threadPool.task.ITask;
-import threadPool.thread.IMessageExecutor;
+import threadPool.ITask;
+import threadPool.IMessageExecutor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
