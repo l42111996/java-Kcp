@@ -53,6 +53,9 @@ public class ChannelConfig {
     }
 
     public void setiMessageExecutorPool(IMessageExecutorPool iMessageExecutorPool) {
+        if(this.iMessageExecutorPool!=null){
+            this.iMessageExecutorPool.stop();
+        }
         this.iMessageExecutorPool = iMessageExecutorPool;
     }
 

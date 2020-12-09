@@ -17,7 +17,7 @@ public class ReadTask implements ITask {
 
     private Ukcp ukcp;
 
-    private static final Recycler<ReadTask> RECYCLER = new Recycler<ReadTask>(2<<16) {
+    private static final Recycler<ReadTask> RECYCLER = new Recycler<ReadTask>() {
         @Override
         protected ReadTask newObject(Handle<ReadTask> handle) {
             return new ReadTask(handle);

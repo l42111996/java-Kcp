@@ -2,7 +2,9 @@ package com.backblaze.erasure;
 
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -20,7 +22,7 @@ public class FecTest {
 
 
 
-    static PooledByteBufAllocator pooledByteBufAllocator = new PooledByteBufAllocator(true);
+    static ByteBufAllocator pooledByteBufAllocator = new UnpooledByteBufAllocator(false);
     public static void main(String[] args) {
         //ByteBuf byteBuf = pooledByteBufAllocator.directBuffer(10);
         //byteBuf.duplicate();
@@ -45,9 +47,9 @@ public class FecTest {
         }).start();
 
 
-        testOOM();
+        //testOOM();
         //encodeOOM();
-        //new Thread(() -> runtask()).start();
+        new Thread(() -> runtask()).start();
     }
     static  Field maxMemoryField =  null;
     static Field reservedMemoryField = null;
@@ -74,7 +76,7 @@ public class FecTest {
         FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
         while(true){
             List<ByteBuf> byteBufList = new ArrayList<>();
-            List<ByteBuf> byteBufs = buildBytebuf(data);
+            List<ByteBuf> byteBufs = buildBytebuf(data,1500);
             for (int i = 0; i < byteBufs.size(); i++) {
                 ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
                 if(encodeResult!=null){
@@ -111,7 +113,7 @@ public class FecTest {
             try {
                 while(true){
                     List<ByteBuf> byteBufList = new ArrayList<>();
-                    List<ByteBuf> byteBufs = buildBytebuf(data);
+                    List<ByteBuf> byteBufs = buildBytebuf(data,1500);
                     for (int i = 0; i < byteBufs.size(); i++) {
                         ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
                         if(encodeResult!=null){
@@ -122,12 +124,11 @@ public class FecTest {
                         byteBufList.add(byteBufs.get(i));
                     }
 
-                    int drop = new Random().nextInt(data+part);
-                            //new Random().nextInt(data+part);
+                    int drop = random.nextInt(data+part);
 
                     //模拟丢数据
                     for (int i = 0; i < drop; i++) {
-                        int dropIndex = new Random().nextInt(byteBufList.size());
+                        int dropIndex = random.nextInt(byteBufList.size());
                         byteBufList.get(dropIndex).release();
                         byteBufList.remove(dropIndex);
                     }
@@ -201,20 +202,21 @@ public class FecTest {
 
 
     private static void runtask(){
-        int data = 3;
-        int part = 10;
+        int data = 10;
+        int part = 3;
+        int mtu = 1500;
 
         ReedSolomon reedSolomon = ReedSolomon.create(data,part);
 
-        FecEncode fecEncode = new FecEncode(0,reedSolomon,1500);
-        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
+        FecEncode fecEncode = new FecEncode(0,reedSolomon,mtu);
+        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,mtu);
 
-        FecDecode fecDecode1 = new FecDecode((data+part)*3,reedSolomon,1500);
+        FecDecode fecDecode1 = new FecDecode((data+part)*3,reedSolomon,mtu);
         int j = 0;
         while (true){
             j++;
                 //System.out.println(j);
-                List<ByteBuf> byteBufs = buildBytebuf(data);
+                List<ByteBuf> byteBufs = buildBytebuf(data,mtu);
 
                 List<ByteBuf> byteBufList = new ArrayList<>();
                 for (int i = 0; i < byteBufs.size(); i++) {
@@ -227,20 +229,20 @@ public class FecTest {
                     byteBufList.add(byteBufs.get(i));
                 }
                 //是否能恢复
-                boolean canDecode = new Random().nextBoolean();
+                boolean canDecode = random.nextBoolean();
                 int dropCount = 0;
 
                 if(canDecode){
-                    dropCount = new Random().nextInt(part);
+                    dropCount = random.nextInt(part);
                 }else{
-                    dropCount = part+1+(new Random().nextInt(data));
+                    dropCount = part+1+(random.nextInt(data));
                 }
+                //随机丢包
+                randomDrop(byteBufList,dropCount);
+                //乱序
+                randomSort(byteBufList);
 
-                for (int i = 0; i < dropCount; i++) {
-                    int dropIndex = new Random().nextInt(byteBufList.size());
-                    byteBufList.get(dropIndex).release();
-                    byteBufList.remove(dropIndex);
-                }
+
 
                 List<ByteBuf> dencodeResult = null;
                 int dataSize = 0;
@@ -254,8 +256,26 @@ public class FecTest {
                         break;
                 }
 
-            System.out.println(j +"  "+canDecode);
                 if(dataSize!=data){
+                   //如果能恢复
+                    if(canDecode){
+
+                    }else{
+                        //不能恢复
+                        if(dencodeResult!=null){
+                            for (ByteBuf byteBuf : byteBufList) {
+                                byteBuf.readerIndex(0);
+                                FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
+                                dencodeResult = fecDecode1.decode(fecPacket);
+                            }
+                            System.out.println("异常"+j);
+                        }
+
+
+                    }
+
+
+
                     if(dencodeResult!=null&&!canDecode)
                     {
                         System.out.println("异常"+j);
@@ -263,13 +283,10 @@ public class FecTest {
 
                     if(dencodeResult==null&&canDecode)
                     {
-                        for (ByteBuf byteBuf : byteBufList) {
-                            byteBuf.readerIndex(0);
-                            FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
-                            dencodeResult = fecDecode1.decode(fecPacket);
-                        }
-                        System.out.println("异常"+j);
+
                     }
+                }else{
+                    System.out.println();
                 }
                 for (ByteBuf byteBuf : byteBufList) {
                     byteBuf.release();
@@ -281,9 +298,6 @@ public class FecTest {
                     }
 
                 }
-
-
-
             }
 
             //fecEncode.release();
@@ -292,42 +306,37 @@ public class FecTest {
     }
 
 
+    static final Random random = new Random();
 
-    private void ranSort(ByteBuf[] encodeBytes){
-        for (int i = 0; i < encodeBytes.length; i++) {
-            int first = new Random().nextInt(encodeBytes.length);
-            int second = new Random().nextInt(encodeBytes.length);
-            ByteBuf temp = encodeBytes[first];
-            encodeBytes[first] = encodeBytes[second];
-            encodeBytes[second] = temp;
+    private static void randomSort(List<ByteBuf> byteBufs){
+        for (int i = 0; i < byteBufs.size(); i++) {
+            int first = random.nextInt(byteBufs.size());
+            int second = random.nextInt(byteBufs.size());
+            ByteBuf temp = byteBufs.get(first);
+            byteBufs.set(first,byteBufs.get(second));
+            byteBufs.set(second,temp);
         }
     }
-    private void ranRemove(ByteBuf[] encodeBytes){
-        int index = new Random().nextInt(encodeBytes.length);
-        for (int i = 0; i < encodeBytes.length; i++) {
-            if(i==index)
-                continue;
-
-
-
-
-
+    private static void randomDrop(List<ByteBuf> byteBufs,int dropCount){
+        for (int i = 0; i < dropCount; i++) {
+            int dropIndex = random.nextInt(byteBufs.size());
+            byteBufs.get(dropIndex).release();
+            byteBufs.remove(dropIndex);
         }
-
 
     }
 
 
 
-    private static List<ByteBuf> buildBytebuf(int dataShardCount){
+    private static List<ByteBuf> buildBytebuf(int dataShardCount,int mtu){
         List<ByteBuf> byteBufs = new ArrayList<>();
         for (int i = 0; i < dataShardCount; i++) {
-            ByteBuf byteBuf = pooledByteBufAllocator.directBuffer(1500);
+            ByteBuf byteBuf = pooledByteBufAllocator.buffer(mtu);
             byteBuf.writeBytes(new byte[Fec.fecHeaderSizePlus2]);
             //ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(Fec.mtuLimit);
-            int size = new Random().nextInt(200)+Fec.fecHeaderSizePlus2+1;
+            int size = random.nextInt(mtu-Fec.fecHeaderSizePlus2)+1;
             for (int i1 = 0; i1 < size; i1++) {
-                byteBuf.writeByte(new Random().nextInt(127));
+                byteBuf.writeByte(random.nextInt(127));
             }
             byteBufs.add(byteBuf);
         }

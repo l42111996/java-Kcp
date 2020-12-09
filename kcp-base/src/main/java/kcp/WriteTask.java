@@ -17,7 +17,7 @@ public class WriteTask implements ITask {
 
     private Ukcp ukcp;
 
-    private static final Recycler<WriteTask> RECYCLER = new Recycler<WriteTask>(2<<16) {
+    private static final Recycler<WriteTask> RECYCLER = new Recycler<WriteTask>() {
         @Override
         protected WriteTask newObject(Handle<WriteTask> handle) {
             return new WriteTask(handle);
