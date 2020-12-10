@@ -8,6 +8,9 @@ import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.kqueue.KQueue;
+import io.netty.channel.kqueue.KQueueDatagramChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import threadPool.IMessageExecutorPool;
@@ -50,18 +53,28 @@ public class KcpServer {
 
 
         boolean epoll = Epoll.isAvailable();
+        boolean kqueue = KQueue.isAvailable();
         this.iMessageExecutorPool = channelConfig.getiMessageExecutorPool();
         bootstrap = new Bootstrap();
         int cpuNum = Runtime.getRuntime().availableProcessors();
         int bindTimes = 1;
-        if (epoll) {
+        if (epoll||kqueue) {
             //ADD SO_REUSEPORT ？ https://www.jianshu.com/p/61df929aa98b
             bootstrap.option(EpollChannelOption.SO_REUSEPORT, true);
             bindTimes = cpuNum;
         }
+        Class<? extends Channel> channelClass = null;
+        if(epoll){
+            group = new EpollEventLoopGroup(cpuNum);
+            channelClass = EpollDatagramChannel.class;
+        }else if(kqueue){
+            group = new KQueueEventLoopGroup(cpuNum);
+            channelClass = KQueueDatagramChannel.class;
+        }else{
+            group = new NioEventLoopGroup(ports.length);
+            channelClass = NioDatagramChannel.class;
+        }
 
-        group = epoll ? new EpollEventLoopGroup(cpuNum) : new NioEventLoopGroup(ports.length);
-        Class<? extends Channel> channelClass = epoll ? EpollDatagramChannel.class : NioDatagramChannel.class;
         bootstrap.channel(channelClass);
         bootstrap.group(group);
         bootstrap.handler(new ChannelInitializer<Channel>() {
