@@ -45,7 +45,7 @@ public class WriteTask implements ITask {
                 return;
             }
             //从发送缓冲区到kcp缓冲区
-            Queue<ByteBuf> queue = ukcp.getWriteQueue();
+            Queue<ByteBuf> queue = ukcp.getWriteBuffer();
             while(ukcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){

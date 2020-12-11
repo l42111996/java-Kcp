@@ -31,6 +31,8 @@ public class ChannelConfig {
     private boolean fastFlush = true;
     //crc32校验
     private boolean crc32Check = false;
+    //接收窗口大小(字节 -1不限制)
+    private int readBufferSize=-1;
 
     //增加ack包回复成功率 填 /8/16/32
     private int ackMaskSize = 0;
@@ -47,6 +49,13 @@ public class ChannelConfig {
         this.nocwnd=nc;
     }
 
+    public int getReadBufferSize() {
+        return readBufferSize;
+    }
+
+    public void setReadBufferSize(int readBufferSize) {
+        this.readBufferSize = readBufferSize;
+    }
 
     public IMessageExecutorPool getiMessageExecutorPool() {
         return iMessageExecutorPool;

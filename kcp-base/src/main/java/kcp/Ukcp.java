@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import io.netty.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue;
 import org.jctools.queues.MpscLinkedQueue;
 import threadPool.IMessageExecutor;
 
@@ -14,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Ukcp{
 
@@ -31,9 +31,9 @@ public class Ukcp{
     private FecEncode fecEncode = null;
     private FecDecode fecDecode = null;
 
-    private final Queue<ByteBuf> writeQueue;
+    private final Queue<ByteBuf> writeBuffer;
 
-    private final Queue<ByteBuf> readQueue;
+    private final Queue<ByteBuf> readBuffer;
 
     private final IMessageExecutor iMessageExecutor;
 
@@ -46,6 +46,11 @@ public class Ukcp{
     private AtomicBoolean writeProcessing = new AtomicBoolean(false);
 
     private AtomicBoolean readProcessing = new AtomicBoolean(false);
+
+    private AtomicInteger readBufferIncr = new AtomicInteger(-1);
+
+    private boolean controlReadBufferSize=false;
+
 
     /**
      * 上次收到消息时间
@@ -65,10 +70,13 @@ public class Ukcp{
         this.kcpListener = kcpListener;
         this.iMessageExecutor = iMessageExecutor;
         this.channelManager = channelManager;
-        //默认2<<16   可以修改
-        writeQueue = new MpscLinkedQueue<>();
-        readQueue = new MpscChunkedArrayQueue<>(2<<11);
+        this.writeBuffer = new MpscLinkedQueue<>();
+        this.readBuffer = new MpscLinkedQueue<>();
 
+        if(channelConfig.getReadBufferSize()!=-1){
+            this.controlReadBufferSize = true;
+            this.readBufferIncr.set(channelConfig.getReadBufferSize()/channelConfig.getMtu());
+        }
         int headerSize = 0;
         //init fec
         if (reedSolomon != null) {
@@ -298,15 +306,23 @@ public class Ukcp{
         return fastFlush;
     }
 
-
-
     protected void read(ByteBuf byteBuf) {
-        if(this.readQueue.offer(byteBuf)){
-            notifyReadEvent();
-        }else{
-            byteBuf.release();
-            log.error("conv "+kcp.getConv()+" recieveList is full");
+        if(controlReadBufferSize){
+            int readBufferSize =readBufferIncr.getAndUpdate(operand -> {
+                if(operand==0){
+                    return operand;
+                }
+                return --operand;
+            });
+            System.out.println(readBufferSize);
+            if(readBufferSize==0){
+                byteBuf.release();
+                log.error("conv {} address {} recieveList is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
+                return;
+            }
         }
+        this.readBuffer.offer(byteBuf);
+        notifyReadEvent();
     }
 
     /**
@@ -317,8 +333,8 @@ public class Ukcp{
      */
     public void write(ByteBuf byteBuf) {
         byteBuf = byteBuf.retainedDuplicate();
-        if (!writeQueue.offer(byteBuf)) {
-            log.error("conv "+kcp.getConv()+" sendList is full");
+        if (!writeBuffer.offer(byteBuf)) {
+            log.error("conv {} address {} sendList is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
             byteBuf.release();
             close();
         }
@@ -326,7 +342,9 @@ public class Ukcp{
     }
 
 
-
+    protected AtomicInteger getReadBufferIncr() {
+        return readBufferIncr;
+    }
 
 
     /**
@@ -355,8 +373,8 @@ public class Ukcp{
         return tsUpdate;
     }
 
-    protected Queue<ByteBuf> getReadQueue() {
-        return readQueue;
+    protected Queue<ByteBuf> getReadBuffer() {
+        return readBuffer;
     }
 
     protected Ukcp setTsUpdate(long tsUpdate) {
@@ -364,8 +382,8 @@ public class Ukcp{
         return this;
     }
 
-    protected Queue<ByteBuf> getWriteQueue() {
-        return writeQueue;
+    protected Queue<ByteBuf> getWriteBuffer() {
+        return writeBuffer;
     }
 
     protected KcpListener getKcpListener() {
@@ -396,14 +414,14 @@ public class Ukcp{
         kcp.setState(-1);
         kcp.release();
         for (; ; ) {
-            ByteBuf byteBuf = writeQueue.poll();
+            ByteBuf byteBuf = writeBuffer.poll();
             if (byteBuf == null) {
                 break;
             }
             byteBuf.release();
         }
         for (; ; ) {
-            ByteBuf byteBuf = readQueue.poll();
+            ByteBuf byteBuf = readBuffer.poll();
             if (byteBuf == null) {
                 break;
             }

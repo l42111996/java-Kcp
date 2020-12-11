@@ -47,12 +47,14 @@ public class ReadTask implements ITask {
             }
             boolean hasKcpMessage = false;
             long current = System.currentTimeMillis();
-            Queue<ByteBuf> recieveList = ukcp.getReadQueue();
+            Queue<ByteBuf> recieveList = ukcp.getReadBuffer();
+            int readCount =0;
             for (; ; ) {
                 ByteBuf byteBuf = recieveList.poll();
                 if (byteBuf == null) {
                     break;
                 }
+                readCount++;
                 hasKcpMessage = true;
                 ukcp.input(byteBuf, current);
                 byteBuf.release();
@@ -60,6 +62,7 @@ public class ReadTask implements ITask {
             if (!hasKcpMessage) {
                 return;
             }
+            ukcp.getReadBufferIncr().addAndGet(readCount);
             if (ukcp.isStream()) {
                 int size =0;
                 while (ukcp.canRecv()) {
@@ -80,7 +83,7 @@ public class ReadTask implements ITask {
                 }
             }
             //判断写事件
-            if (!ukcp.getWriteQueue().isEmpty()&& ukcp.canSend(false)) {
+            if (!ukcp.getWriteBuffer().isEmpty()&& ukcp.canSend(false)) {
                 ukcp.notifyWriteEvent();
             }
         } catch (Throwable e) {
