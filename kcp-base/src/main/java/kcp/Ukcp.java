@@ -49,7 +49,11 @@ public class Ukcp{
 
     private AtomicInteger readBufferIncr = new AtomicInteger(-1);
 
+    private AtomicInteger writeBufferIncr = new AtomicInteger(-1);
+
     private boolean controlReadBufferSize=false;
+
+    private boolean controlWriteBufferSize=false;
 
 
     /**
@@ -77,6 +81,14 @@ public class Ukcp{
             this.controlReadBufferSize = true;
             this.readBufferIncr.set(channelConfig.getReadBufferSize()/channelConfig.getMtu());
         }
+
+        if(channelConfig.getWriteBufferSize()!=-1){
+            this.controlWriteBufferSize = true;
+            this.writeBufferIncr.set(channelConfig.getWriteBufferSize()/channelConfig.getMtu());
+        }
+
+
+
         int headerSize = 0;
         //init fec
         if (reedSolomon != null) {
@@ -314,10 +326,9 @@ public class Ukcp{
                 }
                 return --operand;
             });
-            System.out.println(readBufferSize);
             if(readBufferSize==0){
                 byteBuf.release();
-                log.error("conv {} address {} recieveList is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
+                log.error("conv {} address {} readBuffer is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
                 return;
             }
         }
@@ -329,16 +340,25 @@ public class Ukcp{
      * 发送有序可靠消息
      * 线程安全的
      * @param byteBuf 发送后需要手动调用 {@link ByteBuf#release()}
-     * @return
+     * @return true发送成功  false缓冲区满了
      */
-    public void write(ByteBuf byteBuf) {
-        byteBuf = byteBuf.retainedDuplicate();
-        if (!writeBuffer.offer(byteBuf)) {
-            log.error("conv {} address {} sendList is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
-            byteBuf.release();
-            close();
+    public boolean write(ByteBuf byteBuf) {
+        if(controlWriteBufferSize){
+            int bufferSize =writeBufferIncr.getAndUpdate(operand -> {
+                if(operand==0){
+                    return operand;
+                }
+                return --operand;
+            });
+            if(bufferSize==0){
+                //log.error("conv {} address {} writeBuffer is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
+                return false;
+            }
         }
+        byteBuf = byteBuf.retainedDuplicate();
+        writeBuffer.offer(byteBuf);
         notifyWriteEvent();
+        return true;
     }
 
 
@@ -452,6 +472,20 @@ public class Ukcp{
     protected long getTimeoutMillis() {
         return timeoutMillis;
     }
+
+    protected AtomicInteger getWriteBufferIncr() {
+        return writeBufferIncr;
+    }
+
+    protected boolean isControlReadBufferSize() {
+        return controlReadBufferSize;
+    }
+
+
+    protected boolean isControlWriteBufferSize() {
+        return controlWriteBufferSize;
+    }
+
 
     @SuppressWarnings("unchecked")
     public User user() {

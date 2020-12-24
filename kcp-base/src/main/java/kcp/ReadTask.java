@@ -45,7 +45,6 @@ public class ReadTask implements ITask {
             if (!ukcp.isActive()) {
                 return;
             }
-            boolean hasKcpMessage = false;
             long current = System.currentTimeMillis();
             Queue<ByteBuf> recieveList = ukcp.getReadBuffer();
             int readCount =0;
@@ -55,14 +54,15 @@ public class ReadTask implements ITask {
                     break;
                 }
                 readCount++;
-                hasKcpMessage = true;
                 ukcp.input(byteBuf, current);
                 byteBuf.release();
             }
-            if (!hasKcpMessage) {
+            if (readCount==0) {
                 return;
             }
-            ukcp.getReadBufferIncr().addAndGet(readCount);
+            if(ukcp.isControlReadBufferSize()){
+                ukcp.getReadBufferIncr().addAndGet(readCount);
+            }
             if (ukcp.isStream()) {
                 int size =0;
                 while (ukcp.canRecv()) {

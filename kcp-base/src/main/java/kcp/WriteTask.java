@@ -46,11 +46,13 @@ public class WriteTask implements ITask {
             }
             //从发送缓冲区到kcp缓冲区
             Queue<ByteBuf> queue = ukcp.getWriteBuffer();
+            int writeCount =0;
             while(ukcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
                     break;
                 }
+                writeCount++;
                 try {
                     ukcp.send(byteBuf);
                     byteBuf.release();
@@ -58,6 +60,9 @@ public class WriteTask implements ITask {
                     ukcp.getKcpListener().handleException(e, ukcp);
                     return;
                 }
+            }
+            if(ukcp.isControlWriteBufferSize()){
+                ukcp.getWriteBufferIncr().addAndGet(writeCount);
             }
             //如果有发送 则检测时间
             if(!ukcp.canSend(false)||(ukcp.checkFlush()&& ukcp.isFastFlush())){
