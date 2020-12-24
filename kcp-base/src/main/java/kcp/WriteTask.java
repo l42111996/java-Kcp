@@ -1,5 +1,6 @@
 package kcp;
 
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
 import threadPool.ITask;
@@ -47,6 +48,7 @@ public class WriteTask implements ITask {
             //从发送缓冲区到kcp缓冲区
             Queue<ByteBuf> queue = ukcp.getWriteBuffer();
             int writeCount =0;
+            long writeBytes = 0;
             while(ukcp.canSend(false)){
                 ByteBuf byteBuf = queue.poll();
                 if(byteBuf==null){
@@ -54,6 +56,7 @@ public class WriteTask implements ITask {
                 }
                 writeCount++;
                 try {
+                    writeBytes +=byteBuf.readableBytes();
                     ukcp.send(byteBuf);
                     byteBuf.release();
                 } catch (IOException e) {
@@ -61,6 +64,7 @@ public class WriteTask implements ITask {
                     return;
                 }
             }
+            Snmp.snmp.BytesSent.add(writeBytes);
             if(ukcp.isControlWriteBufferSize()){
                 ukcp.getWriteBufferIncr().addAndGet(writeCount);
             }

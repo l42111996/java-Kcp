@@ -1,5 +1,6 @@
 package kcp;
 
+import com.backblaze.erasure.fec.Snmp;
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
@@ -63,6 +64,7 @@ public class ReadTask implements ITask {
             if(ukcp.isControlReadBufferSize()){
                 ukcp.getReadBufferIncr().addAndGet(readCount);
             }
+            long readBytes = 0;
             if (ukcp.isStream()) {
                 int size =0;
                 while (ukcp.canRecv()) {
@@ -74,14 +76,17 @@ public class ReadTask implements ITask {
                 }
                 for (int i = 0; i < size; i++) {
                     ByteBuf byteBuf = bufList.getUnsafe(i);
+                    readBytes += byteBuf.readableBytes();
                     readBytebuf(byteBuf,current,ukcp);
                 }
             } else {
                 while (ukcp.canRecv()) {
                     ByteBuf recvBuf = ukcp.mergeReceive();
+                    readBytes += recvBuf.readableBytes();
                     readBytebuf(recvBuf,current,ukcp);
                 }
             }
+            Snmp.snmp.BytesReceived.add(readBytes);
             //判断写事件
             if (!ukcp.getWriteBuffer().isEmpty()&& ukcp.canSend(false)) {
                 ukcp.notifyWriteEvent();

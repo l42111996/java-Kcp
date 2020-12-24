@@ -42,12 +42,6 @@ public class KcpClient {
         }
         int cpuNum = Runtime.getRuntime().availableProcessors();
         this.iMessageExecutorPool = channelConfig.getiMessageExecutorPool();
-        //if (disruptorExecutorPool == null) {
-        //    this.disruptorExecutorPool = new DisruptorExecutorPool();
-        //    for (int i = 0; i < cpuNum; i++) {
-        //        disruptorExecutorPool.createDisruptorProcessor("disruptorExecutorPool" + i);
-        //    }
-        //}
         nioEventLoopGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
         bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
