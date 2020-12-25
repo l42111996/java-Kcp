@@ -11,6 +11,8 @@ import com.backblaze.erasure.bytebuf.InputOutputByteBufHeapTableCodingLoop;
 import com.backblaze.erasure.bytebuf.InputOutputByteBufTableCodingLoop;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
+
 /**
  * Reed-Solomon Coding over 8-bit values.
  */
@@ -107,7 +109,7 @@ public class ReedSolomon {
                 offset, byteCount);
     }
 
-    private static final ByteBufCodingLoop LOOP = new InputOutputByteBufHeapTableCodingLoop();
+    private static final ByteBufCodingLoop LOOP = new InputOutputByteBufTableCodingLoop();
 
 
     public void encodeParity(ByteBuf[] shards, int offset, int byteCount) {
@@ -186,6 +188,7 @@ public class ReedSolomon {
                 firstByte, byteCount,
                 tempBuffer);
     }
+
 
     /**
      * Given a list of shards, some of which contain data, fills in the
@@ -294,6 +297,137 @@ public class ReedSolomon {
                 outputs, outputCount,
                 offset, byteCount);
     }
+
+
+    public void decodeMissingHeap(ByteBuf [] shards,
+                                  boolean [] shardPresent,
+                                  final int offset,
+                                  final int byteCount) {
+        // Check arguments.
+        checkBuffersAndSizes(shards, offset, byteCount);
+
+        // Quick check: are all of the shards present?  If so, there's
+        // nothing to do.
+        int numberPresent = 0;
+        for (int i = 0; i < totalShardCount; i++) {
+            if (shardPresent[i]) {
+                numberPresent += 1;
+            }
+        }
+        if (numberPresent == totalShardCount) {
+            // Cool.  All of the shards data data.  We don't
+            // need to do anything.
+            return;
+        }
+
+        // More complete sanity check
+        if (numberPresent < dataShardCount) {
+            throw new IllegalArgumentException("Not enough shards present");
+        }
+
+        // Pull out the rows of the matrix that correspond to the
+        // shards that we have and build a square matrix.  This
+        // matrix could be used to generate the shards that we have
+        // from the original data.
+        //
+        // Also, pull out an array holding just the shards that
+        // correspond to the rows of the submatrix.  These shards
+        // will be the input to the decoding process that re-creates
+        // the missing data shards.
+        Matrix subMatrix = new Matrix(dataShardCount, dataShardCount);
+        byte [] [] subShards = new byte [dataShardCount] [];
+        {
+            int subMatrixRow = 0;
+            for (int matrixRow = 0; matrixRow < totalShardCount && subMatrixRow < dataShardCount; matrixRow++) {
+                if (shardPresent[matrixRow]) {
+                    for (int c = 0; c < dataShardCount; c++) {
+                        subMatrix.set(subMatrixRow, c, matrix.get(matrixRow, c));
+                    }
+                    byte[] bytes = new byte[byteCount];
+                    shards[matrixRow].getBytes(0,bytes);
+                    subShards[subMatrixRow] = bytes;
+                    subMatrixRow += 1;
+                }
+            }
+        }
+
+        // Invert the matrix, so we can go from the encoded shards
+        // back to the original data.  Then pull out the row that
+        // generates the shard that we want to decode.  Note that
+        // since this matrix maps back to the orginal data, it can
+        // be used to create a data shard, but not a parity shard.
+        Matrix dataDecodeMatrix = subMatrix.invert();
+
+        // Re-create any data shards that were missing.
+        //
+        // The input to the coding is all of the shards we actually
+        // have, and the output is the missing data shards.  The computation
+        // is done using the special decode matrix we just built.
+        byte [] [] outputs = new byte [parityShardCount] [];
+        byte [] [] matrixRows = new byte [parityShardCount] [];
+        byte [] [] shardsHeap = new byte[totalShardCount][];
+        int outputCount = 0;
+        for (int iShard = 0; iShard < dataShardCount; iShard++) {
+            if (!shardPresent[iShard]) {
+                byte[] bytes = new byte[byteCount];
+                shards[iShard].getBytes(0,bytes);
+                outputs[outputCount] = bytes;
+
+                bytes = Arrays.copyOf(bytes,bytes.length);
+                shardsHeap[iShard] = bytes;
+
+                matrixRows[outputCount] = dataDecodeMatrix.getRow(iShard);
+                outputCount += 1;
+            }else{
+                shardsHeap[iShard] = new byte[byteCount];
+            }
+        }
+        codingLoop.codeSomeShards(
+                matrixRows,
+                subShards, dataShardCount,
+                outputs, outputCount,
+                offset, byteCount);
+
+        // Now that we have all of the data shards intact, we can
+        // compute any of the parity that is missing.
+        //
+        // The input to the coding is ALL of the data shards, including
+        // any that we just calculated.  The output is whichever of the
+        // data shards were missing.
+        outputCount = 0;
+        for (int iShard = dataShardCount; iShard < totalShardCount; iShard++) {
+            if (!shardPresent[iShard]) {
+                byte[] bytes = new byte[byteCount];
+                shards[iShard].getBytes(0,bytes);
+                outputs[outputCount] = bytes;
+
+                bytes = Arrays.copyOf(bytes,bytes.length);
+                shardsHeap[iShard] = bytes;
+
+                matrixRows[outputCount] = parityRows[iShard - dataShardCount];
+                outputCount += 1;
+            }else{
+                shardsHeap[iShard] = new byte[byteCount];
+            }
+
+        }
+        codingLoop.codeSomeShards(
+                matrixRows,
+                shardsHeap, dataShardCount,
+                outputs, outputCount,
+                offset, byteCount);
+
+        for (int i = 0; i < shardsHeap.length; i++) {
+            if(!shardPresent[i]){
+                shards[i].setBytes(0,shardsHeap[i]);
+            }
+        }
+    }
+
+
+
+
+
 
 
     public void decodeMissing(ByteBuf [] shards,

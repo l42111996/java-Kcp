@@ -1,10 +1,7 @@
 package com.backblaze.erasure;
 
 import com.backblaze.erasure.fec.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -12,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -76,15 +74,15 @@ public class FecTest {
         FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
         while(true){
             List<ByteBuf> byteBufList = new ArrayList<>();
-            List<ByteBuf> byteBufs = buildBytebuf(data,1500);
+            List<FecTestPackage> byteBufs = buildBytebuf(data,1500);
             for (int i = 0; i < byteBufs.size(); i++) {
-                ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
+                ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i).getByteBuf());
                 if(encodeResult!=null){
                     for (int i1 = 0; i1 < encodeResult.length; i1++) {
                         byteBufList.add(encodeResult[i1]);
                     }
                 }
-                byteBufList.add(byteBufs.get(i));
+                byteBufList.add(byteBufs.get(i).getByteBuf());
             }
             for (ByteBuf byteBuf : byteBufList) {
                 byteBuf.release();
@@ -113,15 +111,15 @@ public class FecTest {
             try {
                 while(true){
                     List<ByteBuf> byteBufList = new ArrayList<>();
-                    List<ByteBuf> byteBufs = buildBytebuf(data,1500);
+                    List<FecTestPackage> byteBufs = buildBytebuf(data,1500);
                     for (int i = 0; i < byteBufs.size(); i++) {
-                        ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
+                        ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i).getByteBuf());
                         if(encodeResult!=null){
                             for (int i1 = 0; i1 < encodeResult.length; i1++) {
                                 byteBufList.add(encodeResult[i1]);
                             }
                         }
-                        byteBufList.add(byteBufs.get(i));
+                        byteBufList.add(byteBufs.get(i).getByteBuf());
                     }
 
                     int drop = random.nextInt(data+part);
@@ -215,39 +213,49 @@ public class FecTest {
         int j = 0;
         while (true){
             j++;
-                //System.out.println(j);
-                List<ByteBuf> byteBufs = buildBytebuf(data,mtu);
 
-                List<ByteBuf> byteBufList = new ArrayList<>();
-                for (int i = 0; i < byteBufs.size(); i++) {
-                    ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
-                    if(encodeResult!=null){
-                        for (int i1 = 0; i1 < encodeResult.length; i1++) {
-                            byteBufList.add(encodeResult[i1]);
-                        }
-                    }
-                    byteBufList.add(byteBufs.get(i));
-                }
                 //是否能恢复
                 boolean canDecode = random.nextBoolean();
                 int dropCount = 0;
-
                 if(canDecode){
                     dropCount = random.nextInt(part);
                 }else{
                     dropCount = part+1+(random.nextInt(data));
                 }
+                if(dropCount==0){
+                    continue;
+                }
+
+                List<FecTestPackage> byteBufs = buildBytebuf(data,mtu);
+
+
                 //随机丢包
-                randomDrop(byteBufList,dropCount);
+                randomDrop(byteBufs,dropCount,canDecode);
+
+
+                List<FecTestPackage> byteBufList = new ArrayList<>();
+                for (int i = 0; i < byteBufs.size(); i++) {
+                    ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i).getByteBuf());
+                    if(encodeResult!=null){
+                        for (int i1 = 0; i1 < encodeResult.length; i1++) {
+                            byteBufList.add(new FecTestPackage(encodeResult[i1]));
+                        }
+                    }
+                    byteBufList.add(byteBufs.get(i));
+                }
+
                 //乱序
-                randomSort(byteBufList);
+                Collections.shuffle(byteBufs);
 
 
 
                 List<ByteBuf> dencodeResult = null;
                 int dataSize = 0;
-                for (ByteBuf byteBuf : byteBufList) {
-                    FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
+                for (FecTestPackage byteBuf : byteBufList) {
+                    if(byteBuf.isDrop()){
+                        continue;
+                    }
+                    FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf.getByteBuf());
                     if(fecPacket.getFlag()==Fec.typeData){
                         dataSize++;
                     }
@@ -256,43 +264,27 @@ public class FecTest {
                         break;
                 }
 
-                if(dataSize!=data){
-                   //如果能恢复
-                    if(canDecode){
-
-                    }else{
-                        //不能恢复
-                        if(dencodeResult!=null){
-                            for (ByteBuf byteBuf : byteBufList) {
-                                byteBuf.readerIndex(0);
-                                FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
-                                dencodeResult = fecDecode1.decode(fecPacket);
-                            }
-                            System.out.println("异常"+j);
-                        }
-
-
+                if(canDecode){
+                    if(dencodeResult.size()!=(data-dataSize)){
+                        System.out.println("恢复数据错误!");
                     }
 
-
-
-                    if(dencodeResult!=null&&!canDecode)
-                    {
-                        System.out.println("异常"+j);
+                    for (ByteBuf byteBuf : dencodeResult) {
+                        System.out.println("恢复了"+byteBuf.getInt(0));
+                        //System.out.println(ByteBufUtil.prettyHexDump(byteBuf));
                     }
 
-                    if(dencodeResult==null&&canDecode)
-                    {
-
-                    }
-                }else{
                     System.out.println();
-                }
-                for (ByteBuf byteBuf : byteBufList) {
-                    byteBuf.release();
+
+
+
                 }
 
-                if(dencodeResult!=null){
+            for (FecTestPackage byteBuf : byteBufList) {
+                byteBuf.getByteBuf().release();
+            }
+
+            if(dencodeResult!=null){
                     for (ByteBuf byteBuf : dencodeResult) {
                         byteBuf.release();
                     }
@@ -308,37 +300,43 @@ public class FecTest {
 
     static final Random random = new Random();
 
-    private static void randomSort(List<ByteBuf> byteBufs){
-        for (int i = 0; i < byteBufs.size(); i++) {
-            int first = random.nextInt(byteBufs.size());
-            int second = random.nextInt(byteBufs.size());
-            ByteBuf temp = byteBufs.get(first);
-            byteBufs.set(first,byteBufs.get(second));
-            byteBufs.set(second,temp);
-        }
-    }
-    private static void randomDrop(List<ByteBuf> byteBufs,int dropCount){
-        for (int i = 0; i < dropCount; i++) {
+    private static void randomDrop(List<FecTestPackage> byteBufs,int dropCount,boolean canDecode){
+        for(;;){
+            if(dropCount==0){
+                break;
+            }
             int dropIndex = random.nextInt(byteBufs.size());
-            byteBufs.get(dropIndex).release();
-            byteBufs.remove(dropIndex);
+            FecTestPackage fecTestPackage = byteBufs.get(dropIndex);
+            if(!fecTestPackage.isDrop()){
+                if(canDecode){
+                    int dropId = fecTestPackage.getByteBuf().getInt(Fec.fecHeaderSizePlus2);
+                    System.out.println("准备丢弃"+dropId);
+                }
+                fecTestPackage.setDrop(true);
+                dropCount--;
+            }
         }
-
     }
 
+    private static final AtomicInteger id = new AtomicInteger();
 
-
-    private static List<ByteBuf> buildBytebuf(int dataShardCount,int mtu){
-        List<ByteBuf> byteBufs = new ArrayList<>();
+    private static List<FecTestPackage> buildBytebuf(int dataShardCount,int mtu){
+        List<FecTestPackage> byteBufs = new ArrayList<>();
         for (int i = 0; i < dataShardCount; i++) {
             ByteBuf byteBuf = pooledByteBufAllocator.buffer(mtu);
             byteBuf.writeBytes(new byte[Fec.fecHeaderSizePlus2]);
+            int ids = id.incrementAndGet();
+            byteBuf.writeInt(ids);
             //ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(Fec.mtuLimit);
-            int size = random.nextInt(mtu-Fec.fecHeaderSizePlus2)+1;
+            int size = random.nextInt(mtu-Fec.fecHeaderSizePlus2)+1-4;
             for (int i1 = 0; i1 < size; i1++) {
                 byteBuf.writeByte(random.nextInt(127));
             }
-            byteBufs.add(byteBuf);
+
+            FecTestPackage fecTestPackage = new FecTestPackage(byteBuf);
+            fecTestPackage.setId(ids);
+
+            byteBufs.add(fecTestPackage);
         }
 
         return byteBufs;
