@@ -6,6 +6,8 @@
 
 package com.backblaze.erasure;
 
+import com.backblaze.erasure.bytebuf.ByteBufCodingLoop;
+import com.backblaze.erasure.bytebuf.InputOutputByteBufHeapTableCodingLoop;
 import com.backblaze.erasure.bytebuf.InputOutputByteBufTableCodingLoop;
 import io.netty.buffer.ByteBuf;
 
@@ -105,7 +107,7 @@ public class ReedSolomon {
                 offset, byteCount);
     }
 
-    private static final InputOutputByteBufTableCodingLoop LOOP = new InputOutputByteBufTableCodingLoop();
+    private static final ByteBufCodingLoop LOOP = new InputOutputByteBufHeapTableCodingLoop();
 
 
     public void encodeParity(ByteBuf[] shards, int offset, int byteCount) {

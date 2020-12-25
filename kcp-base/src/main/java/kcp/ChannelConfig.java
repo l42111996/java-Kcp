@@ -32,21 +32,27 @@ public class ChannelConfig {
     //crc32校验
     private boolean crc32Check = false;
     //接收窗口大小(字节 -1不限制)
-    private int readBufferSize=-1;
+    private int readBufferSize = -1;
+    //发送窗口大小(字节 -1不限制)
+    private int writeBufferSize = -1;
 
     //增加ack包回复成功率 填 /8/16/32
     private int ackMaskSize = 0;
-    /**使用conv确定一个channel 还是使用 socketAddress确定一个channel**/
-    private boolean useConvChannel=false;
-    /**处理kcp消息接收和发送的线程池**/
+    /**
+     * 使用conv确定一个channel 还是使用 socketAddress确定一个channel
+     **/
+    private boolean useConvChannel = false;
+    /**
+     * 处理kcp消息接收和发送的线程池
+     **/
     private IMessageExecutorPool iMessageExecutorPool = new NettyMessageExecutorPool(Runtime.getRuntime().availableProcessors());
 
 
-    public void nodelay(boolean nodelay, int interval, int resend, boolean nc){
+    public void nodelay(boolean nodelay, int interval, int resend, boolean nc) {
         this.nodelay = nodelay;
         this.interval = interval;
         this.fastresend = resend;
-        this.nocwnd=nc;
+        this.nocwnd = nc;
     }
 
     public int getReadBufferSize() {
@@ -62,7 +68,7 @@ public class ChannelConfig {
     }
 
     public void setiMessageExecutorPool(IMessageExecutorPool iMessageExecutorPool) {
-        if(this.iMessageExecutorPool!=null){
+        if (this.iMessageExecutorPool != null) {
             this.iMessageExecutorPool.stop();
         }
         this.iMessageExecutorPool = iMessageExecutorPool;
@@ -182,6 +188,14 @@ public class ChannelConfig {
 
     public boolean isUseConvChannel() {
         return useConvChannel;
+    }
+
+    public int getWriteBufferSize() {
+        return writeBufferSize;
+    }
+
+    public void setWriteBufferSize(int writeBufferSize) {
+        this.writeBufferSize = writeBufferSize;
     }
 
     public void setUseConvChannel(boolean useConvChannel) {
