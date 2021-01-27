@@ -12,7 +12,7 @@
     <artifactId>java-Kcp</artifactId>
     <groupId>com.github.l42111996</groupId>
     <packaging>pom</packaging>
-    <version>1.4</version>
+    <version>1.5</version>
     <modules>
         <module>kcp-fec</module>
         <module>kcp-base</module>

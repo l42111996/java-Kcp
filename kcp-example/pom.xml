@@ -5,7 +5,7 @@
     <parent>
         <artifactId>java-Kcp</artifactId>
         <groupId>com.github.l42111996</groupId>
-        <version>1.4</version>
+        <version>1.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

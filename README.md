@@ -17,7 +17,7 @@ KCP是一个基于udp的快速可靠协议(rudp)，能以比 TCP浪费10%-20%的
 <dependency>
   <groupId>com.github.l42111996</groupId>
   <artifactId>kcp-base</artifactId>
-  <version>1.4</version>
+  <version>1.5</version>
 </dependency>
 ```
 
