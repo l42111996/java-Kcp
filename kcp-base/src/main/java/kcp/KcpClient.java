@@ -9,11 +9,14 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.util.HashedWheelTimer;
 import threadPool.IMessageExecutor;
 import threadPool.IMessageExecutorPool;
-import threadPool.TimerThreadPool;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * kcp客户端
@@ -28,7 +31,19 @@ public class KcpClient {
     private EventLoopGroup nioEventLoopGroup;
     /**客户端的连接集合**/
     private IChannelManager channelManager;
+    private HashedWheelTimer hashedWheelTimer;
 
+
+    /**定时器线程工厂**/
+    private static class TimerThreadFactory implements ThreadFactory
+    {
+        private AtomicInteger timeThreadName=new AtomicInteger(0);
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r,"KcpClientTimerThread "+timeThreadName.addAndGet(1));
+            return thread;
+        }
+    }
 
     public void init(ChannelConfig channelConfig) {
         if(channelConfig.isUseConvChannel()){
@@ -40,9 +55,11 @@ public class KcpClient {
         }else{
             channelManager = new ClientAddressChannelManager();
         }
-        int cpuNum = Runtime.getRuntime().availableProcessors();
         this.iMessageExecutorPool = channelConfig.getiMessageExecutorPool();
         nioEventLoopGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors());
+
+        hashedWheelTimer = new HashedWheelTimer(new TimerThreadFactory(),1, TimeUnit.MILLISECONDS);
+
         bootstrap = new Bootstrap();
         bootstrap.channel(NioDatagramChannel.class);
         bootstrap.group(nioEventLoopGroup);
@@ -116,9 +133,8 @@ public class KcpClient {
             }
         });
 
-        ScheduleTask scheduleTask = new ScheduleTask(iMessageExecutor, ukcp);
-        TimerThreadPool.scheduleHashedWheel(scheduleTask, ukcp.getInterval());
-
+        ScheduleTask scheduleTask = new ScheduleTask(iMessageExecutor, ukcp,hashedWheelTimer);
+        hashedWheelTimer.newTimeout(scheduleTask,ukcp.getInterval(),TimeUnit.MILLISECONDS);
         return ukcp;
     }
 
@@ -144,6 +160,10 @@ public class KcpClient {
         if (nioEventLoopGroup != null) {
             nioEventLoopGroup.shutdownGracefully();
         }
+        if(hashedWheelTimer!=null){
+            hashedWheelTimer.stop();
+        }
+
         //System.out.println(Snmp.snmp);
         //System.out.println("关闭连接3");
     }

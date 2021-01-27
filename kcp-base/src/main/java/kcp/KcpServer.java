@@ -1,7 +1,6 @@
 package kcp;
 
 import com.backblaze.erasure.fec.Fec;
-import com.backblaze.erasure.fec.Snmp;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -13,10 +12,14 @@ import io.netty.channel.kqueue.KQueueDatagramChannel;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.util.HashedWheelTimer;
 import threadPool.IMessageExecutorPool;
 
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by JinMiao
@@ -29,7 +32,19 @@ public class KcpServer {
     private EventLoopGroup group;
     private List<Channel> localAddresss = new Vector<>();
     private IChannelManager channelManager;
+    private HashedWheelTimer hashedWheelTimer;
 
+
+    /**定时器线程工厂**/
+    private static class TimerThreadFactory implements ThreadFactory
+    {
+        private AtomicInteger timeThreadName=new AtomicInteger(0);
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r,"KcpServerTimerThread "+timeThreadName.addAndGet(1));
+            return thread;
+        }
+    }
 
     //public void init(int workSize, KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
     //    DisruptorExecutorPool disruptorExecutorPool = new DisruptorExecutorPool();
@@ -50,6 +65,8 @@ public class KcpServer {
         }else{
             channelManager = new ServerAddressChannelManager();
         }
+
+        hashedWheelTimer = new HashedWheelTimer(new TimerThreadFactory(),1, TimeUnit.MILLISECONDS);
 
 
         boolean epoll = Epoll.isAvailable();
@@ -80,7 +97,7 @@ public class KcpServer {
         bootstrap.handler(new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) {
-                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, iMessageExecutorPool, kcpListener);
+                ServerChannelHandler serverChannelHandler = new ServerChannelHandler(channelManager, channelConfig, iMessageExecutorPool, kcpListener,hashedWheelTimer);
                 ChannelPipeline cp = ch.pipeline();
                 if(channelConfig.isCrc32Check()){
                     Crc32Encode crc32Encode = new Crc32Encode();
@@ -116,10 +133,12 @@ public class KcpServer {
         if (iMessageExecutorPool != null) {
             iMessageExecutorPool.stop();
         }
+        if(hashedWheelTimer!=null){
+            hashedWheelTimer.stop();
+        }
         if (group != null) {
             group.shutdownGracefully();
         }
-        System.out.println(Snmp.snmp);
     }
 
     public IChannelManager getChannelManager() {

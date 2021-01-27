@@ -7,7 +7,6 @@ import kcp.ChannelConfig;
 import kcp.KcpListener;
 import kcp.KcpServer;
 import kcp.Ukcp;
-import threadPool.TimerThreadPool;
 
 /**
  * 模拟帧同步测试吞吐和流量

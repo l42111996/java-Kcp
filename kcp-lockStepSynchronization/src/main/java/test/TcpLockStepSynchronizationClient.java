@@ -7,7 +7,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import test.tcp.NetConnector;
 import test.tcp.TcpChannelInitializer;
-import threadPool.TimerThreadPool;
 
 import java.net.InetSocketAddress;
 

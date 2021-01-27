@@ -1,6 +1,5 @@
 package test;
 
-import threadPool.TimerThreadPool;
 import threadPool.disruptor.DisruptorExecutorPool;
 
 import java.util.Map;
