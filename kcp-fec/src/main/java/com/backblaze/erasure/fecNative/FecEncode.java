@@ -113,13 +113,13 @@ public class FecEncode {
             encodeCache[i] = parityByte;
             markParity(parityByte,headerOffset);
             parityByte.writerIndex(this.maxSize);
-            shards[i+dataShards] = parityByte.memoryAddress();
+            shards[i+dataShards] = parityByte.memoryAddress()+payloadOffset;
         }
 
         //按着最大长度不足补充0
         for (int i = 0; i < dataShards; i++) {
             ByteBuf shard = shardCache[i];
-            shards[i] = shard.memoryAddress();
+            shards[i] = shard.memoryAddress()+payloadOffset;
             int left = this.maxSize-shard.writerIndex();
             if(left<=0) {
                 continue;

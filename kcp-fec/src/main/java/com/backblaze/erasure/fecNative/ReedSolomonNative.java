@@ -16,6 +16,11 @@ public class ReedSolomonNative{
     private int parityShards;
 
 
+    public int getTotalShardCount(){
+        return this.dataShards+this.parityShards;
+    }
+
+
     public ReedSolomonNative(int dataShards, int parityShards){
         long reedSolomonPtr = REED_SOLOMON_C.rsNew(dataShards,parityShards);
         this.reedSolomonPtr = reedSolomonPtr;
