@@ -58,7 +58,7 @@ public class KcpServer {
     public void init(KcpListener kcpListener, ChannelConfig channelConfig, int... ports) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
-            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+            if(channelConfig.getFecAdapt()!=null){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
             channelManager = new ServerConvChannelManager(convIndex);

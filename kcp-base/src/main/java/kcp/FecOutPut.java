@@ -1,6 +1,7 @@
 package kcp;
 
-import com.backblaze.erasure.fec.FecEncode;
+import com.backblaze.erasure.IFecEncode;
+import com.backblaze.erasure.fecNative.FecEncode;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -12,10 +13,10 @@ public class FecOutPut implements  KcpOutput{
 
     private KcpOutput output;
 
-    private FecEncode fecEncode;
+    private IFecEncode fecEncode;
 
 
-    protected FecOutPut(KcpOutput output, FecEncode fecEncode) {
+    protected FecOutPut(KcpOutput output, IFecEncode fecEncode) {
         this.output = output;
         this.fecEncode = fecEncode;
     }

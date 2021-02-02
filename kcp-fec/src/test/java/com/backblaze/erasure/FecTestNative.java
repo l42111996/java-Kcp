@@ -1,9 +1,13 @@
 package com.backblaze.erasure;
 
-import com.backblaze.erasure.fec.*;
+import com.backblaze.erasure.fec.Fec;
+import com.backblaze.erasure.fec.FecPacket;
+import com.backblaze.erasure.fec.Snmp;
+import com.backblaze.erasure.fecNative.FecDecode;
+import com.backblaze.erasure.fecNative.FecEncode;
+import com.backblaze.erasure.fecNative.ReedSolomonNative;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.lang.reflect.Field;
@@ -18,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Created by JinMiao
  * 2018/6/21.
  */
-public class FecTest {
+public class FecTestNative {
 
 
 
@@ -68,137 +72,7 @@ public class FecTest {
         System.out.println("usedDirectbuf: "+reservedMemoryField.get(bitClass));
     }
 
-    public static void encodeOOM(){
-        int data = 10;
-        int part = 3;
-        ReedSolomon reedSolomon = ReedSolomon.create(data,part);
-        FecEncode fecEncode = new FecEncode(0,reedSolomon,1500);
-        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
-        while(true){
-            List<ByteBuf> byteBufList = new ArrayList<>();
-            List<ByteBuf> byteBufs = buildBytebuf(data,1500);
-            for (int i = 0; i < byteBufs.size(); i++) {
-                ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
-                if(encodeResult!=null){
-                    for (int i1 = 0; i1 < encodeResult.length; i1++) {
-                        byteBufList.add(encodeResult[i1]);
-                    }
-                }
-                byteBufList.add(byteBufs.get(i));
-            }
-            for (ByteBuf byteBuf : byteBufList) {
-                byteBuf.release();
-            }
-        }
-    }
 
-
-    public static void decodeOOM(){
-
-    }
-
-
-    public static void testOOM(){
-        int data = 10;
-        int part = 3;
-
-        ReedSolomon reedSolomon = ReedSolomon.create(data,part);
-        FecEncode fecEncode = new FecEncode(0,reedSolomon,1500);
-        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
-
-        ArrayBlockingQueue<ByteBuf> queue = new ArrayBlockingQueue<>(150);
-        AtomicLong atomicLong = new AtomicLong();
-        //生产
-        new Thread(() -> {
-            try {
-                while(true){
-                    List<ByteBuf> byteBufList = new ArrayList<>();
-                    List<ByteBuf> byteBufs = buildBytebuf(data,1500);
-                    for (int i = 0; i < byteBufs.size(); i++) {
-                        ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
-                        if(encodeResult!=null){
-                            for (int i1 = 0; i1 < encodeResult.length; i1++) {
-                                byteBufList.add(encodeResult[i1]);
-                            }
-                        }
-                        byteBufList.add(byteBufs.get(i));
-                    }
-
-                    int drop = random.nextInt(data+part);
-
-                    //模拟丢数据
-                    for (int i = 0; i < drop; i++) {
-                        int dropIndex = random.nextInt(byteBufList.size());
-                        byteBufList.get(dropIndex).release();
-                        byteBufList.remove(dropIndex);
-                    }
-                    //打乱顺序
-                    Collections.shuffle(byteBufList);
-                    for (ByteBuf byteBuf : byteBufList) {
-                        if(!queue.offer(byteBuf)){
-                            byteBuf.release();
-                        }
-                    }
-                }
-            }catch (Throwable t){
-                System.out.println(atomicLong.get());
-                t.printStackTrace();
-            }
-        }).start();
-
-        //消费
-        new Thread(() -> {
-            try {
-                int i =0;
-                while(true){
-                    List<ByteBuf> byteBufs = new ArrayList<>();
-                    while (true){
-                        ByteBuf byteBuf = queue.poll();
-                        if(byteBuf==null){
-                            break;
-                        }
-                        byteBufs.add(byteBuf);
-                    }
-                    if(byteBufs.isEmpty())
-                    {
-                        continue;
-                    }
-                    try {
-                        Thread.sleep(10);
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    Collections.shuffle(byteBufs);
-
-                    for (ByteBuf byteBuf : byteBufs) {
-                        i++;
-
-                        if(i%(100000)==0){
-                            System.out.println(Snmp.snmp.toString());
-                        }
-
-                        FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
-                        atomicLong.set(fecPacket.getSeqid());
-                        List<ByteBuf> dencodeResult = fecDecode.decode(fecPacket);
-                        if(dencodeResult!=null){
-                            for (ByteBuf buf : dencodeResult) {
-                                //System.out.println("refa "+buf.refCnt());
-                                buf.release();
-                            }
-                        }
-                        //System.out.println("ref "+byteBuf.refCnt());
-                        byteBuf.release();
-                    }
-                }
-            }catch (Throwable t){
-                System.out.println(atomicLong.get());
-                t.printStackTrace();
-            }
-        }).start();
-    }
 
 
     private static void runtask(){
@@ -206,7 +80,7 @@ public class FecTest {
         int part = 3;
         int mtu = 1500;
 
-        ReedSolomon reedSolomon = ReedSolomon.create(data,part);
+        ReedSolomonNative reedSolomon = new ReedSolomonNative(data,part);
 
         FecEncode fecEncode = new FecEncode(0,reedSolomon,mtu);
         FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,mtu);
@@ -248,7 +122,7 @@ public class FecTest {
                 int dataSize = 0;
                 for (ByteBuf byteBuf : byteBufList) {
                     FecPacket fecPacket =  FecPacket.newFecPacket(byteBuf);
-                    if(fecPacket.getFlag()==Fec.typeData){
+                    if(fecPacket.getFlag()== Fec.typeData){
                         dataSize++;
                     }
                     dencodeResult = fecDecode.decode(fecPacket);
@@ -286,7 +160,7 @@ public class FecTest {
 
                     }
                 }else{
-                    //System.out.println();
+                    System.out.println();
                 }
                 for (ByteBuf byteBuf : byteBufList) {
                     byteBuf.release();
@@ -331,7 +205,7 @@ public class FecTest {
     private static List<ByteBuf> buildBytebuf(int dataShardCount,int mtu){
         List<ByteBuf> byteBufs = new ArrayList<>();
         for (int i = 0; i < dataShardCount; i++) {
-            ByteBuf byteBuf = pooledByteBufAllocator.buffer(mtu);
+            ByteBuf byteBuf = pooledByteBufAllocator.directBuffer(mtu);
             byteBuf.writeBytes(new byte[Fec.fecHeaderSizePlus2]);
             //ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(Fec.mtuLimit);
             int size = random.nextInt(mtu-Fec.fecHeaderSizePlus2)+1;

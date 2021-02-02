@@ -1,6 +1,9 @@
 package com.backblaze.erasure;
 
-import com.backblaze.erasure.fec.*;
+import com.backblaze.erasure.fec.FecPacket;
+import com.backblaze.erasure.fecNative.FecDecode;
+import com.backblaze.erasure.fecNative.FecEncode;
+import com.backblaze.erasure.fecNative.ReedSolomonNative;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
@@ -11,7 +14,7 @@ import java.util.Random;
  * Created by JinMiao
  * 2020/12/25.
  */
-public class BytebufBenchmark {
+public class BytebufBenchmarkNative {
 
     private static final int DATA_COUNT = 17;
     private static final int PARITY_COUNT = 3;
@@ -20,7 +23,7 @@ public class BytebufBenchmark {
     private static final int PROCESSOR_CACHE_SIZE = 10 * 1024 * 1024;
     private static final Random RANDOM = new Random();
     public static void main(String[] args) {
-        ReedSolomon reedSolomon = ReedSolomon.create(DATA_COUNT,PARITY_COUNT);
+        ReedSolomonNative reedSolomon = new ReedSolomonNative(DATA_COUNT,PARITY_COUNT);
         FecDecode fecDecode = new FecDecode(TOTAL_COUNT*3,reedSolomon,BUFFER_SIZE);
         FecEncode fecEncode = new FecEncode(0,reedSolomon,BUFFER_SIZE);
 

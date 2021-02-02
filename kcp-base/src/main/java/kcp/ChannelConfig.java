@@ -1,5 +1,6 @@
 package kcp;
 
+import com.backblaze.erasure.FecAdapt;
 import threadPool.IMessageExecutorPool;
 import threadPool.netty.NettyMessageExecutorPool;
 
@@ -23,8 +24,7 @@ public class ChannelConfig {
     private boolean stream;
 
     //下面为新增参数
-    private int fecDataShardCount;
-    private int fecParityShardCount;
+    private FecAdapt fecAdapt;
     //收到包立刻回传ack包
     private boolean ackNoDelay = false;
     //发送包立即调用flush 延迟低一些  cpu增加  如果interval值很小 建议关闭该参数
@@ -138,20 +138,12 @@ public class ChannelConfig {
         this.stream = stream;
     }
 
-    public int getFecDataShardCount() {
-        return fecDataShardCount;
+    public FecAdapt getFecAdapt() {
+        return fecAdapt;
     }
 
-    public void setFecDataShardCount(int fecDataShardCount) {
-        this.fecDataShardCount = fecDataShardCount;
-    }
-
-    public int getFecParityShardCount() {
-        return fecParityShardCount;
-    }
-
-    public void setFecParityShardCount(int fecParityShardCount) {
-        this.fecParityShardCount = fecParityShardCount;
+    public void setFecAdapt(FecAdapt fecAdapt) {
+        this.fecAdapt = fecAdapt;
     }
 
     public boolean isAckNoDelay() {

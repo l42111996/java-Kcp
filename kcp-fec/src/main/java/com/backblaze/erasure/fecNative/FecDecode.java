@@ -1,16 +1,14 @@
-package com.backblaze.erasure.fec;
+package com.backblaze.erasure.fecNative;
 
 import com.backblaze.erasure.IFecDecode;
 import com.backblaze.erasure.ReedSolomon;
+import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import static com.backblaze.erasure.fec.Fec.typeData;
 
 /**
  *4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth不包含自己)+body
@@ -35,13 +33,13 @@ public class FecDecode implements IFecDecode {
     /**标记是否已经缓存了**/
     private boolean[] flagCache;
     private ByteBuf zeros;
-    private ReedSolomon codec;
+    private ReedSolomonNative codec;
 
 
-    public FecDecode(int rxlimit, ReedSolomon codec,int mtu) {
+    public FecDecode(int rxlimit, ReedSolomonNative codec,int mtu) {
         this.rxlimit = rxlimit;
-        this.dataShards = codec.getDataShardCount();
-        this.parityShards = codec.getParityShardCount();
+        this.dataShards = codec.getDataShards();
+        this.parityShards = codec.getParityShards();
         this.shardSize = dataShards + parityShards;
 
         if (dataShards <= 0 || parityShards <= 0) {
@@ -77,7 +75,7 @@ public class FecDecode implements IFecDecode {
         MyArrayList<FecPacket> rx = this.rx;
         int dataShards = this.dataShards;
         ByteBuf zeros = this.zeros;
-        int typeData =Fec.typeData;
+        int typeData = Fec.typeData;
 
         if(pkt.getFlag()==Fec.typeParity){
             Snmp.snmp.FECParityShards.increment();
@@ -168,6 +166,8 @@ public class FecDecode implements IFecDecode {
                 freeRange(first, numshard, rx);
             }
             else if(numshard>=dataShards){
+
+                long[] shardsAddress = new long[shards.length];
                 for (int i = 0; i < shards.length; i++) {
                     ByteBuf shard  = shards[i];
                     //如果数据不存在 用0填充起来
@@ -181,8 +181,9 @@ public class FecDecode implements IFecDecode {
                         shard.writeBytes(zeros,left);
                         zeros.resetReaderIndex();
                     }
+                    shardsAddress[i] = shard.memoryAddress();
                 }
-                codec.decodeMissing(shards,shardsflag,0,maxlen);
+                codec.rsReconstruct(shardsAddress,shardsflag,maxlen);
                 result = new ArrayList<>(dataShards);
                 for (int i = 0; i < shardSize; i++) {
                     if(shardsflag[i]){

@@ -1,7 +1,7 @@
-package com.backblaze.erasure.fec;
+package com.backblaze.erasure.fecNative;
 
 import com.backblaze.erasure.IFecEncode;
-import com.backblaze.erasure.ReedSolomon;
+import com.backblaze.erasure.fec.Fec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
@@ -43,11 +43,11 @@ public class FecEncode implements IFecEncode {
 
     private ByteBuf zeros;
 
-    private ReedSolomon codec;
+    private ReedSolomonNative codec;
 
-    public FecEncode(int headerOffset, ReedSolomon codec,int mtu) {
-        this.dataShards = codec.getDataShardCount();
-        this.parityShards = codec.getParityShardCount();
+    public FecEncode(int headerOffset, ReedSolomonNative codec,int mtu) {
+        this.dataShards = codec.getDataShards();
+        this.parityShards = codec.getParityShards();
         this.shardSize = this.dataShards + this.parityShards;
         //this.paws = (Integer.MAX_VALUE/shardSize - 1) * shardSize;
         this.paws = 0xffffffffL/shardSize * shardSize;
@@ -106,6 +106,7 @@ public class FecEncode implements IFecEncode {
         if(shardCount!=dataShards) {
             return null;
         }
+        long[] shards = new long[dataShards+parityShards];
         //填充parityShards
         for (int i = 0; i < parityShards; i++) {
             ByteBuf parityByte = ByteBufAllocator.DEFAULT.buffer(this.maxSize);
@@ -113,11 +114,13 @@ public class FecEncode implements IFecEncode {
             encodeCache[i] = parityByte;
             markParity(parityByte,headerOffset);
             parityByte.writerIndex(this.maxSize);
+            shards[i+dataShards] = parityByte.memoryAddress()+payloadOffset;
         }
 
         //按着最大长度不足补充0
         for (int i = 0; i < dataShards; i++) {
             ByteBuf shard = shardCache[i];
+            shards[i] = shard.memoryAddress()+payloadOffset;
             int left = this.maxSize-shard.writerIndex();
             if(left<=0) {
                 continue;
@@ -133,7 +136,8 @@ public class FecEncode implements IFecEncode {
             shard.writeBytes(zeros,left);
             zeros.readerIndex(0);
         }
-        codec.encodeParity(shardCache,payloadOffset,this.maxSize-payloadOffset);
+        codec.rsEncode(shards,this.maxSize-payloadOffset);
+        //codec.encodeParity(shardCache,payloadOffset,this.maxSize-payloadOffset);
         //释放dataShards
         for (int i = 0; i < dataShards; i++) {
             shardCache[i].release();
