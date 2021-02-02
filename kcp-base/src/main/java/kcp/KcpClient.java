@@ -2,6 +2,7 @@ package kcp;
 
 import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.Fec;
+import com.backblaze.erasure.fecNative.ReedSolomonNative;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -48,7 +49,7 @@ public class KcpClient {
     public void init(ChannelConfig channelConfig) {
         if(channelConfig.isUseConvChannel()){
             int convIndex = 0;
-            if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+            if(channelConfig.getFecAdapt()!=null){
                 convIndex+= Fec.fecHeaderSizePlus2;
             }
             channelManager = new ClientConvChannelManager(convIndex);
@@ -116,12 +117,7 @@ public class KcpClient {
         IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
 
-        ReedSolomon reedSolomon = null;
-        if (channelConfig.getFecDataShardCount() != 0 && channelConfig.getFecParityShardCount() != 0) {
-            reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
-        }
-
-        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, reedSolomon,channelConfig,channelManager);
+        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig.getFecAdapt(),channelConfig,channelManager);
         ukcp.user(user);
 
         channelManager.New(localAddress,ukcp,null);

@@ -1,5 +1,6 @@
 package com.backblaze.erasure.fecNative;
 
+import com.backblaze.erasure.IFecDecode;
 import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.*;
 import io.netty.buffer.ByteBuf;
@@ -18,7 +19,7 @@ import java.util.Random;
  * 2018/6/8.
  * TODO go版本使用的uint为序列id 在发送24亿条消息之后可能会出现兼容问题，以后版本修复
  */
-public class FecDecode {
+public class FecDecode implements IFecDecode {
     // queue size limit
     private int rxlimit;
     private int dataShards;

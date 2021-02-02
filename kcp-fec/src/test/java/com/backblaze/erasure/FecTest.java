@@ -286,7 +286,7 @@ public class FecTest {
 
                     }
                 }else{
-                    System.out.println();
+                    //System.out.println();
                 }
                 for (ByteBuf byteBuf : byteBufList) {
                     byteBuf.release();

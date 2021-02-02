@@ -72,29 +72,6 @@ public class FecTestNative {
         System.out.println("usedDirectbuf: "+reservedMemoryField.get(bitClass));
     }
 
-    public static void encodeOOM(){
-        int data = 10;
-        int part = 3;
-        ReedSolomonNative reedSolomon = new ReedSolomonNative(data,part);
-        FecEncode fecEncode = new FecEncode(0,reedSolomon,1500);
-        FecDecode fecDecode = new FecDecode((data+part)*3,reedSolomon,1500);
-        while(true){
-            List<ByteBuf> byteBufList = new ArrayList<>();
-            List<ByteBuf> byteBufs = buildBytebuf(data,1500);
-            for (int i = 0; i < byteBufs.size(); i++) {
-                ByteBuf[] encodeResult = fecEncode.encode(byteBufs.get(i));
-                if(encodeResult!=null){
-                    for (int i1 = 0; i1 < encodeResult.length; i1++) {
-                        byteBufList.add(encodeResult[i1]);
-                    }
-                }
-                byteBufList.add(byteBufs.get(i));
-            }
-            for (ByteBuf byteBuf : byteBufList) {
-                byteBuf.release();
-            }
-        }
-    }
 
 
 

@@ -1,5 +1,6 @@
 package test;
 
+import com.backblaze.erasure.FecAdapt;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import kcp.ChannelConfig;
@@ -22,8 +23,7 @@ public class Kcp4GoExampleClient implements KcpListener {
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
-        channelConfig.setFecDataShardCount(10);
-        channelConfig.setFecParityShardCount(3);
+        channelConfig.setFecAdapt(new FecAdapt(10,3));
         channelConfig.setAckNoDelay(false);
         //channelConfig.setTimeoutMillis(10000);
 

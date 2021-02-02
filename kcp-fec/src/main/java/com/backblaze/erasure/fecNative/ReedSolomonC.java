@@ -6,11 +6,19 @@ package com.backblaze.erasure.fecNative;
  */
 public class ReedSolomonC {
 
+    private static boolean nativeSupport = true;
     static {
-        //System.load("/Users/king/Desktop/libjni.dylib");
-        String path = System.getProperty("user.dir");
-        System.load(path+"/kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/libjni.dylib");
-        init();
+        try {
+            String path = System.getProperty("user.dir");
+            System.load(path+"/kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/libjni.dylib");
+            init();
+        }catch (Throwable e){
+            nativeSupport = false;
+        }
+    }
+
+    public static boolean isNativeSupport() {
+        return nativeSupport;
     }
 
     protected static native void init();

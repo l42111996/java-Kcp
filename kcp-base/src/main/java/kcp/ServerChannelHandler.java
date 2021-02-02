@@ -2,6 +2,7 @@ package kcp;
 
 import com.backblaze.erasure.ReedSolomon;
 import com.backblaze.erasure.fec.Fec;
+import com.backblaze.erasure.fecNative.ReedSolomonNative;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -74,11 +75,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
         }
         IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
-        ReedSolomon reedSolomon = null;
-        if (channelConfig.getFecDataShardCount() != 0 && channelConfig.getFecParityShardCount() != 0) {
-            reedSolomon = ReedSolomon.create(channelConfig.getFecDataShardCount(), channelConfig.getFecParityShardCount());
-        }
-        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, reedSolomon, channelConfig, channelManager);
+        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig.getFecAdapt(), channelConfig, channelManager);
 
         User user = new User(ctx.channel(), msg.sender(), msg.recipient());
         newUkcp.user(user);
@@ -101,7 +98,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     private int getSn(ByteBuf byteBuf,ChannelConfig channelConfig){
         int headerSize = 0;
-        if(channelConfig.getFecDataShardCount()!=0&&channelConfig.getFecParityShardCount()!=0){
+        if(channelConfig.getFecAdapt()!=null){
             headerSize+= Fec.fecHeaderSizePlus2;
         }
 

@@ -29,6 +29,11 @@ public class ReedSolomonNative{
     }
 
 
+    public static boolean isNativeSupport() {
+        return ReedSolomonC.isNativeSupport();
+    }
+
+
     protected void rsRelease(){
         this.REED_SOLOMON_C.rsRelease(this.reedSolomonPtr);
     }

@@ -1,7 +1,11 @@
 package kcp;
 
-import com.backblaze.erasure.ReedSolomon;
-import com.backblaze.erasure.fec.*;
+import com.backblaze.erasure.FecAdapt;
+import com.backblaze.erasure.IFecDecode;
+import com.backblaze.erasure.IFecEncode;
+import com.backblaze.erasure.fec.Fec;
+import com.backblaze.erasure.fec.FecPacket;
+import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.internal.logging.InternalLogger;
@@ -28,8 +32,8 @@ public class Ukcp{
 
     private boolean active;
 
-    private FecEncode fecEncode = null;
-    private FecDecode fecDecode = null;
+    private IFecEncode fecEncode = null;
+    private IFecDecode fecDecode = null;
 
     private final Queue<ByteBuf> writeBuffer;
 
@@ -67,7 +71,7 @@ public class Ukcp{
      *
      * @param output output for kcp
      */
-    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,ReedSolomon reedSolomon,ChannelConfig channelConfig,IChannelManager channelManager) {
+    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor, FecAdapt fecAdapt, ChannelConfig channelConfig, IChannelManager channelManager) {
         this.timeoutMillis = channelConfig.getTimeoutMillis();
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
@@ -91,10 +95,10 @@ public class Ukcp{
 
         int headerSize = 0;
         //init fec
-        if (reedSolomon != null) {
+        if (fecAdapt != null) {
             KcpOutput kcpOutput = kcp.getOutput();
-            fecEncode = new FecEncode(headerSize, reedSolomon,channelConfig.getMtu());
-            fecDecode = new FecDecode(3 * reedSolomon.getTotalShardCount(), reedSolomon,channelConfig.getMtu());
+            fecEncode = fecAdapt.fecEncode(headerSize,channelConfig.getMtu());
+            fecDecode = fecAdapt.fecDecode(channelConfig.getMtu());
             kcpOutput = new FecOutPut(kcpOutput, fecEncode);
             kcp.setOutput(kcpOutput);
             headerSize+= Fec.fecHeaderSizePlus2;

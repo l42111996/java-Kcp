@@ -1,5 +1,6 @@
 package com.backblaze.erasure.fecNative;
 
+import com.backblaze.erasure.IFecEncode;
 import com.backblaze.erasure.fec.Fec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -11,7 +12,7 @@ import io.netty.buffer.ByteBufAllocator;
  * Created by JinMiao
  * 2018/6/6.
  */
-public class FecEncode {
+public class FecEncode implements IFecEncode {
 
 
     /**消息包长度**/
@@ -244,13 +245,13 @@ public class FecEncode {
     }
 
 
-    public void markData(ByteBuf byteBuf,int offset){
+    private void markData(ByteBuf byteBuf,int offset){
         byteBuf.setIntLE(offset, (int) this.next);
         byteBuf.setShortLE(offset+4, Fec.typeData);
         this.next++;
     }
 
-    public void markParity(ByteBuf byteBuf, int offset){
+    private void markParity(ByteBuf byteBuf, int offset){
         byteBuf.setIntLE(offset, (int) this.next);
         byteBuf.setShortLE(offset+4,Fec.typeParity);
         //if(next==this.paws){

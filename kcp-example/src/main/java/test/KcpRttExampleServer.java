@@ -1,5 +1,6 @@
 package test;
 
+import com.backblaze.erasure.FecAdapt;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import kcp.ChannelConfig;
@@ -23,8 +24,7 @@ public class KcpRttExampleServer implements KcpListener {
         channelConfig.setSndwnd(512);
         channelConfig.setRcvwnd(512);
         channelConfig.setMtu(512);
-        channelConfig.setFecDataShardCount(3);
-        channelConfig.setFecParityShardCount(1);
+        channelConfig.setFecAdapt(new FecAdapt(3,1));
         channelConfig.setAckNoDelay(true);
         channelConfig.setTimeoutMillis(10000);
         channelConfig.setUseConvChannel(true);
