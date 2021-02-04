@@ -331,6 +331,7 @@ public class Ukcp{
                 return --operand;
             });
             if(readBufferSize==0){
+                //TODO 这里做的不对 应该丢弃队列最早的那个消息包  这样子丢弃有一定的概率会卡死 以后优化
                 byteBuf.release();
                 log.error("conv {} address {} readBuffer is full",kcp.getConv(),((User)kcp.getUser()).getRemoteAddress());
                 return;
