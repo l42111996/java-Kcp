@@ -90,7 +90,7 @@ public class KcpClient {
      * @param ukcp
      */
     public void reconnect(Ukcp ukcp){
-        if(!(channelManager instanceof ServerConvChannelManager)){
+        if(!(channelManager instanceof ClientConvChannelManager)){
             throw new UnsupportedOperationException("reconnect can only be used in convChannel");
         }
         ukcp.getiMessageExecutor().execute(() -> {
