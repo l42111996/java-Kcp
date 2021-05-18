@@ -14,14 +14,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class ScheduleTask implements ITask, Runnable, TimerTask {
 
-    private IMessageExecutor disruptorSingleExecutor;
+    private final IMessageExecutor messageExecutor;
 
-    private Ukcp ukcp;
+    private final Ukcp ukcp;
 
-    private HashedWheelTimer hashedWheelTimer;
+    private final HashedWheelTimer hashedWheelTimer;
 
-    public ScheduleTask(IMessageExecutor disruptorSingleExecutor, Ukcp ukcp,HashedWheelTimer hashedWheelTimer) {
-        this.disruptorSingleExecutor = disruptorSingleExecutor;
+    public ScheduleTask(IMessageExecutor messageExecutor, Ukcp ukcp, HashedWheelTimer hashedWheelTimer) {
+        this.messageExecutor = messageExecutor;
         this.ukcp = ukcp;
         this.hashedWheelTimer = hashedWheelTimer;
     }
@@ -35,7 +35,7 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
     @Override
     public void execute() {
         try {
-            Ukcp ukcp = this.ukcp;
+            final Ukcp ukcp = this.ukcp;
             long now = System.currentTimeMillis();
             //判断连接是否关闭
             if (ukcp.getTimeoutMillis() != 0 && now - ukcp.getTimeoutMillis() > ukcp.getLastRecieveTime()) {
@@ -64,7 +64,7 @@ public class ScheduleTask implements ITask, Runnable, TimerTask {
 
     @Override
     public void run() {
-        this.disruptorSingleExecutor.execute(this);
+        this.messageExecutor.execute(this);
     }
 
     @Override

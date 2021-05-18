@@ -2,7 +2,6 @@ package kcp;
 
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.Recycler;
 import threadPool.ITask;
 
 import java.io.IOException;
@@ -14,27 +13,11 @@ import java.util.Queue;
  */
 public class WriteTask implements ITask {
 
-    private final Recycler.Handle<WriteTask> recyclerHandle;
 
-    private Ukcp ukcp;
+    private final Ukcp ukcp;
 
-    private static final Recycler<WriteTask> RECYCLER = new Recycler<WriteTask>() {
-        @Override
-        protected WriteTask newObject(Handle<WriteTask> handle) {
-            return new WriteTask(handle);
-        }
-    };
-
-
-    private WriteTask(Recycler.Handle<WriteTask> recyclerHandle) {
-        this.recyclerHandle = recyclerHandle;
-    }
-
-
-    static WriteTask New(Ukcp ukcp) {
-        WriteTask writeTask = RECYCLER.get();
-        writeTask.ukcp = ukcp;
-        return writeTask;
+    public WriteTask(Ukcp ukcp) {
+        this.ukcp = ukcp;
     }
 
     @Override
@@ -84,9 +67,5 @@ public class WriteTask implements ITask {
 
     public void release(){
         ukcp.getWriteProcessing().set(false);
-        ukcp = null;
-        recyclerHandle.recycle(this);
     }
-
-
 }

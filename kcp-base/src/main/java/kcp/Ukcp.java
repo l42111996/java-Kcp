@@ -47,13 +47,17 @@ public class Ukcp{
 
     private final IChannelManager channelManager;
 
-    private AtomicBoolean writeProcessing = new AtomicBoolean(false);
+    private final AtomicBoolean writeProcessing = new AtomicBoolean(false);
 
-    private AtomicBoolean readProcessing = new AtomicBoolean(false);
+    private final AtomicBoolean readProcessing = new AtomicBoolean(false);
 
-    private AtomicInteger readBufferIncr = new AtomicInteger(-1);
+    private final AtomicInteger readBufferIncr = new AtomicInteger(-1);
 
-    private AtomicInteger writeBufferIncr = new AtomicInteger(-1);
+    private final AtomicInteger writeBufferIncr = new AtomicInteger(-1);
+
+    private final WriteTask writeTask = new WriteTask(this);
+
+    private final ReadTask readTask = new ReadTask(this);
 
     private boolean controlReadBufferSize=false;
 
@@ -381,15 +385,13 @@ public class Ukcp{
 
     private void notifyReadEvent() {
         if(readProcessing.compareAndSet(false,true)){
-            ReadTask readTask = ReadTask.New(this);
-            this.iMessageExecutor.execute(readTask);
+            this.iMessageExecutor.execute(this.readTask);
         }
     }
 
     protected void notifyWriteEvent() {
         if(writeProcessing.compareAndSet(false,true)){
-            WriteTask writeTask = WriteTask.New(this);
-            this.iMessageExecutor.execute(writeTask);
+            this.iMessageExecutor.execute(this.writeTask);
         }
     }
 

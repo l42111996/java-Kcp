@@ -3,7 +3,6 @@ package kcp;
 import com.backblaze.erasure.fec.Snmp;
 import internal.CodecOutputList;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.Recycler;
 import threadPool.ITask;
 
 import java.util.Queue;
@@ -14,26 +13,11 @@ import java.util.Queue;
  */
 public class ReadTask implements ITask {
 
-    private final Recycler.Handle<ReadTask> recyclerHandle;
 
-    private Ukcp ukcp;
+    private final Ukcp ukcp;
 
-    private static final Recycler<ReadTask> RECYCLER = new Recycler<ReadTask>() {
-        @Override
-        protected ReadTask newObject(Handle<ReadTask> handle) {
-            return new ReadTask(handle);
-        }
-    };
-
-    private ReadTask(Recycler.Handle<ReadTask> recyclerHandle) {
-        this.recyclerHandle = recyclerHandle;
-    }
-
-
-    protected static ReadTask New(Ukcp kcp) {
-        ReadTask readTask = RECYCLER.get();
-        readTask.ukcp = kcp;
-        return readTask;
+    public ReadTask(Ukcp ukcp) {
+        this.ukcp = ukcp;
     }
 
 
@@ -116,8 +100,6 @@ public class ReadTask implements ITask {
 
     public void release() {
         ukcp.getReadProcessing().set(false);
-        ukcp = null;
-        recyclerHandle.recycle(this);
     }
 
 }
