@@ -4,8 +4,11 @@ import com.backblaze.erasure.FecAdapt;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.DefaultEventLoop;
+import io.netty.channel.EventLoop;
 import kcp.*;
 import threadPool.disruptor.DisruptorExecutorPool;
+import threadPool.disruptor.DisruptorSingleExecutor;
 
 import java.net.InetSocketAddress;
 
@@ -16,15 +19,16 @@ import java.net.InetSocketAddress;
  */
 public class KcpPingPongExampleClient implements KcpListener {
 
+    static DefaultEventLoop logicThread = new DefaultEventLoop();
     public static void main(String[] args) {
         ChannelConfig channelConfig = new ChannelConfig();
         channelConfig.nodelay(true,40,2,true);
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
-        channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
-        channelConfig.setFecAdapt(new FecAdapt(10,3));
-        channelConfig.setAckNoDelay(true);
+        //channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
+        //channelConfig.setFecAdapt(new FecAdapt(10,3));
+        channelConfig.setAckNoDelay(false);
         //channelConfig.setCrc32Check(true);
         //channelConfig.setTimeoutMillis(10000);
 
@@ -51,17 +55,22 @@ public class KcpPingPongExampleClient implements KcpListener {
 
     @Override
     public void handleReceive(ByteBuf byteBuf, Ukcp ukcp) {
-        ukcp.write(byteBuf);
-        int id = byteBuf.getInt(0);
-        //if(j-id%10!=0){
-        //    System.out.println("id"+id +"  j" +j);
-        //}
+        ByteBuf newBuf = byteBuf.retainedDuplicate();
+        logicThread.execute(() -> {
+            try {
+                ukcp.write(newBuf);
+                newBuf.release();
+                j++;
+                if(j%100000==0){
+                    System.out.println(Snmp.snmp.toString());
+                    System.out.println("收到了 返回回去"+j);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
 
-        j++;
-        if(j%100000==0){
-            System.out.println(Snmp.snmp.toString());
-            System.out.println("收到了 返回回去"+j);
-        }
+        });
+
     }
 
     @Override

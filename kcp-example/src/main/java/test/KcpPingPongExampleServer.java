@@ -3,11 +3,15 @@ package test;
 import com.backblaze.erasure.FecAdapt;
 import com.backblaze.erasure.fec.Snmp;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.DefaultEventLoop;
+import io.netty.channel.EventLoop;
 import kcp.ChannelConfig;
 import kcp.KcpListener;
 import kcp.KcpServer;
 import kcp.Ukcp;
 import threadPool.disruptor.DisruptorExecutorPool;
+import threadPool.disruptor.DisruptorSingleExecutor;
+import threadPool.netty.NettyMessageExecutor;
 
 /**
  * 测试单连接吞吐量
@@ -16,7 +20,7 @@ import threadPool.disruptor.DisruptorExecutorPool;
  * 2019-06-27.
  */
 public class KcpPingPongExampleServer implements KcpListener {
-
+    static DefaultEventLoop logicThread = new DefaultEventLoop();
     public static void main(String[] args) {
 
         KcpPingPongExampleServer kcpRttExampleServer = new KcpPingPongExampleServer();
@@ -25,11 +29,11 @@ public class KcpPingPongExampleServer implements KcpListener {
         channelConfig.setSndwnd(1024);
         channelConfig.setRcvwnd(1024);
         channelConfig.setMtu(1400);
-        channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
-        channelConfig.setFecAdapt(new FecAdapt(10,3));
-        channelConfig.setAckNoDelay(true);
+        //channelConfig.setiMessageExecutorPool(new DisruptorExecutorPool(Runtime.getRuntime().availableProcessors()));
+        //channelConfig.setFecAdapt(new FecAdapt(10,3));
+        channelConfig.setAckNoDelay(false);
         //channelConfig.setCrc32Check(true);
-        //channelConfig.setTimeoutMillis(10000);
+        channelConfig.setTimeoutMillis(10000);
         KcpServer kcpServer = new KcpServer();
         kcpServer.init(kcpRttExampleServer, channelConfig, 10001);
     }
@@ -46,14 +50,23 @@ public class KcpPingPongExampleServer implements KcpListener {
 
     @Override
     public void handleReceive(ByteBuf buf, Ukcp kcp) {
-        i++;
-        long now = System.currentTimeMillis();
-        if(now-start>1000){
-            System.out.println("收到消息 time: "+(now-start) +"  message :" +i);
-            start = now;
-            i=0;
-        }
-        kcp.write(buf);
+        ByteBuf newBuf = buf.retainedDuplicate();
+        logicThread.execute(() -> {
+            try {
+                i++;
+                long now = System.currentTimeMillis();
+                if(now-start>1000){
+                    System.out.println("收到消息 time: "+(now-start) +"  message :" +i);
+                    start = now;
+                    i=0;
+                }
+                kcp.write(newBuf);
+                newBuf.release();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+        });
     }
 
     @Override

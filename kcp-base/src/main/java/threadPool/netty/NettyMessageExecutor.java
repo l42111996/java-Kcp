@@ -1,6 +1,8 @@
 package threadPool.netty;
 
+import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
+import io.netty.util.concurrent.ThreadProperties;
 import threadPool.IMessageExecutor;
 import threadPool.ITask;
 
@@ -29,6 +31,10 @@ public class NettyMessageExecutor implements IMessageExecutor {
 
     @Override
     public void execute(ITask iTask) {
-        this.eventLoop.execute(() -> iTask.execute());
+        //if(eventLoop.inEventLoop()){
+        //    iTask.execute();
+        //}else{
+            this.eventLoop.execute(() -> iTask.execute());
+        //}
     }
 }

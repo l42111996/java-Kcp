@@ -121,10 +121,10 @@ public class DisruptorSingleExecutor implements IMessageExecutor {
 	@Override
 	public void execute(ITask iTask){
 		Thread currentThread = Thread.currentThread();
-		if(currentThread==this.currentThread){
-			iTask.execute();
-			return;
-		}
+		//if(currentThread==this.currentThread){
+		//	iTask.execute();
+		//	return;
+		//}
 		//		if(buffer.hasAvailableCapacity(1))
 //		{
 //			System.out.println("没有容量了");

@@ -890,14 +890,13 @@ public class Kcp implements IKcp {
                 }
             }
         }
-
-        if(windowSlides){
-            flush(false,current);
-        }else
-            if (ackNoDelay && ackcount > 0) { // ack immediately
-            flush(true,current);
-        }
-
+        //TODO 这里每个包立即去flush会造成大量小包网络利用率低，readtask里面在读完数据之后统一处理性能好一些
+        //if(windowSlides){
+        //    flush(false,current);
+        //}else
+        //    if (ackNoDelay && ackcount > 0) { // ack immediately
+        //    flush(true,current);
+        //}
         return 0;
     }
 
