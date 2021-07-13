@@ -30,11 +30,11 @@ public class User {
         this.localAddress = localAddress;
     }
 
-    public Channel getChannel() {
+    protected Channel getChannel() {
         return channel;
     }
 
-    public void setChannel(Channel channel) {
+    protected void setChannel(Channel channel) {
         this.channel = channel;
     }
 
@@ -42,15 +42,15 @@ public class User {
         return remoteAddress;
     }
 
-    public void setRemoteAddress(InetSocketAddress remoteAddress) {
+    protected void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
     }
 
-    public InetSocketAddress getLocalAddress() {
+    protected InetSocketAddress getLocalAddress() {
         return localAddress;
     }
 
-    public void setLocalAddress(InetSocketAddress localAddress) {
+    protected void setLocalAddress(InetSocketAddress localAddress) {
         this.localAddress = localAddress;
     }
 
