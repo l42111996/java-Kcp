@@ -117,7 +117,7 @@ public class KcpClient {
         IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
 
-        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig.getFecAdapt(),channelConfig,channelManager);
+        Ukcp ukcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig,channelManager);
         ukcp.user(user);
 
         channelManager.New(localAddress,ukcp,null);

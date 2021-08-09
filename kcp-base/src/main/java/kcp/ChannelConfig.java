@@ -9,6 +9,7 @@ import threadPool.netty.NettyMessageExecutorPool;
  * 2018/9/20.
  */
 public class ChannelConfig {
+    public static final int crc32Size = 4;
 
     private int conv;
     private boolean nodelay;

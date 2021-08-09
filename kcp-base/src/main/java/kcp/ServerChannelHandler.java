@@ -75,7 +75,7 @@ public class ServerChannelHandler extends ChannelInboundHandlerAdapter {
         }
         IMessageExecutor iMessageExecutor = iMessageExecutorPool.getIMessageExecutor();
         KcpOutput kcpOutput = new KcpOutPutImp();
-        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig.getFecAdapt(), channelConfig, channelManager);
+        Ukcp newUkcp = new Ukcp(kcpOutput, kcpListener, iMessageExecutor, channelConfig, channelManager);
 
         User user = new User(ctx.channel(), msg.sender(), msg.recipient());
         newUkcp.user(user);

@@ -75,7 +75,7 @@ public class Ukcp{
      *
      * @param output output for kcp
      */
-    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor, FecAdapt fecAdapt, ChannelConfig channelConfig, IChannelManager channelManager) {
+    public Ukcp(KcpOutput output, KcpListener kcpListener, IMessageExecutor iMessageExecutor,  ChannelConfig channelConfig, IChannelManager channelManager) {
         this.timeoutMillis = channelConfig.getTimeoutMillis();
         this.kcp = new Kcp(channelConfig.getConv(), output);
         this.active = true;
@@ -98,6 +98,11 @@ public class Ukcp{
 
 
         int headerSize = 0;
+        FecAdapt fecAdapt = channelConfig.getFecAdapt();
+        if(channelConfig.isCrc32Check()){
+            headerSize += ChannelConfig.crc32Size;
+        }
+
         //init fec
         if (fecAdapt != null) {
             KcpOutput kcpOutput = kcp.getOutput();
