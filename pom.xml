@@ -12,7 +12,7 @@
     <artifactId>java-Kcp</artifactId>
     <groupId>com.github.l42111996</groupId>
     <packaging>pom</packaging>
-    <version>1.5</version>
+    <version>1.6</version>
     <modules>
         <module>kcp-fec</module>
         <module>kcp-base</module>
@@ -159,7 +159,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
-                        <version>2.5.1</version>
+                        <version>2.5.3</version>
                     </plugin>
                 </plugins>
             </build>
