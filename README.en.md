@@ -18,6 +18,15 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
   <version>1.6</version>
 </dependency>
 ```
+# Using method and parameters
+1. [Server-side example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleServer.java)
+2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
+3. [Best Practices](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
+4. [A lot of information](https://github.com/skywind3000/kcp)
+5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/csharp-kcp/blob/master/example-Kcp/KcpRttExampleClient.cs)
+6. [Encountered problems](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
+7. [Performance test results](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
+8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
 
 # compatibility:
 1. Compatible with c version of kcp
@@ -37,34 +46,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 10. Changes in export ip such as 4G switching wifi when adding games will not cause disconnection
 
 
-# Using method and parameters
-1. [Server-side example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleServer.java)
-2. [Client Example](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/KcpRttExampleClient.java)
-3. [Best Practices](https://github.com/skywind3000/kcp/wiki/KCP-Best-Practice)
-4. [A lot of information](https://github.com/skywind3000/kcp)
-5. Compatible with C #, [java server](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4sharpExampleServer.java), [c #Client](https://github.com/l42111996/csharp-kcp/blob/master/example-Kcp/KcpRttExampleClient.cs)
-6. [Encountered problems](https://github.com/l42111996/java-Kcp/blob/master/QA.md)
-7. [Performance test results](https://github.com/l42111996/java-Kcp/blob/master/Benchmark.md)
-8. [Compatible with kcp-go, including fec compatible](https://github.com/l42111996/java-Kcp/blob/master/kcp-example/src/main/java/test/Kcp4GoExampleClient.java)
-
-
-# Test completed
-1. Single connection endless loop sending and receiving packet memory detection, performance test
-Configuration: mbp 2.3 GHz Intel Core i9 16GRam
-Single connection with fec 5W / s qps
-Single connection without fec 9W / s qps
-2. Java server and c # client compatibility test
-3. 3000 connections remain using single core 30% cpu
-4. fec combined with directbuffer detection for the best CPU performance plan
-5. A large number of clients continue to connect, disconnect, send messages, and troubleshoot memory leaks
-
-
-# TODO
-1. RTT stability test under high concurrent carbonization
-
-
 # Relevant information
-
 1. https://github.com/skywind3000/kcp The original ccp version of kcp
 2. https://github.com/xtaci/kcp-go go version kcp, with a lot of optimization
 3. https://github.com/Backblaze/JavaReedSolomon java version fec
@@ -74,5 +56,4 @@ Single connection without fec 9W / s qps
 7. https://github.com/l42111996/csharp-kcp C# version of kcp based on dotNetty, perfectly compatible
 
 # communicate with
-
 QQ: 526167774
