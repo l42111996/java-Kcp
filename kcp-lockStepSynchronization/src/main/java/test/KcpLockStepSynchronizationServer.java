@@ -70,6 +70,7 @@ public class KcpLockStepSynchronizationServer implements KcpListener
             @Override
             public void write(ByteBuf byteBuf) {
                 ukcp.write(byteBuf);
+                byteBuf.release();
             }
         });
         ukcp.user().setCache(player);

@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <disruptor.version>3.4.2</disruptor.version>
+        <disruptor.version>3.4.4</disruptor.version>
     </properties>
 
     <artifactId>kcp-base</artifactId>
@@ -29,7 +29,7 @@
         <dependency>
             <groupId>org.jctools</groupId>
             <artifactId>jctools-core</artifactId>
-            <version>3.0.0</version>
+            <version>3.3.0</version>
         </dependency>
     </dependencies>
 
