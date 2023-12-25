@@ -46,7 +46,7 @@ public class User {
         this.remoteAddress = remoteAddress;
     }
 
-    protected InetSocketAddress getLocalAddress() {
+    public InetSocketAddress getLocalAddress() {
         return localAddress;
     }
 
