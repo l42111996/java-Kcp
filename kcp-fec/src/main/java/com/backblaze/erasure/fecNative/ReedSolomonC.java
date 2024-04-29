@@ -1,5 +1,7 @@
 package com.backblaze.erasure.fecNative;
 
+import java.io.*;
+
 /**
  * Created by JinMiao
  * 2018/8/27.
@@ -10,7 +12,17 @@ public class ReedSolomonC {
     static {
         try {
             String path = System.getProperty("user.dir");
-            System.load(path+"/kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/libjni.dylib");
+            String libPath = new File(path, "kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/libjni").toString();
+            String extension = "";
+            if (System.getProperty("os.name").startsWith("Windows")) {
+                extension = "dll";
+            } else if (System.getProperty("os.name").startsWith("Linux")) {
+                extension = "so";
+            } else if (System.getProperty("os.name").startsWith("Mac")) {
+                extension = "dylib";
+            }
+            libPath += "." + extension;
+            System.load(libPath);
             init();
         }catch (Throwable e){
             nativeSupport = false;
