@@ -1,14 +1,10 @@
 package com.backblaze.erasure.fecNative;
 
-import com.backblaze.erasure.IFecDecode;
-import com.backblaze.erasure.ReedSolomon;
+import com.backblaze.erasure.*;
 import com.backblaze.erasure.fec.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  *4bit(headerOffset)+4bit(seqid)+2bit(flag)+2bit(body lenth不包含自己)+body
@@ -36,7 +32,7 @@ public class FecDecode implements IFecDecode {
     private ReedSolomonNative codec;
 
 
-    public FecDecode(int rxlimit, ReedSolomonNative codec,int mtu) {
+    public FecDecode(int rxlimit, ReedSolomonNative codec, int mtu) {
         this.rxlimit = rxlimit;
         this.dataShards = codec.getDataShards();
         this.parityShards = codec.getParityShards();
@@ -172,14 +168,15 @@ public class FecDecode implements IFecDecode {
                     ByteBuf shard  = shards[i];
                     //如果数据不存在 用0填充起来
                     if(shard==null){
-                        shards[i] = zeros.copy(0,maxlen);
-                        shards[i].writerIndex(maxlen);
-                        continue;
-                    }
-                    int left = maxlen-shard.readableBytes();
-                    if(left>0){
-                        shard.writeBytes(zeros,left);
-                        zeros.resetReaderIndex();
+                        shard = zeros.copy(0,maxlen);
+                        shard.writerIndex(maxlen);
+                        shards[i] = shard;
+                    }else{
+                        int left = maxlen-shard.readableBytes();
+                        if(left>0){
+                            shard.writeBytes(zeros,left);
+                            zeros.resetReaderIndex();
+                        }
                     }
                     shardsAddress[i] = shard.memoryAddress();
                 }
