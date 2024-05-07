@@ -12,16 +12,9 @@ public class ReedSolomonC {
     static {
         try {
             String path = System.getProperty("user.dir");
-            String libPath = new File(path, "kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/libjni").toString();
-            String extension = "";
-            if (System.getProperty("os.name").startsWith("Windows")) {
-                extension = "dll";
-            } else if (System.getProperty("os.name").startsWith("Linux")) {
-                extension = "so";
-            } else if (System.getProperty("os.name").startsWith("Mac")) {
-                extension = "dylib";
-            }
-            libPath += "." + extension;
+            String libPath = new File(path, "kcp-fec/src/main/java/com/backblaze/erasure/fecNative/native/").toString();
+            String extension = System.mapLibraryName("jni");
+            libPath +=File.separator+ extension;
             System.load(libPath);
             init();
         }catch (Throwable e){
