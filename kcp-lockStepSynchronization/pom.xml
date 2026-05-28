@@ -5,11 +5,14 @@
     <parent>
         <artifactId>java-Kcp</artifactId>
         <groupId>com.github.l42111996</groupId>
-        <version>1.6.1</version>
+        <version>1.6.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kcp-lockStepSynchronization</artifactId>
+    <name>kcp-lockStepSynchronization</name>
+    <description>Lock-step synchronization examples for java-Kcp</description>
+    <url>https://github.com/l42111996/java-Kcp</url>
 
     <dependencies>
         <dependency>

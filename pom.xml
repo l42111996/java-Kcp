@@ -23,6 +23,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>8</maven.compiler.release>
         <netty.version>4.1.104.Final</netty.version>
         <slf4j.version>1.7.32</slf4j.version>
     </properties>
@@ -78,12 +79,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <fork>true</fork>
-                    <verbose>true</verbose>
                     <encoding>UTF-8</encoding>
                     <showWarnings>false</showWarnings>
                 </configuration>
@@ -108,7 +105,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>2.2.1</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -122,14 +119,16 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.9.1</version>
+                        <version>3.7.0</version>
                         <configuration>
                             <show>private</show>
                             <nohelp>true</nohelp>
                             <charset>UTF-8</charset>
                             <encoding>UTF-8</encoding>
                             <docencoding>UTF-8</docencoding>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <additionalJOptions>
+                                <additionalJOption>-Xdoclint:none</additionalJOption>
+                            </additionalJOptions>
                             <!-- TODO 临时解决不规范的javadoc生成报错,后面要规范化后把这行去掉 -->
                         </configuration>
                         <executions>
@@ -145,7 +144,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
+                        <version>3.2.7</version>
                         <executions>
                             <execution>
                                 <phase>verify</phase>
@@ -155,6 +154,18 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- Maven Central Portal -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.10.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <tokenAuth>true</tokenAuth>
+                            <autoPublish>false</autoPublish>
+                        </configuration>
+                    </plugin>
                     <!--Release -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -163,19 +174,6 @@
                     </plugin>
                 </plugins>
             </build>
-
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>Sonatype Nexus Snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-                <repository>
-                    <id>sonatype-nexus-staging</id>
-                    <name>Nexus Release Repository</name>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </distributionManagement>
         </profile>
     </profiles>
 

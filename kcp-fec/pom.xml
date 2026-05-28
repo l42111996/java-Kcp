@@ -5,11 +5,15 @@
     <parent>
         <artifactId>java-Kcp</artifactId>
         <groupId>com.github.l42111996</groupId>
-        <version>1.6.1</version>
+        <version>1.6.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kcp-fec</artifactId>
+    <name>kcp-fec</name>
+    <description>Forward error correction module for java-Kcp</description>
+    <url>https://github.com/l42111996/java-Kcp</url>
+
     <dependencies>
         <dependency>
             <groupId>io.netty</groupId>
