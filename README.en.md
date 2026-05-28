@@ -15,7 +15,7 @@ KCP is a udp-based fast and reliable protocol (rudp), which can reduce the avera
 <dependency>
   <groupId>com.github.l42111996</groupId>
   <artifactId>kcp-base</artifactId>
-  <version>1.6</version>
+  <version>1.6.2</version>
 </dependency>
 ```
 # Using method and parameters
